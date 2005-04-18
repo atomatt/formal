@@ -1,0 +1,70 @@
+fields:
+    timedelta
+    file (upload vs url to fetch)
+    any ?
+
+    collection
+        sequence
+        mapping (?)
+
+widgets:
+    text input
+        checked
+    text area
+    password
+        checked
+    file
+    checkbox
+        tri-state
+    button
+    choice
+        drop down
+        select with size
+        radio
+    multichoice
+        select with size
+        checkboxes
+    date
+        3 field
+            browser locale
+            ILocale in ctx
+            etc
+        calendar
+    time
+        ...
+    date/time
+        ...
+            
+"useful" widgets:
+    email
+    url
+    
+    
+other ideas:
+    yaml
+    csv
+    
+    
+unique ids, ala webform
+    
+    
+Steal ideas from (?):
+    * http://www.stuffandnonsense.co.uk/archives/trimming_form_fields.html
+    
+    
+custom pattern
+    
+    
+interleave mode where you get to define lots of HTML and the forms.form weaves
+itself in
+
+
+more generic exception (than validation error) for just saying something failed.
+
+
+something a little like ian bicking's htmlfill to accomplish my "weaving" idea.
+i need to look at htlmfill more but i think it has some issues with things like
+3-input data rendering. Perhaps instead of parsing the html the widgets should
+*always* work by filling slots at various different levels - label + message +
+<input> element(s) + description + value(s) + label, complete widget output,
+complete group output etc.
