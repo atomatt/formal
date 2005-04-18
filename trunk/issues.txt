@@ -1,0 +1,76 @@
+* Choice widget should compare the POSTed value to the blank value and
+  replace it with None.
+
+
+* Update widgets to decode to unicode instances immediately.
+
+
+* Make sure generated forms are standards compliant.
+
+    Right now, the form does not contain a fieldset :(.
+
+
+* Validation should be extracted
+
+    Create a validaton module with lots of validator classes, i.e. Required,
+    Range, etc.
+  
+
+* Required fields are not highlighted
+
+    Type should be checked for a required attribute or validator and a
+    ''required'' CSS class should be set on the field's element.
+
+    
+* Mapping type
+
+
+* Nested groups of fields (Structure)
+
+
+* File type
+
+
+* DateTime type
+
+
+* RadioChoice widget
+
+
+* MultipleSelect widget
+
+
+* Allow different field label than the name
+
+
+* Allow action button labels to be different to name
+
+
+* Form callback is not used when an action is added.
+
+    Because the actions are submit buttons the form's callback is not used even
+    when the user hits enter and does not click a button.
+    
+    I'm not sure if this is correct or incorrect but it may be confusing to some
+    users.
+
+    
+* Fully customisable form templates
+
+
+* Improve the CSS
+
+    Consider splitting into two stylesheets: layout and style. If possible,
+    provide a couple of sets for common form styles.
+
+    
+* Add widgets for other HTML editors.
+
+    HTMLArea, FCKEditor, Kupu.
+    
+    
+* Form action URL splats and query parameters that the page was using.
+
+    I'm not sure it's possible to manage this unless the form always uses POST
+    and t.web or Nevow provides access to GET and POST vars.
+    
