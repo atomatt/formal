@@ -174,7 +174,29 @@ class Sequence(object):
         return value
 
 
+class File(object):
+    __implements__ = iforms.IType,
+    
+    name = None
+    required = False
+    missing = None
+   
+    def __init__(self, required=None, missing=None):
+        if required is not None:
+            self.required = required
+        if missing is not None:
+            self.missing = missing
+        
+    def validate(self, value):
+        print value[0]
+        if self.required and value[0] == '':
+            raise validation.FieldRequiredError('required field')
+        if value[0] == '':
+            value = self.missing
+        return value
+
+
 __all__ = [
-    "Boolean", "Date", "Float", "Integer", "Sequence", "String", "Time",
+    'Boolean', 'Date', 'File', 'Float', 'Integer', 'Sequence', 'String', 'Time',
     ]
     

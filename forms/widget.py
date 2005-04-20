@@ -3,7 +3,8 @@ Widgets are small components that render form fields for inputing data in a
 certain format.
 """
 
-from nevow import rend, tags as T, util
+import mimetypes
+from nevow import inevow, rend, tags as T, util
 from forms import iforms, types, validation
 from forms.util import keytocssid
 
@@ -303,9 +304,31 @@ class CheckboxMultiChoice(object):
         return self.original.validate(values)
 
 
+class FileUpload(object):
+    __implements__ = iforms.IWidget,
+    
+    def __init__(self, original):
+        self.original = original
+        
+    def render(self, ctx, key, args, errors):
+        if errors:
+            value = args.get(key, [''])[0]
+        else:
+            value = iforms.IFileConvertible(self.original).fromType(args.get(key))
+        return T.input(name=key, id=keytocssid(ctx.key),type='file')
+        
+    def processInput(self, ctx, key, args):
+        fileitem = inevow.IRequest(ctx).fields[key]
+        name = fileitem.filename.decode(util.getPOSTCharset(ctx))
+        value = (name, fileitem.file)
+
+        value = iforms.IFileConvertible(self.original).fromType(value)
+        return self.original.validate(value)
+
+
 __all__ = [
-    "Checkbox", "CheckboxMultiChoice", "CheckedPassword", "Password",
-    "SelectChoice", "TextArea", "TextInput", "DatePartsInput",
-    "MMYYDatePartsInput",
+    'Checkbox', 'CheckboxMultiChoice', 'CheckedPassword', 'FileUpload',
+    'Password', 'SelectChoice', 'TextArea', 'TextInput', 'DatePartsInput',
+    'MMYYDatePartsInput',
     ]
     

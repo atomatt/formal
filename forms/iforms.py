@@ -59,4 +59,8 @@ class IBooleanConvertible(IConvertible):
     
 class IDateTupleConvertible(IConvertible):
     pass
+
+    
+class IFileConvertible(IConvertible):
+    pass
     
