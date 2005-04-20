@@ -27,6 +27,7 @@ registerAdapter(TextInput, Float, iforms.IWidget)
 registerAdapter(Checkbox, Boolean, iforms.IWidget)
 registerAdapter(DatePartsInput, Date, iforms.IWidget)
 registerAdapter(TextInput, Time, iforms.IWidget)
+registerAdapter(FileUpload, File, iforms.IWidget)
 from forms import util
 registerAdapter(util.SequenceKeyLabelAdapter, tuple, iforms.IKey)
 registerAdapter(util.SequenceKeyLabelAdapter, tuple, iforms.ILabel)
@@ -37,5 +38,6 @@ registerAdapter(converters.IntegerToStringConverter, Integer, iforms.IStringConv
 registerAdapter(converters.FloatToStringConverter, Float, iforms.IStringConvertible)
 registerAdapter(converters.DateToStringConverter, Date, iforms.IStringConvertible)
 registerAdapter(converters.TimeToStringConverter, Time, iforms.IStringConvertible)
+registerAdapter(converters.NullConverter, File, iforms.IFileConvertible)
 del registerAdapter
 
