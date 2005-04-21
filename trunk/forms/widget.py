@@ -17,6 +17,7 @@ class TextInput(object):
     __implements__ = iforms.IWidget,
     
     inputType = 'text'
+    showValueOnFailure = True
     
     def __init__(self, original):
         self.original = original
@@ -26,6 +27,8 @@ class TextInput(object):
             value = args.get(key, [''])[0]
         else:
             value = iforms.IStringConvertible(self.original).fromType(args.get(key))
+        if not self.showValueOnFailure:
+            value = None
         return T.input(type=self.inputType, name=key, id=keytocssid(ctx.key), value=value)
         
     def processInput(self, ctx, key, args):
@@ -60,6 +63,7 @@ class Checkbox(object):
         
 class Password(TextInput):
     inputType = 'password'
+    showValueOnFailure = False
     
     
 class TextArea(object):
