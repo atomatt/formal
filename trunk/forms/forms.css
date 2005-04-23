@@ -90,3 +90,11 @@
   color:#000;
 }
 
+
+.nevow-form .fileupload input {
+  margin-left: 100px;
+}
+.nevow-form .fileupload img {
+  height:30px;
+}
+

@@ -2,7 +2,9 @@ from datetime import date, time
 from twisted.application import internet, service
 from nevow import appserver, compy, loaders, rend, static, tags as T
 import forms
+
 from forms import iforms, htmleditor
+from fileresource import fileResource
 
 
 dates = [
@@ -48,6 +50,7 @@ people = [
     Person(1, 'Matt', 'Goodall'),
     Person(2, 'Tim', 'Parkin'),
     ]
+
 
 
 class Page(rend.Page, forms.ResourceMixin):
@@ -106,6 +109,18 @@ class Page(rend.Page, forms.ResourceMixin):
             }
         return form
         
+    def form_3(self, ctx):
+        form = forms.Form(self._submit)
+        form.addField('name', forms.String(required=True))
+        form.addField('file1', forms.String(), forms.widgetFactory(forms.FileUpload,fileResource(),preview='image'))
+        #form.addField('file2', forms.String(), forms.widgetFactory(forms.FileUpload,fileResource()))
+        #form.addField('file3', forms.String(), forms.widgetFactory(forms.FileUpload,fileResource()))
+        form.addAction(self._submit)
+        form.data = {
+            'file1': 'product.jpg'
+            }
+        return form        
+    
     def _submit(self, ctx, form, data):
         print form
         print data
@@ -116,8 +131,8 @@ class Page(rend.Page, forms.ResourceMixin):
         
 setattr(Page, 'child_nevow-forms.css', forms.defaultCSS)
 setattr(Page, 'child_tiny_mce', static.File('tiny_mce'))
-        
-        
+setattr(Page, 'child_webassets', static.File('assets'))
+
 root = Page()
 site = appserver.NevowSite(root, logPath='/dev/null')
 application = service.Application('forms2-test')
