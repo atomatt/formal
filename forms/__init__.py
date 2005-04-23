@@ -27,7 +27,7 @@ registerAdapter(TextInput, Float, iforms.IWidget)
 registerAdapter(Checkbox, Boolean, iforms.IWidget)
 registerAdapter(DatePartsInput, Date, iforms.IWidget)
 registerAdapter(TextInput, Time, iforms.IWidget)
-registerAdapter(FileUpload, File, iforms.IWidget)
+registerAdapter(FileUploadRaw, File, iforms.IWidget)
 from forms import util
 registerAdapter(util.SequenceKeyLabelAdapter, tuple, iforms.IKey)
 registerAdapter(util.SequenceKeyLabelAdapter, tuple, iforms.ILabel)

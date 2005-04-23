@@ -8,7 +8,6 @@ from nevow import inevow, rend, tags as T, util
 from forms import iforms, types, validation
 from forms.util import keytocssid
 
-
 # Marker object for args that are not supplied
 _UNSET = object()
         
@@ -308,7 +307,7 @@ class CheckboxMultiChoice(object):
         return self.original.validate(values)
 
 
-class FileUpload(object):
+class FileUploadRaw(object):
     __implements__ = iforms.IWidget,
     
     def __init__(self, original):
@@ -330,8 +329,61 @@ class FileUpload(object):
         return self.original.validate(value)
 
 
+class FileUpload(object):
+    __implements__ = iforms.IWidget,
+    
+    def __init__(self, original, fileHandler, preview=None):
+        self.original = original
+        self.fileHandler = fileHandler
+        self.preview = preview
+
+    def _namer(self, prefix):
+        def _(part):
+            return '%s__%s' % (prefix,part)
+        return _
+
+    def render(self, ctx, key, args, errors):
+        namer = self._namer(key)
+        if errors:
+            fileitem = inevow.IRequest(ctx).fields[key]
+            name = fileitem.filename.decode(util.getPOSTCharset(ctx))
+            if name:
+                value = name
+            else:
+               namer = self._namer(key)
+               value = args.get(namer('value'))[0]
+        else:
+            value = iforms.IStringConvertible(self.original).fromType(args.get(key))
+            
+        if value is not None:
+            name = self.fileHandler.getUrlForFile(value)
+            if name:
+                if self.preview == 'image':
+                    yield T.p[value,T.img(src=self.fileHandler.getUrlForFile(value))]
+                else:
+                    yield T.p[value]
+            else:
+                yield T.p[T.strong['nothing uploaded']]
+
+        yield T.input(name=namer('value'),value=value,type='hidden')
+        yield T.input(name=key, id=keytocssid(ctx.key),type='file')
+        
+    def processInput(self, ctx, key, args):
+        fileitem = inevow.IRequest(ctx).fields[key]
+        name = fileitem.filename.decode(util.getPOSTCharset(ctx))
+
+        if name:
+            value = self.fileHandler.storeFile( fileitem.file, name )
+        else:
+           namer = self._namer(key)
+           value = args.get(namer('value'))[0]
+
+        value = iforms.IStringConvertible(self.original).fromType(value)
+        return self.original.validate(value)
+
+
 __all__ = [
-    'Checkbox', 'CheckboxMultiChoice', 'CheckedPassword', 'FileUpload',
+    'Checkbox', 'CheckboxMultiChoice', 'CheckedPassword','FileUploadRaw', 'FileUpload',
     'Password', 'SelectChoice', 'TextArea', 'TextInput', 'DatePartsInput',
     'MMYYDatePartsInput',
     ]
