@@ -355,15 +355,14 @@ class FileUpload(object):
         else:
             value = iforms.IStringConvertible(self.original).fromType(args.get(key))
             
-        if value is not None:
-            name = self.fileHandler.getUrlForFile(value)
-            if name:
-                if self.preview == 'image':
-                    yield T.p[value,T.img(src=self.fileHandler.getUrlForFile(value))]
-                else:
-                    yield T.p[value]
+        name = self.fileHandler.getUrlForFile(value)
+        if name:
+            if self.preview == 'image':
+                yield T.p[value,T.img(src=self.fileHandler.getUrlForFile(value))]
             else:
-                yield T.p[T.strong['nothing uploaded']]
+                yield T.p[value]
+        else:
+            yield T.p[T.strong['nothing uploaded']]
 
         yield T.input(name=namer('value'),value=value,type='hidden')
         yield T.input(name=key, id=keytocssid(ctx.key),type='file')

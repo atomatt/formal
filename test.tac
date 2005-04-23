@@ -110,15 +110,17 @@ class Page(rend.Page, forms.ResourceMixin):
         return form
         
     def form_3(self, ctx):
+        ''' This test needs an 'assets' folder to store files in. The widget is passed a fileResource which 
+            is used to get a preview url and to save the upload results. commit/rollback type hooks will need
+            to be added to forms to allow 'clean' operation. -- tp
+        '''
         form = forms.Form(self._submit)
         form.addField('name', forms.String(required=True))
-        form.addField('file1', forms.String(), forms.widgetFactory(forms.FileUpload,fileResource(),preview='image'))
-        #form.addField('file2', forms.String(), forms.widgetFactory(forms.FileUpload,fileResource()))
-        #form.addField('file3', forms.String(), forms.widgetFactory(forms.FileUpload,fileResource()))
+        form.addField('file', forms.String(required=True), forms.widgetFactory(forms.FileUpload,fileResource(),preview='image'))
         form.addAction(self._submit)
-        form.data = {
-            'file1': 'product.jpg'
-            }
+        #form.data = {
+        #    'file': 'product.jpg'
+        #    }
         return form        
     
     def _submit(self, ctx, form, data):
