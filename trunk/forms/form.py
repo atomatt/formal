@@ -267,9 +267,9 @@ class FormRenderer(object):
             T.slot('items'),
             T.div(id=T.slot('fieldId'), pattern='item', _class=T.slot('class'))[
                 T.label(_for=T.slot('id'))[T.slot('label')],
-                T.slot('message'),
                 T.div(_class='inputs')[T.slot('inputs')],
-                T.slot('description')
+                T.slot('description'),
+                T.slot('message'),
                 ],
             T.div(class_='actions')[
                 T.slot('actions'),
