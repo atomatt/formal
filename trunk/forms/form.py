@@ -61,7 +61,7 @@ class Form(object):
         if callback is not None:
             self.callback = callback
     
-    def addField(self, name, type, widgetFactory=None, label=None, description=''):
+    def addField(self, name, type, widgetFactory=None, label=None, description=None):
         if self.items is None:
             self.items = []
         type.name = name
@@ -349,7 +349,7 @@ class FormRenderer(object):
             ctx.tag.fillSlots('label', label)
             ctx.tag.fillSlots('inputs', widget.render(ctx, name, formData, formErrors))
             ctx.tag.fillSlots('message', message)
-            ctx.tag.fillSlots('description', T.div(class_='description')[description])
+            ctx.tag.fillSlots('description', T.div(class_='description')[description or ''])
             
             return ctx.tag
             
