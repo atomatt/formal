@@ -4,7 +4,7 @@ Form implementation and high-level renderers.
 
 from twisted.internet import defer
 from nevow import context, flat, loaders, inevow, tags as T, url
-from nevow.compy import registerAdapter
+from nevow.compy import registerAdapter, Interface
 from forms import iforms, types, util, validation
 
 
@@ -242,14 +242,48 @@ class ResourceMixin(object):
         if r is not None:
             return r
         return url.URL.fromContext(ctx)
+
+
+class IKnownForms(Interface):
+    """Marker interface used to locate a dict instance containing the named
+    forms we know about during this request.
+    """
+    
+    
+class KnownForms(dict):
+    __implements__ = IKnownForms,
         
 
 def locateForm(ctx, name):
+    """Locate a form by name.
+    
+    Initially, a form is located by calling on an IFormFactory that is found
+    on the context. Once a form has been found, it is remembered in an
+    KnownForms instance for the lifetime of the request.
+    
+    This ensures that the form that is located during form processing will be
+    the same instance that is located when a form is rendered after validation
+    failure.
+    """
+    # Get hold of the request
+    request = inevow.IRequest(ctx)
+    # Find or create the known forms instance
+    knownForms = request.getComponent(IKnownForms)
+    if knownForms is None:
+        knownForms = KnownForms()
+        request.setComponent(IKnownForms, knownForms)
+    # See if the form is already known
+    form = knownForms.get(name)
+    if form is not None:
+        return form
+    # Not known yet, ask a form factory to create the form
     factory = iforms.IFormFactory(ctx)
     form = factory.formFactory(ctx, name)
     if form is None:
         raise Exception('Form %r not found'%name)
     form.name = name
+    # Make it a known
+    knownForms[name] = form
     return form
     
     
