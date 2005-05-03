@@ -4,9 +4,10 @@ certain format.
 """
 
 import mimetypes
-from nevow import inevow, rend, tags as T, util
+from nevow import inevow, rend, tags as T, util, url, static
 from forms import iforms, types, validation
 from forms.util import keytocssid
+from forms.form import formWidgetResource
 
 # Marker object for args that are not supplied
 _UNSET = object()
@@ -380,9 +381,164 @@ class FileUpload(object):
         value = iforms.IStringConvertible(self.original).fromType(value)
         return self.original.validate(value)
 
+class FileUploadWidget2(object):
+    __implements__ = iforms.IWidget,
+
+    FROM_RESOURCE_MANAGER = 'rm'
+    FROM_CONVERTIBLE = 'cf'
+
+    def _namer(self, prefix):
+        def _(part):
+            return '%s__%s' % (prefix,part)
+        return _
+
+    def __init__( self, original, convertibleFactory=None ): 
+        self.original = original
+        self.convertibleFactory = convertibleFactory()
+
+    def prepare( self, ctx, key, args, errors ):
+        """
+            Called before the render method to convert file.data into request 
+            format.
+
+            Not actually used, since I want to resolve the original data to a 
+            file only when the browser requests the data. This is done in the
+            getResource method.
+        """
+#        resource = args.get( key )
+
+#        if not errors and resource:
+#            resourceManager = iforms.IForm( ctx ).resourceManager
+#            resourceId = resourceManager.setResource( key, resource[1], resource[2] )
+#            resource[1].close()
+
+    def _blankField( self, field ):
+        """
+            Convert empty strings into None.
+        """
+        if field and field == '':
+            return None
+        return field
+    
+    def _getFromArgs( self, args, name ):
+        """
+            Get the first value of 'name' from 'args', or None.
+        """
+        rv = args.get( name )
+        if rv:
+            rv = rv[0]
+        return rv
+
+    def render(self, ctx, key, args, errors):
+        """
+            Render the data.
+
+            This either renders a link to the original file, if specified, and
+            no new file has been uploaded. Or a link to the uploaded file.
+
+            The request to get the data should be routed to the getResouce 
+            method.
+        """
+        form = iforms.IForm( ctx )
+
+        namer = self._namer( key )
+        resourceIdName = namer( 'resource_id' )
+        originalIdName = namer( 'original_id' )
+
+        # get the resource id first from the resource manager
+        # then try the request
+        resourceId = form.resourceManager.getResourceId( key )
+        if resourceId is None:
+            resourceId = self._getFromArgs( args, resourceIdName )
+        resourceId = self._blankField( resourceId )
+
+        # Get the original key from a hidden field in the request, 
+        # then try the request file.data initial data.
+        originalKey = self._getFromArgs( args, originalIdName )
+        if not errors and not originalKey:
+            originalKey = args.get( key )
+        originalKey = self._blankField( originalKey )
+
+        if resourceId:
+            # Have an uploaded file, so render a URL to the uploaded file
+            tmpURL = url.here.parentdir().child(formWidgetResource(form.name)).child(key).child( self.FROM_RESOURCE_MANAGER ).child( resourceId )
+            yield T.p['Current:',T.img(src=tmpURL)]
+        elif originalKey:
+            # The is no uploaded file, but there is an original, so render a
+            # URL to it
+            tmpURL = url.here.parentdir().child(formWidgetResource(form.name)).child(key).child( self.FROM_CONVERTIBLE ).child( originalKey )
+            yield T.p['Current:',T.img(src=tmpURL)]
+        else:
+            # No uploaded file, no original
+            yield T.p['Current:',T.strong['nothing uploaded']]
+
+        yield T.input(name=key, id=keytocssid(ctx.key),type='file')
+
+        # Id of uploaded file in the resource manager
+        yield T.input(name=resourceIdName,value=resourceId,type='hidden')
+        if originalKey:
+            # key of the original that can be used to get a file later
+            yield T.input(name=originalIdName,value=originalKey,type='hidden')
+
+    def processInput(self, ctx, key, args):
+        """
+            Process the request, storing any uploaded file in the 
+            resource manager.
+        """
+
+        resourceManager = iforms.IForm( ctx ).resourceManager
+    
+        # Ping the resource manager with any resource ids that I know
+        self._registerWithResourceManager( key, args, resourceManager ) 
+
+        fileitem = inevow.IRequest(ctx).fields[key]
+        name = fileitem.filename.decode(util.getPOSTCharset(ctx))
+        if name:
+            # Store the uploaded file in the resource manager
+            resourceManager.setResource( key, fileitem.file, name )
+
+        # Validating against an uploaded file. Should the fact that there is
+        # original file meet a required field validation?
+        return self.original.validate( resourceManager.getResourceForWidget( key ) )
+
+    def _registerWithResourceManager( self, key, args, resourceManager ):
+        """
+            If there is a resource id in the request, then let the 
+            resource manager know about it.
+        """
+        namer = self._namer( key )
+        resourceIdName = namer( 'resource_id' )
+
+        resourceId = self._getFromArgs( args, resourceIdName )
+        resourceId = self._blankField( resourceId )
+        if resourceId:
+            resourceManager.register( key, resourceId )
+
+    def getResource( self, ctx, segments ):
+        """
+            Return an Resource that contains the image, either a file
+            from the resource manager, or a data object from the convertible.
+        """
+
+        if segments[0] == self.FROM_RESOURCE_MANAGER:
+            # Resource manager can provide a path so return a static.File
+            # instance that points to the file
+            rm = iforms.IForm( ctx ).resourceManager
+            (mimetype, path, fileName) = rm.getResourcePath( segments[1] )
+            return static.File( path, mimetype ), []
+        elif segments[0] == self.FROM_CONVERTIBLE:
+            # The convertible can provide a file like object so create a
+            # static.Data instance with the data from the convertible.
+            (mimetype, filelike, fileName) = self.convertibleFactory.fromType( segments[1] )
+            data = filelike.read()
+            filelike.close()
+            return static.Data( data, mimetype ), []
+        else:
+            return None
+
 
 __all__ = [
-    'Checkbox', 'CheckboxMultiChoice', 'CheckedPassword','FileUploadRaw', 'FileUpload',
+    'Checkbox', 'CheckboxMultiChoice', 'CheckedPassword','FileUploadRaw', 'FileUpload', 'FileUploadWidget2',
     'Password', 'SelectChoice', 'TextArea', 'TextInput', 'DatePartsInput',
     'MMYYDatePartsInput',
     ]
