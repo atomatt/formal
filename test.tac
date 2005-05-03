@@ -2,9 +2,40 @@ from datetime import date, time
 from twisted.application import internet, service
 from nevow import appserver, compy, loaders, rend, static, tags as T
 import forms
+import os
+from shutil import copyfileobj
+import mimetypes
 
-from forms import iforms, htmleditor
+from forms import iforms, htmleditor, converters
 from fileresource import fileResource
+
+class KeyToFileConverter( object ):
+    __implements__ = iforms.IFileConvertible,
+
+    def fromType( self, value ):
+        """
+            Given a string generate a (mimetype, filelike, fileName) or None
+        """
+        if not value or value == '':
+            return None
+
+        mimetype = mimetypes.guess_type( value )
+        filelike = open(os.path.join('images',value),'r')
+        return (mimetype, filelike, value)
+
+    def toType( self, value ):
+        """
+            Given a (mimetype, filelike, filename) tuple return a string
+        """
+        if not value:
+            return None
+
+        (mimetype, filelike,fileName) = value;
+        target = file(os.path.join('images',fileName),'w')
+        copyfileobj( filelike, target )
+        target.close()
+        filelike.close()
+        return fileName
 
 
 dates = [
@@ -50,8 +81,6 @@ people = [
     Person(1, 'Matt', 'Goodall'),
     Person(2, 'Tim', 'Parkin'),
     ]
-
-
 
 class Page(rend.Page, forms.ResourceMixin):
     
@@ -122,6 +151,16 @@ class Page(rend.Page, forms.ResourceMixin):
         #    'file': 'product.jpg'
         #    }
         return form        
+
+    def form_4(self, ctx):
+        form = forms.Form(self._submit)
+        form.addField('name', forms.String(required=True))
+        form.addField('file', forms.File(required=True), forms.widgetFactory(forms.FileUploadWidget2, convertibleFactory=KeyToFileConverter))
+        form.addAction(self._submit)
+#        form.data = {
+#            'file': 'dm.gif'
+#            }
+        return form        
     
     def _submit(self, ctx, form, data):
         print form
@@ -130,10 +169,12 @@ class Page(rend.Page, forms.ResourceMixin):
             raise forms.FieldError('Failed the field!', 'string')
         if data.get('string') == 'formerror':
             raise forms.FormError('Failed the form!')
-        
+
 setattr(Page, 'child_nevow-forms.css', forms.defaultCSS)
 setattr(Page, 'child_tiny_mce', static.File('tiny_mce'))
 setattr(Page, 'child_webassets', static.File('assets'))
+setattr(Page, 'child_images', static.File('images'))
+setattr(Page, 'child_uploads', static.File('uploads'))
 
 root = Page()
 site = appserver.NevowSite(root, logPath='/dev/null')
