@@ -3,13 +3,15 @@ Form implementation and high-level renderers.
 """
 
 from twisted.internet import defer
-from nevow import context, flat, loaders, inevow, tags as T, url
+from nevow import context, flat, loaders, inevow, tags as T, url, static
 from nevow.compy import registerAdapter, Interface
 from forms import iforms, types, util, validation
+from resourcemanager import ResourceManager
 
 
 ACTION_SEP = '!!'
 FORM_ACTION = '__nevow_form__'
+WIDGET_RESOURCE = '__widget_res__'
 
 
 def renderForm(name):
@@ -18,6 +20,7 @@ def renderForm(name):
         
         # Find the form
         form = locateForm(ctx, name)
+        ctx.remember(form, iforms.IForm)
         
         # Create a keyed tag that will render the form when flattened.
         tag = T.invisible(key=name)[inevow.IRenderer(form)]
@@ -50,6 +53,8 @@ class Action(object):
 
 
 class Form(object):
+
+    __implements__ = iforms.IForm,
     
     callback = None
     items = None
@@ -60,6 +65,7 @@ class Form(object):
     def __init__(self, callback=None):
         if callback is not None:
             self.callback = callback
+        self.resourceManager = ResourceManager()
     
     def addField(self, name, type, widgetFactory=None, label=None, description=None):
         if self.items is None:
@@ -141,8 +147,19 @@ class Form(object):
                 
         if errors:
             return errors
+
+        # toType
+        for name, type, label, description in self.items:
+            widget = self.widgetForItem(name)
+            if hasattr( widget, 'convertibleFactory' ):
+                data[name] = widget.convertibleFactory.toType( data[name] )
+
+        def _clearUpResources( r ):
+            self.resourceManager.clearUpResources()
+            return r
             
         d = defer.maybeDeferred(callback, ctx, self, data)
+        d.addCallback( _clearUpResources )
         d.addCallbacks(self._cbFormProcessed, self._cbFormProcessingFailed, callbackArgs=[ctx], errbackArgs=[ctx])
         return d
         
@@ -222,19 +239,28 @@ class ResourceMixin(object):
             return s.formFactory(ctx, name)
             
     def locateChild(self, ctx, segments):
-        
+
         # Leave now if this it not meant for me.
-        if not segments[0].startswith(FORM_ACTION):
+        if not segments[0].startswith(FORM_ACTION) and not segments[0].startswith(WIDGET_RESOURCE):
             return super(ResourceMixin, self).locateChild(ctx, segments)
             
         # Find the form name, the form and remember them.
         formName = segments[0].split(ACTION_SEP)[1]
         form = locateForm(ctx, formName)
-        
+        ctx.remember(form, iforms.IForm)
+
+        # Serve up file from the resource manager
+        if segments[0].startswith( WIDGET_RESOURCE ):
+            return self._fileFromWidget( ctx, form, segments[1:] )
+
         # Process the form.
         d = defer.maybeDeferred(form.process, ctx)
         d.addCallback(self._formProcessed, ctx)
         return d
+
+    def _fileFromWidget( self, ctx, form, segments ):
+        widget = form.widgetForItem( segments[0] )
+        return widget.getResource( ctx, segments[1:] )
         
     def _formProcessed(self, r, ctx):
         if isinstance(r, FormErrors):
@@ -289,6 +315,9 @@ def locateForm(ctx, name):
     
 def formAction(name):
     return '%s%s%s' % (FORM_ACTION, ACTION_SEP, name)
+
+def formWidgetResource(name):
+    return '%s%s%s' % (WIDGET_RESOURCE, ACTION_SEP, name)
 
     
 class FormRenderer(object):
@@ -376,6 +405,13 @@ class FormRenderer(object):
             else:
                 classes.append('error')
                 message = T.div(class_='message')[str(error)]
+
+            # fromType
+#            if formErrors is None and hasattr( widget, 'convertibleFactory' ):
+#                formData[name] = widget.convertibleFactory.fromType( formData.get( name ) )
+
+#            if hasattr( widget, 'prepare' ):
+#                widget.prepare( ctx, name, formData, formErrors )
             
             ctx.tag.fillSlots('class', ' '.join(classes))
             ctx.tag.fillSlots('fieldId', '%s-field'%util.keytocssid(ctx.key))
