@@ -188,10 +188,9 @@ class File(object):
             self.missing = missing
         
     def validate(self, value):
-        print value[0]
-        if self.required and value[0] == '':
+        if self.required and value is None:
             raise validation.FieldRequiredError('required field')
-        if value[0] == '':
+        if value is None:
             value = self.missing
         return value
 
