@@ -3,9 +3,8 @@ Widgets are small components that render form fields for inputing data in a
 certain format.
 """
 
-import mimetypes
-from nevow import inevow, rend, tags as T, util, url, static
-from forms import iforms, types, validation
+from nevow import inevow, tags as T, util, url, static
+from forms import iforms, validation
 from forms.util import keytocssid
 from forms.form import formWidgetResource
 

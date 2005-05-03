@@ -2,7 +2,7 @@
 IConvertible protocol.
 """
 
-from datetime import date, time, datetime
+from datetime import date, time
 from nevow.compy import Adapter
 from forms import iforms, validation
 
@@ -65,7 +65,7 @@ class BooleanToStringConverter(Adapter):
         if not value:
             return None
         if value not in ('True', 'False'):
-            raise FieldValidationError('%r should be either True or False')
+            raise validation.FieldValidationError('%r should be either True or False')
         return value == 'True'
     
     
