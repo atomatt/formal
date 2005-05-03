@@ -3,9 +3,9 @@ Form implementation and high-level renderers.
 """
 
 from twisted.internet import defer
-from nevow import context, flat, loaders, inevow, tags as T, url, static
+from nevow import context, loaders, inevow, tags as T, url
 from nevow.compy import registerAdapter, Interface
-from forms import iforms, types, util, validation
+from forms import iforms, util, validation
 from resourcemanager import ResourceManager
 
 

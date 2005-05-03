@@ -1,4 +1,4 @@
-from datetime import date, time, datetime
+from datetime import date, time
 from twisted.trial import unittest
 import forms
 
