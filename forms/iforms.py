@@ -64,6 +64,9 @@ class IDateTupleConvertible(IConvertible):
 class IFileConvertible(IConvertible):
     pass
 
+class ISequenceConvertible(IConvertible):
+    pass
+
 class IForm( Interface ):
     pass
     
