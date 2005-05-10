@@ -3,6 +3,7 @@ Form types.
 """
 
 from forms import iforms, validation
+from zope.interface import implements
 
 """
   - DateTime
@@ -13,7 +14,7 @@ from forms import iforms, validation
 
 class String(object):
     
-    __implements__ = iforms.IType,
+    implements( iforms.IType )
     
     name = None
     required = False
@@ -42,7 +43,7 @@ class String(object):
         
 class Integer(object):
     
-    __implements__ = iforms.IType,
+    implements( iforms.IType )
     
     name = None
     required = False
@@ -64,7 +65,7 @@ class Integer(object):
         
 class Float(object):
     
-    __implements__ = iforms.IType,
+    implements( iforms.IType )
     
     name = None
     required = False
@@ -86,7 +87,7 @@ class Float(object):
         
 class Boolean(object):
     
-    __implements__ = iforms.IType,
+    implements( iforms.IType )
     
     name = None
     required = False
@@ -108,7 +109,7 @@ class Boolean(object):
         
 class Date(object):
     
-    __implements__ = iforms.IType,
+    implements( iforms.IType )
     
     name = None
     required = None
@@ -130,7 +131,7 @@ class Date(object):
         
 class Time(object):
     
-    __implements__ = iforms.IType,
+    implements( iforms.IType )
     
     name = None
     required = None 
@@ -151,7 +152,7 @@ class Time(object):
         
         
 class Sequence(object):
-    __implements__ = iforms.IType,
+    implements( iforms.IType )
     
     name = None
     required = None 
@@ -175,7 +176,7 @@ class Sequence(object):
 
 
 class File(object):
-    __implements__ = iforms.IType,
+    implements( iforms.IType )
     
     name = None
     required = False
@@ -193,6 +194,7 @@ class File(object):
         if value is None:
             value = self.missing
         return value
+
 
 
 __all__ = [
