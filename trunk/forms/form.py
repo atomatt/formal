@@ -7,6 +7,7 @@ from nevow import context, loaders, inevow, tags as T, url
 from nevow.compy import registerAdapter, Interface
 from forms import iforms, util, validation
 from resourcemanager import ResourceManager
+from zope.interface import implements
 
 
 ACTION_SEP = '!!'
@@ -54,7 +55,7 @@ class Action(object):
 
 class Form(object):
 
-    __implements__ = iforms.IForm,
+    implements( iforms.IForm )
     
     callback = None
     items = None
@@ -189,7 +190,7 @@ class Form(object):
         
                 
 class FormErrors(object):
-    __implements__ = iforms.IFormErrors,
+    implements( iforms.IFormErrors )
     
     errors = None
     
@@ -217,7 +218,7 @@ class FormErrors(object):
         
         
 class ResourceMixin(object):
-    __implements__ = iforms.IFormFactory,
+    implements( iforms.IFormFactory )
     
     def __init__(self, *a, **k):
         super(ResourceMixin, self).__init__(*a, **k)
@@ -277,7 +278,7 @@ class IKnownForms(Interface):
     
     
 class KnownForms(dict):
-    __implements__ = IKnownForms,
+    implements( IKnownForms )
         
 
 def locateForm(ctx, name):
@@ -321,7 +322,7 @@ def formWidgetResource(name):
 
     
 class FormRenderer(object):
-    __implements__ = inevow.IRenderer,
+    implements( inevow.IRenderer )
     
     loader = loaders.stan(
         T.form(id=T.slot('id'), action=T.slot('action'), class_='nevow-form', method='post', enctype='multipart/form-data', **{'accept-charset':'utf-8'})[
@@ -439,7 +440,7 @@ class FormRenderer(object):
         
         
 class NoAddSlashHack:
-    __implements__ = inevow.IResource,
+    implements( inevow.IResource )
     
     def __init__(self, wrapped):
         self.wrapped = wrapped

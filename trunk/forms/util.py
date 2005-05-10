@@ -1,4 +1,5 @@
 from forms import iforms
+from zope.interface import implements
 
 
 def titleFromName(name):
@@ -30,7 +31,7 @@ def keytocssid(key):
     
         
 class SequenceKeyLabelAdapter(object):
-    __implements__ = iforms.IKey, iforms.ILabel
+    implements( iforms.IKey, iforms.ILabel )
     
     def __init__(self, original):
         self.original = original
