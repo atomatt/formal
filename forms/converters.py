@@ -5,10 +5,11 @@ IConvertible protocol.
 from datetime import date, time
 from nevow.compy import Adapter
 from forms import iforms, validation
+from zope.interface import implements
 
 
 class NullConverter(Adapter):
-    __implements__ = iforms.IStringConvertible,
+    implements( iforms.IStringConvertible )
     
     def fromType(self, value):
         if value is None:
@@ -22,7 +23,7 @@ class NullConverter(Adapter):
 
 
 class NumberToStringConverter(Adapter):
-    __implements__ = iforms.IStringConvertible,
+    implements( iforms.IStringConvertible )
     
     def fromType(self, value):
         if value is None:
@@ -50,7 +51,7 @@ class FloatToStringConverter(NumberToStringConverter):
 
 
 class BooleanToStringConverter(Adapter):
-    __implements__ = iforms.IStringConvertible,
+    implements( iforms.IStringConvertible )
     
     def fromType(self, value):
         if value is None:
@@ -70,7 +71,7 @@ class BooleanToStringConverter(Adapter):
     
     
 class DateToStringConverter(Adapter):
-    __implements__ = iforms.IStringConvertible,
+    implements( iforms.IStringConvertible )
     
     def fromType(self, value):
         if value is None:
@@ -97,7 +98,7 @@ class DateToStringConverter(Adapter):
 
 
 class TimeToStringConverter(Adapter):
-    __implements__ = iforms.IStringConvertible,
+    implements( iforms.IStringConvertible )
     
     def fromType(self, value):
         if value is None:
@@ -133,7 +134,7 @@ class TimeToStringConverter(Adapter):
         
         
 class DateToDateTupleConverter(Adapter):
-    __implements__ = iforms.IDateTupleConvertible,
+    implements( iforms.IDateTupleConvertible )
     
     def fromType(self, value):
         if value is None:

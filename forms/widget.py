@@ -7,13 +7,14 @@ from nevow import inevow, tags as T, util, url, static
 from forms import iforms, validation
 from forms.util import keytocssid
 from forms.form import formWidgetResource
+from zope.interface import implements
 
 # Marker object for args that are not supplied
 _UNSET = object()
         
         
 class TextInput(object):
-    __implements__ = iforms.IWidget,
+    implements( iforms.IWidget )
     
     inputType = 'text'
     showValueOnFailure = True
@@ -37,7 +38,7 @@ class TextInput(object):
         
         
 class Checkbox(object):
-    __implements__ = iforms.IWidget,
+    implements( iforms.IWidget )
         
     def __init__(self, original):
         self.original = original
@@ -66,7 +67,7 @@ class Password(TextInput):
     
     
 class TextArea(object):
-    __implements__ = iforms.IWidget,
+    implements( iforms.IWidget )
     
     def __init__(self, original):
         self.original = original
@@ -85,7 +86,7 @@ class TextArea(object):
         
         
 class CheckedPassword(object):
-    __implements__ = iforms.IWidget,
+    implements( iforms.IWidget )
     
     def __init__(self, original):
         self.original = original
@@ -115,7 +116,7 @@ class CheckedPassword(object):
         
         
 class SelectChoice(object):
-    __implements__ = iforms.IWidget,
+    implements( iforms.IWidget )
     
     options = None
     noneOption = ('', '')
@@ -159,7 +160,7 @@ class SelectChoice(object):
         
         
 class DatePartsInput(object):
-    __implements__ = iforms.IWidget,
+    implements( iforms.IWidget )
     
     dayFirst = False
     
@@ -208,7 +209,7 @@ class DatePartsInput(object):
 
 
 class MMYYDatePartsInput(object):
-    __implements__ = iforms.IWidget,
+    implements( iforms.IWidget )
     
     cutoffYear = 70
     
@@ -263,7 +264,7 @@ class MMYYDatePartsInput(object):
         return self.original.validate(value)
         
 class CheckboxMultiChoice(object):
-    __implements__ = iforms.IWidget,
+    implements( iforms.IWidget )
     
     options = None
     noneOption = ('', '')
@@ -308,7 +309,7 @@ class CheckboxMultiChoice(object):
 
 
 class FileUploadRaw(object):
-    __implements__ = iforms.IWidget,
+    implements( iforms.IWidget )
     
     def __init__(self, original):
         self.original = original
@@ -330,7 +331,7 @@ class FileUploadRaw(object):
 
 
 class FileUpload(object):
-    __implements__ = iforms.IWidget,
+    implements( iforms.IWidget )
     
     def __init__(self, original, fileHandler, preview=None):
         self.original = original
@@ -381,7 +382,7 @@ class FileUpload(object):
         return self.original.validate(value)
 
 class FileUploadWidget2(object):
-    __implements__ = iforms.IWidget,
+    implements( iforms.IWidget )
 
     FROM_RESOURCE_MANAGER = 'rm'
     FROM_CONVERTIBLE = 'cf'

@@ -1,5 +1,6 @@
 from nevow import tags as T
 from forms import iforms
+from zope.interface import implements
 
 
 tinyMCEGlue = T.xml("""
@@ -18,7 +19,7 @@ tinyMCEGlue = T.xml("""
     
 
 class TinyMCE(object):
-    __implements__ = iforms.IWidget,
+    implements( iforms.IWidget )
     
     def __init__(self, original):
         self.original = original
