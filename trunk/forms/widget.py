@@ -8,6 +8,7 @@ from forms import iforms, validation
 from forms.util import keytocssid
 from forms.form import formWidgetResource
 from zope.interface import implements
+from twisted.internet import defer
 
 # Marker object for args that are not supplied
 _UNSET = object()
@@ -459,18 +460,21 @@ class FileUploadWidget2(object):
             originalKey = args.get( key )
         originalKey = self._blankField( originalKey )
 
+
+        urlFactory = url.URL.fromContext( ctx )
+
         if resourceId:
             # Have an uploaded file, so render a URL to the uploaded file
-            tmpURL = url.here.parentdir().child(formWidgetResource(form.name)).child(key).child( self.FROM_RESOURCE_MANAGER ).child( resourceId )
-            yield T.p['Current:',T.img(src=tmpURL)]
+            tmpURL = urlFactory.child(formWidgetResource(form.name)).child(key).child( self.FROM_RESOURCE_MANAGER ).child( resourceId )
+            yield T.img(src=tmpURL)
         elif originalKey:
             # The is no uploaded file, but there is an original, so render a
             # URL to it
-            tmpURL = url.here.parentdir().child(formWidgetResource(form.name)).child(key).child( self.FROM_CONVERTIBLE ).child( originalKey )
-            yield T.p['Current:',T.img(src=tmpURL)]
+            tmpURL = urlFactory.child(formWidgetResource(form.name)).child(key).child( self.FROM_CONVERTIBLE ).child( originalKey )
+            yield T.img(src=tmpURL)
         else:
             # No uploaded file, no original
-            yield T.p['Current:',T.strong['nothing uploaded']]
+            yield T.strong['Nothing uploaded']
 
         yield T.input(name=key, id=keytocssid(ctx.key),type='file')
 
@@ -529,10 +533,16 @@ class FileUploadWidget2(object):
         elif segments[0] == self.FROM_CONVERTIBLE:
             # The convertible can provide a file like object so create a
             # static.Data instance with the data from the convertible.
-            (mimetype, filelike, fileName) = self.convertibleFactory.fromType( segments[1] )
-            data = filelike.read()
-            filelike.close()
-            return static.Data( data, mimetype ), []
+
+            def _( result ):
+                mimetype, filelike, fileName = result
+                data = filelike.read()
+                filelike.close()
+                return static.Data( data, mimetype ), []
+
+            d = defer.maybeDeferred( self.convertibleFactory.fromType, segments[1], context=ctx )
+            d.addCallback( _ )
+            return d
         else:
             return None
 
