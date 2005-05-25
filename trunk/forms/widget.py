@@ -460,17 +460,19 @@ class FileUploadWidget2(object):
             originalKey = args.get( key )
         originalKey = self._blankField( originalKey )
 
-
-        urlFactory = url.URL.fromContext( ctx )
+        if errors:
+            urlFactory = url.URL.fromContext( ctx ).sibling
+        else:
+            urlFactory = url.URL.fromContext( ctx ).child
 
         if resourceId:
             # Have an uploaded file, so render a URL to the uploaded file
-            tmpURL = urlFactory.child(formWidgetResource(form.name)).child(key).child( self.FROM_RESOURCE_MANAGER ).child( resourceId )
+            tmpURL = urlFactory(formWidgetResource(form.name)).child(key).child( self.FROM_RESOURCE_MANAGER ).child( resourceId )
             yield T.img(src=tmpURL)
         elif originalKey:
             # The is no uploaded file, but there is an original, so render a
             # URL to it
-            tmpURL = urlFactory.child(formWidgetResource(form.name)).child(key).child( self.FROM_CONVERTIBLE ).child( originalKey )
+            tmpURL = urlFactory(formWidgetResource(form.name)).child(key).child( self.FROM_CONVERTIBLE ).child( originalKey )
             yield T.img(src=tmpURL)
         else:
             # No uploaded file, no original
