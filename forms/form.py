@@ -19,27 +19,32 @@ def renderForm(name):
     
     def _(ctx, data):
         
-        # Find the form
-        form = locateForm(ctx, name)
-        ctx.remember(form, iforms.IForm)
-        
-        # Create a keyed tag that will render the form when flattened.
-        tag = T.invisible(key=name)[inevow.IRenderer(form)]
-        
-        # Create a new context, referencing the above tag, so that we don't
-        # pollute the current context with anything the form needs during
-        # rendering.
-        ctx = context.WovenContext(parent=ctx, tag=tag)
-        
-        # Find errors for *this* form and remember things on the context
-        errors = iforms.IFormErrors(ctx, None)
-        if errors is not None and errors.formName == name:
-            ctx.remember(errors.data, iforms.IFormData)
-        else:
-            ctx.remember(None, iforms.IFormErrors)
-            ctx.remember(form.data or {}, iforms.IFormData)
+        def _processForm( form, ctx, name ):
+            # Find the form
+            ctx.remember(form, iforms.IForm)
             
-        return ctx
+            # Create a keyed tag that will render the form when flattened.
+            tag = T.invisible(key=name)[inevow.IRenderer(form)]
+            
+            # Create a new context, referencing the above tag, so that we don't
+            # pollute the current context with anything the form needs during
+            # rendering.
+            ctx = context.WovenContext(parent=ctx, tag=tag)
+            
+            # Find errors for *this* form and remember things on the context
+            errors = iforms.IFormErrors(ctx, None)
+            if errors is not None and errors.formName == name:
+                ctx.remember(errors.data, iforms.IFormData)
+            else:
+                ctx.remember(None, iforms.IFormErrors)
+                ctx.remember(form.data or {}, iforms.IFormData)
+                
+            return ctx
+
+        d = defer.succeed( ctx )
+        d.addCallback( locateForm, name )
+        d.addCallback( _processForm, ctx, name )
+        return d
         
     return _
 
@@ -247,7 +252,12 @@ class ResourceMixin(object):
             
         # Find the form name, the form and remember them.
         formName = segments[0].split(ACTION_SEP)[1]
-        form = locateForm(ctx, formName)
+        d = defer.succeed( ctx )
+        d.addCallback( locateForm, formName )
+        d.addCallback( self._processForm, ctx, segments )
+        return d
+
+    def _processForm( self, form, ctx, segments ):
         ctx.remember(form, iforms.IForm)
 
         # Serve up file from the resource manager
@@ -258,6 +268,7 @@ class ResourceMixin(object):
         d = defer.maybeDeferred(form.process, ctx)
         d.addCallback(self._formProcessed, ctx)
         return d
+
 
     def _fileFromWidget( self, ctx, form, segments ):
         widget = form.widgetForItem( segments[0] )
@@ -305,15 +316,20 @@ def locateForm(ctx, name):
         return form
     # Not known yet, ask a form factory to create the form
     factory = iforms.IFormFactory(ctx)
-    form = factory.formFactory(ctx, name)
-    if form is None:
-        raise Exception('Form %r not found'%name)
-    form.name = name
-    # Make it a known
-    knownForms[name] = form
-    return form
-    
-    
+
+    def cacheForm( form, name ):
+        if form is None:
+            raise Exception('Form %r not found'%name)
+        form.name = name
+        # Make it a known
+        knownForms[name] = form
+        return form
+
+    d = defer.succeed( None )
+    d.addCallback( lambda r : factory.formFactory( ctx, name ) )
+    d.addCallback( cacheForm, name )
+    return d
+
 def formAction(name):
     return '%s%s%s' % (FORM_ACTION, ACTION_SEP, name)
 
