@@ -155,7 +155,7 @@ class Page(rend.Page, forms.ResourceMixin):
     def form_4(self, ctx):
         form = forms.Form(self._submit)
         form.addField('name', forms.String(required=True))
-        form.addField('file', forms.File(required=True), forms.widgetFactory(forms.FileUploadWidget2, convertibleFactory=KeyToFileConverter))
+        form.addField('file', forms.File(required=True), forms.widgetFactory(forms.FileUploadWidget, convertibleFactory=KeyToFileConverter))
         form.addAction(self._submit)
 #        form.data = {
 #            'file': 'dm.gif'
