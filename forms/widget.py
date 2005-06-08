@@ -382,7 +382,7 @@ class FileUpload(object):
         value = iforms.IStringConvertible(self.original).fromType(value)
         return self.original.validate(value)
 
-class FileUploadWidget2(object):
+class FileUploadWidget(object):
     implements( iforms.IWidget )
 
     FROM_RESOURCE_MANAGER = 'rm'
@@ -393,25 +393,10 @@ class FileUploadWidget2(object):
             return '%s__%s' % (prefix,part)
         return _
 
-    def __init__( self, original, convertibleFactory=None ): 
+    def __init__( self, original, convertibleFactory=None, originalKeyIsURL=False ): 
         self.original = original
         self.convertibleFactory = convertibleFactory()
-
-    def prepare( self, ctx, key, args, errors ):
-        """
-            Called before the render method to convert file.data into request 
-            format.
-
-            Not actually used, since I want to resolve the original data to a 
-            file only when the browser requests the data. This is done in the
-            getResource method.
-        """
-#        resource = args.get( key )
-
-#        if not errors and resource:
-#            resourceManager = iforms.IForm( ctx ).resourceManager
-#            resourceId = resourceManager.setResource( key, resource[1], resource[2] )
-#            resource[1].close()
+        self.originalKeyIsURL = originalKeyIsURL
 
     def _blankField( self, field ):
         """
@@ -468,15 +453,18 @@ class FileUploadWidget2(object):
         if resourceId:
             # Have an uploaded file, so render a URL to the uploaded file
             tmpURL = urlFactory(formWidgetResource(form.name)).child(key).child( self.FROM_RESOURCE_MANAGER ).child( resourceId )
-            yield T.img(src=tmpURL)
+            yield T.p[T.img(src=tmpURL)]
         elif originalKey:
             # The is no uploaded file, but there is an original, so render a
             # URL to it
-            tmpURL = urlFactory(formWidgetResource(form.name)).child(key).child( self.FROM_CONVERTIBLE ).child( originalKey )
-            yield T.img(src=tmpURL)
+            if self.originalKeyIsURL:
+                tmpURL = originalKey
+            else:
+                tmpURL = urlFactory(formWidgetResource(form.name)).child(key).child( self.FROM_CONVERTIBLE ).child( originalKey )
+            yield T.p[T.img(src=tmpURL)]
         else:
             # No uploaded file, no original
-            yield T.strong['Nothing uploaded']
+            yield T.p[T.strong['Nothing uploaded']]
 
         yield T.input(name=key, id=keytocssid(ctx.key),type='file')
 
@@ -550,7 +538,7 @@ class FileUploadWidget2(object):
 
 
 __all__ = [
-    'Checkbox', 'CheckboxMultiChoice', 'CheckedPassword','FileUploadRaw', 'FileUpload', 'FileUploadWidget2',
+    'Checkbox', 'CheckboxMultiChoice', 'CheckedPassword','FileUploadRaw', 'FileUpload', 'FileUploadWidget',
     'Password', 'SelectChoice', 'TextArea', 'TextInput', 'DatePartsInput',
     'MMYYDatePartsInput',
     ]
