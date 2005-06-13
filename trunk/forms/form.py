@@ -145,7 +145,8 @@ class Form(object):
         data = {}
         for name, type, label, description in self.items:
             try:
-                data[name] = self.widgetForItem(name).processInput(ctx, name, args)
+                if not type.immutable:
+                    data[name] = self.widgetForItem(name).processInput(ctx, name, args)
             except validation.FieldError, e:
                 if e.fieldName is None:
                     e.fieldName = name
@@ -157,8 +158,8 @@ class Form(object):
         # toType
         for name, type, label, description in self.items:
             widget = self.widgetForItem(name)
-            if hasattr( widget, 'convertibleFactory' ):
-                data[name] = widget.convertibleFactory.toType( data[name] )
+            if hasattr( widget, 'convertibleFactory' ) and not type.immutable:
+                data[name] = widget.convertibleFactory.toType( data.get(name) )
 
         def _clearUpResources( r ):
             self.resourceManager.clearUpResources()
@@ -440,18 +441,15 @@ class FormRenderer(object):
                 classes.append('error')
                 message = T.div(class_='message')[str(error)]
 
-            # fromType
-#            if formErrors is None and hasattr( widget, 'convertibleFactory' ):
-#                formData[name] = widget.convertibleFactory.fromType( formData.get( name ) )
-
-#            if hasattr( widget, 'prepare' ):
-#                widget.prepare( ctx, name, formData, formErrors )
-            
             ctx.tag.fillSlots('class', ' '.join(classes))
             ctx.tag.fillSlots('fieldId', '%s-field'%util.keytocssid(ctx.key))
             ctx.tag.fillSlots('id', util.keytocssid(ctx.key))
             ctx.tag.fillSlots('label', label)
-            ctx.tag.fillSlots('inputs', widget.render(ctx, name, formData, formErrors))
+            if type.immutable:
+                render = widget.renderImmutable
+            else:
+                render = widget.render
+            ctx.tag.fillSlots('inputs', render(ctx, name, formData, formErrors))
             ctx.tag.fillSlots('message', message)
             ctx.tag.fillSlots('description', T.div(class_='description')[description or ''])
             

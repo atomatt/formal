@@ -22,7 +22,13 @@ class TextInput(object):
     
     def __init__(self, original):
         self.original = original
-    
+
+    def _renderTag(self, ctx, key, value, disabled):
+        tag=T.input(type=self.inputType, name=key, id=keytocssid(ctx.key), value=value)
+        if disabled:
+            tag(class_='disabled', disabled='disabled')
+        return tag
+
     def render(self, ctx, key, args, errors):
         if errors:
             value = args.get(key, [''])[0]
@@ -30,29 +36,41 @@ class TextInput(object):
             value = iforms.IStringConvertible(self.original).fromType(args.get(key))
         if not self.showValueOnFailure:
             value = None
-        return T.input(type=self.inputType, name=key, id=keytocssid(ctx.key), value=value)
-        
+        return self._renderTag(ctx, key, value, False)
+
+    def renderImmutable(self, ctx, key, args, errors):
+        value = iforms.IStringConvertible(self.original).fromType(args.get(key))
+        return self._renderTag(ctx, key, value, True)
+
     def processInput(self, ctx, key, args):
         value = args.get(key, [''])[0].decode(util.getPOSTCharset(ctx))
         value = iforms.IStringConvertible(self.original).toType(value)
         return self.original.validate(value)
-        
         
 class Checkbox(object):
     implements( iforms.IWidget )
         
     def __init__(self, original):
         self.original = original
+
+    def _renderTag(self, ctx, key, value, disabled):
+        tag = T.input(type='checkbox', name=key, id=keytocssid(ctx.key), value='True')
+        if value == 'True':
+            tag(checked='checked')
+        if disabled:
+            tag(class_='disabled', disabled='disabled')
+        return tag
     
     def render(self, ctx, key, args, errors):
         if errors:
             value = args.get(key, [''])[0]
         else:
             value = iforms.IBooleanConvertible(self.original).fromType(args.get(key))
-        tag = T.input(type='checkbox', name=key, id=keytocssid(ctx.key), value='True')
-        if value == 'True':
-            tag(checked='checked')
-        return tag
+        return self._renderTag(ctx, key, value, False)
+
+    def renderImmutable(self, ctx, key, args, errors):
+        value = iforms.IBooleanConvertible(self.original).fromType(args.get(key))
+        return self._renderTag(ctx, key, value, True)
         
     def processInput(self, ctx, key, args):
         value = args.get(key, [None])[0]
@@ -72,13 +90,23 @@ class TextArea(object):
     
     def __init__(self, original):
         self.original = original
+
+    def _renderTag(self, ctx, key, value, disabled):
+        tag=T.textarea(name=key, id=keytocssid(ctx.key))[value or '']
+        if disabled:
+            tag(class_='disabled', disabled='disabled')
+        return tag
         
     def render(self, ctx, key, args, errors):
         if errors:
             value = args.get(key, [''])[0]
         else:
             value = iforms.IStringConvertible(self.original).fromType(args.get(key))
-        return T.textarea(name=key, id=keytocssid(ctx.key))[value or '']
+        return self._renderTag(ctx, key, value, False)
+
+    def renderImmutable(self, ctx, key, args, errors):
+        value = iforms.IStringConvertible(self.original).fromType(args.get(key))
+        return self._renderTag(ctx, key, value, True)
         
     def processInput(self, ctx, key, args):
         value = args.get(key, [''])[0].decode(util.getPOSTCharset(ctx))
@@ -103,6 +131,15 @@ class CheckedPassword(object):
             T.label(for_='%s__confirm'%keytocssid(ctx.key))[' Confirm '],
             T.input(type='password', name=key, id='%s__confirm'%keytocssid(ctx.key), value=values[1]),
             ]
+
+    def renderImmutable(self, ctx, key, args, errors):
+        values = ('', '')
+        return [
+            T.input(type='password', name=key, id=keytocssid(ctx.key), value=values[0], class_='disabled', disabled='disabled'),
+            T.br,
+            T.label(for_='%s__confirm'%keytocssid(ctx.key))[' Confirm '],
+            T.input(type='password', name=key, id='%s__confirm'%keytocssid(ctx.key), value=values[1], class_='disabled', disabled='disabled')
+        ]
         
     def processInput(self, ctx, key, args):
         pwds = [pwd for pwd in args.get(key, [])]
@@ -128,16 +165,9 @@ class SelectChoice(object):
             self.options = options
         if noneOption is not _UNSET:
             self.noneOption = noneOption
-    
-    def render(self, ctx, key, args, errors):
-        
-        converter = iforms.IStringConvertible(self.original)
-        
-        if errors:
-            value = args.get(key, [''])[0]
-        else:
-            value = converter.fromType(args.get(key))
-            
+
+    def _renderTag(self, ctx, key, value, converter, disabled):
+
         def renderOptions(ctx, data):
             if self.noneOption is not None:
                 yield T.option(value=iforms.IKey(self.noneOption).key())[iforms.ILabel(self.noneOption).label()]
@@ -152,7 +182,28 @@ class SelectChoice(object):
                     option = option(selected='selected')
                 yield option
             
-        return T.select(name=key, id=keytocssid(ctx.key), data=self.options)[renderOptions]
+        tag=T.select(name=key, id=keytocssid(ctx.key), data=self.options)[renderOptions]
+        if disabled:
+            tag(class_='disabled', disabled='disabled')
+        return tag
+    
+    def render(self, ctx, key, args, errors):
+        
+        converter = iforms.IStringConvertible(self.original)
+        
+        if errors:
+            value = args.get(key, [''])[0]
+        else:
+            value = converter.fromType(args.get(key))
+
+        return self._renderTag(ctx, key, value, converter, False)
+            
+    def renderImmutable(self, ctx, key, args, errors):
+        converter = iforms.IStringConvertible(self.original)
+        
+        value = converter.fromType(args.get(key))
+
+        return self._renderTag(ctx, key, value, converter, True)
         
     def processInput(self, ctx, key, args):
         value = args.get(key, [''])[0]
@@ -174,6 +225,20 @@ class DatePartsInput(object):
         def _(part):
             return '%s__%s' % (prefix,part)
         return _
+
+    def _renderTag(self, ctx, year, month, day, namer, disabled):
+        yearTag = T.input(type="text", name=namer('year'), value=year, size=4)
+        monthTag = T.input(type="text", name=namer('month'), value=month, size=2)
+        dayTag = T.input(type="text", name=namer('day'), value=day, size=2)
+        if disabled:
+            tags = (yearTag, monthTag, dayTag)
+            for tag in tags:
+                tag(class_='disabled', disabled='disabled')
+
+        if self.dayFirst:
+            return dayTag, ' / ', monthTag, ' / ', yearTag, ' (dd/mm/yyyy)'
+        else:
+            return monthTag, ' / ', dayTag, ' / ', yearTag, ' (mm/dd/yyyy)'
             
     def render(self, ctx, key, args, errors):
         converter = iforms.IDateTupleConvertible(self.original)
@@ -184,13 +249,15 @@ class DatePartsInput(object):
             day = args.get(namer('day'), [''])[0]
         else:
             year, month, day = converter.fromType(args.get(key))
-        yearTag = T.input(type="text", name=namer('year'), value=year, size=4)
-        monthTag = T.input(type="text", name=namer('month'), value=month, size=2)
-        dayTag = T.input(type="text", name=namer('day'), value=day, size=2)
-        if self.dayFirst:
-            return dayTag, ' / ', monthTag, ' / ', yearTag, ' (dd/mm/yyyy)'
-        else:
-            return monthTag, ' / ', dayTag, ' / ', yearTag, ' (mm/dd/yyyy)'
+
+        return self._renderTag(ctx, year, month, day, namer, False)
+
+    def renderImmutable(self, ctx, key, args, errors):
+        converter = iforms.IDateTupleConvertible(self.original)
+        namer = self._namer(key)
+        year, month, day = converter.fromType(args.get(key))
+        return self._renderTag(ctx, year, month, day, namer, True)
+
             
     def processInput(self, ctx, key, args):
         namer = self._namer(key)
@@ -224,6 +291,15 @@ class MMYYDatePartsInput(object):
             return '%s__%s' % (prefix,part)
         return _
             
+    def _renderTag(self, ctx, year, month, namer, disabled):
+        yearTag = T.input(type="text", name=namer('year'), value=year, size=2)
+        monthTag = T.input(type="text", name=namer('month'), value=month, size=2)
+        if disabled:
+            tags=(yearTag, monthTag)
+            for tag in tags:
+                tag(class_='disabled', disabled='disabled')
+        return monthTag, ' / ', yearTag, ' (mm/yy)'
+
     def render(self, ctx, key, args, errors):
         converter = iforms.IDateTupleConvertible(self.original)
         namer = self._namer(key)
@@ -237,9 +313,17 @@ class MMYYDatePartsInput(object):
             # if we have a year as default data, stringify it and only use last two digits
             if year is not None:
                 year = str(year)[2:]
-        yearTag = T.input(type="text", name=namer('year'), value=year, size=2)
-        monthTag = T.input(type="text", name=namer('month'), value=month, size=2)
-        return monthTag, ' / ', yearTag, ' (mm/yy)'
+
+        return self._renderTag(ctx, year, month, namer, False)
+
+    def renderImmutable(self, ctx, key, args, errors):
+        converter = iforms.IDateTupleConvertible(self.original)
+        year, month, day = converter.fromType(args.get(key))
+        namer = self._namer(key)
+        # if we have a year as default data, stringify it and only use last two digits
+        if year is not None:
+            year = str(year)[2:]
+        return self._renderTag(ctx, year, month, namer, True)
             
     def processInput(self, ctx, key, args):
         namer = self._namer(key)
@@ -277,6 +361,21 @@ class CheckboxMultiChoice(object):
         if noneOption is not _UNSET:
             self.noneOption = noneOption
     
+    def _renderTag(self, ctx, key, values, converter, disabled):
+        
+        # loops through checkbox options and renders 
+        for n,item in enumerate(self.options):
+            optValue = iforms.IKey(item).key()
+            optLabel = iforms.ILabel(item).label()
+            optValue = converter.fromType(optValue)
+            optid = (keytocssid(ctx.key),'-',n)
+            checkbox = T.input(type='checkbox', name=key, value=optValue, id=optid )
+            if optValue in values:
+                checkbox = checkbox(checked='checked')
+            if disabled:
+                checkbox = checkbox(class_='disabled', disabled='disabled')
+            yield checkbox, T.label(for_=optid)[optLabel], T.br()
+
     def render(self, ctx, key, args, errors):
         
         converter = iforms.IStringConvertible(self.original.type)
@@ -289,18 +388,20 @@ class CheckboxMultiChoice(object):
                 values = [converter.fromType(v) for v in values]
             else:
                 values = []
-            
-        # loops through checkbox options and renders 
-        for n,item in enumerate(self.options):
-            optValue = iforms.IKey(item).key()
-            optLabel = iforms.ILabel(item).label()
-            optValue = converter.fromType(optValue)
-            optid = (keytocssid(ctx.key),'-',n)
-            checkbox = T.input(type='checkbox', name=key, value=optValue, id=optid )
-            if optValue in values:
-                checkbox = checkbox(checked='checked')
-            yield checkbox, T.label(for_=optid)[optLabel], T.br()
-            
+
+        return self._renderTag(ctx, key, values, converter, False)
+
+    def renderImmutable(self, ctx, key, args, errors):
+        
+        converter = iforms.IStringConvertible(self.original.type)
+        
+        values = args.get(key)
+        if values is not None:
+            values = [converter.fromType(v) for v in values]
+        else:
+            values = []
+
+        return self._renderTag(ctx, key, values, converter, True)
         
     def processInput(self, ctx, key, args):
         values = args.get(key, [])
@@ -314,13 +415,23 @@ class FileUploadRaw(object):
     
     def __init__(self, original):
         self.original = original
+
+    def _renderTag(self, ctx, key, disabled):
+        tag=T.input(name=key, id=keytocssid(ctx.key),type='file')
+        if disabled:
+            tag(class_='disabled', disabled='disabled')
+        return tag
         
     def render(self, ctx, key, args, errors):
         if errors:
             value = args.get(key, [''])[0]
         else:
             value = iforms.IFileConvertible(self.original).fromType(args.get(key))
-        return T.input(name=key, id=keytocssid(ctx.key),type='file')
+        return self._renderTag(ctx, key, False)
+
+    def renderImmutable(self, ctx, key, args, errors):
+        value = iforms.IFileConvertible(self.original).fromType(args.get(key))
+        return self._renderTag(ctx, key, True)
         
     def processInput(self, ctx, key, args):
         fileitem = inevow.IRequest(ctx).fields[key]
@@ -344,6 +455,23 @@ class FileUpload(object):
             return '%s__%s' % (prefix,part)
         return _
 
+    def _renderTag(self, ctx, key, value, namer, disabled):
+
+        name = self.fileHandler.getUrlForFile(value)
+        if name:
+            if self.preview == 'image':
+                yield T.p[value,T.img(src=self.fileHandler.getUrlForFile(value))]
+            else:
+                yield T.p[value]
+        else:
+            yield T.p[T.strong['nothing uploaded']]
+
+        yield T.input(name=namer('value'),value=value,type='hidden')
+        tag=T.input(name=key, id=keytocssid(ctx.key),type='file')
+        if disabled:
+            tag(class_='disabled', disabled='disabled')
+        yield tag
+
     def render(self, ctx, key, args, errors):
         namer = self._namer(key)
         if errors:
@@ -356,18 +484,13 @@ class FileUpload(object):
                value = args.get(namer('value'))[0]
         else:
             value = iforms.IStringConvertible(self.original).fromType(args.get(key))
-            
-        name = self.fileHandler.getUrlForFile(value)
-        if name:
-            if self.preview == 'image':
-                yield T.p[value,T.img(src=self.fileHandler.getUrlForFile(value))]
-            else:
-                yield T.p[value]
-        else:
-            yield T.p[T.strong['nothing uploaded']]
 
-        yield T.input(name=namer('value'),value=value,type='hidden')
-        yield T.input(name=key, id=keytocssid(ctx.key),type='file')
+        return self._renderTag(ctx, key, value, namer, False)
+
+    def renderImmutable(self, ctx, key, args, errors):
+        namer = self._namer(key)
+        value = iforms.IStringConvertible(self.original).fromType(args.get(key))
+        return self._renderTag(ctx, key, value, namer, True)
         
     def processInput(self, ctx, key, args):
         fileitem = inevow.IRequest(ctx).fields[key]
@@ -474,6 +597,40 @@ class FileUploadWidget(object):
             # key of the original that can be used to get a file later
             yield T.input(name=originalIdName,value=originalKey,type='hidden')
 
+    def renderImmutable(self, ctx, key, args, errors):
+        form = iforms.IForm(ctx)
+
+        namer = self._namer(key)
+        originalIdName = namer('original_id')
+
+        # Get the original key from a hidden field in the request, 
+        # then try the request form.data initial data.
+        originalKey = self._getFromArgs( args, originalIdName )
+        if not errors and not originalKey:
+            originalKey = args.get( key )
+        originalKey = self._blankField( originalKey )
+
+        if errors:
+            urlFactory = url.URL.fromContext( ctx ).sibling
+        else:
+            urlFactory = url.URL.fromContext( ctx ).child
+
+        if originalKey:
+            # The is no uploaded file, but there is an original, so render a
+            # URL to it
+            if self.originalKeyIsURL:
+                tmpURL = originalKey
+            else:
+                tmpURL = urlFactory(formWidgetResource(form.name)).child(key).child(self.FROM_CONVERTIBLE).child(originalKey)
+            yield T.p[T.img(src=tmpURL)]
+        else:
+            # No uploaded file, no original
+            yield T.p[T.strong['Nothing uploaded']]
+
+        if originalKey:
+            # key of the original that can be used to get a file later
+            yield T.input(name=originalIdName,value=originalKey,type='hidden')
+
     def processInput(self, ctx, key, args):
         """
             Process the request, storing any uploaded file in the 
@@ -525,6 +682,7 @@ class FileUploadWidget(object):
             # static.Data instance with the data from the convertible.
 
             def _( result ):
+                
                 mimetype, filelike, fileName = result
                 data = filelike.read()
                 filelike.close()
@@ -551,6 +709,9 @@ class Hidden(object):
         else:
             value = iforms.IStringConvertible(self.original).fromType(args.get(key))
         return T.input(type=self.inputType, name=key, id=keytocssid(ctx.key), value=value)
+
+    def renderImmutable(self, ctx, key, args, errors):
+        return self.render(ctx, key, args, errors)
 
     def processInput(self, ctx, key, args):
         value = args.get(key, [''])[0].decode(util.getPOSTCharset(ctx))
