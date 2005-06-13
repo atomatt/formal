@@ -20,14 +20,16 @@ class String(object):
     required = False
     strip = False
     missing = None
+    immutable = False
     
-    def __init__(self, required=None, strip=None, missing=None):
+    def __init__(self, required=None, strip=None, missing=None, immutable=False):
         if required is not None: 
             self.required = required
         if strip is not None:
             self.strip = strip
         if missing is not None:
             self.missing = missing
+        self.immutable = immutable
         
     def validate(self, value):
         if value is not None and self.strip:
@@ -48,12 +50,14 @@ class Integer(object):
     name = None
     required = False
     missing = None
+    immutable = False
    
-    def __init__(self, required=None, missing=None):
+    def __init__(self, required=None, missing=None, immutable=False):
         if required is not None:
             self.required = required
         if missing is not None:
             self.missing = missing
+        self.immutable = immutable
         
     def validate(self, value):
         if self.required and value is None:
@@ -70,12 +74,14 @@ class Float(object):
     name = None
     required = False
     missing = None
+    immutable = False
     
-    def __init__(self, required=None, missing=None):
+    def __init__(self, required=None, missing=None, immutable=False):
         if required is not None:
             self.required = required
         if missing is not None:
             self.missing = missing
+        self.immutable = immutable
         
     def validate(self, value):
         if self.required and value is None:
@@ -92,12 +98,14 @@ class Boolean(object):
     name = None
     required = False
     missing = None
+    immutable = False
     
-    def __init__(self, required=None, missing=None):
+    def __init__(self, required=None, missing=None, immutable=False):
         if required is not None:
             self.required = required
         if missing is not None:
             self.missing = missing
+        self.immutable = immutable
 
     def validate(self, value):
         if self.required and value is None:
@@ -114,12 +122,14 @@ class Date(object):
     name = None
     required = None
     missing = None
+    immutable = False
     
-    def __init__(self, required=None, missing=None):
+    def __init__(self, required=None, missing=None, immutable=False):
         if required is not None:
             self.required = required
         if missing is not None:
             self.missing = missing
+        self.immutable = immutable
         
     def validate(self, value):
         if self.required and value is None:
@@ -136,12 +146,14 @@ class Time(object):
     name = None
     required = None 
     missing = None
+    immutable = False
         
-    def __init__(self, required=None, missing=None):
+    def __init__(self, required=None, missing=None, immutable=False):
         if required is not None:
             self.required = required
         if missing is not None:
             self.missing = missing
+        self.immutable = immutable
             
     def validate(self, value):
         if self.required and value is None:
@@ -158,14 +170,16 @@ class Sequence(object):
     required = None 
     missing = None
     type = None
+    immutable = False
 
-    def __init__(self, type=None, required=None, missing=None):
+    def __init__(self, type=None, required=None, missing=None, immutable=False):
         if required is not None:
             self.required = required
         if missing is not None:
             self.missing = missing
         if type is not None:
             self.type = type
+        self.immutable = immutable
             
     def validate(self, value):
         if self.required and not value:
@@ -181,12 +195,14 @@ class File(object):
     name = None
     required = False
     missing = None
+    immutable = False
    
-    def __init__(self, required=None, missing=None):
+    def __init__(self, required=None, missing=None, immutable=False):
         if required is not None:
             self.required = required
         if missing is not None:
             self.missing = missing
+        self.immutable = immutable
         
     def validate(self, value):
         if self.required and value is None:
