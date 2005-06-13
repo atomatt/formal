@@ -351,6 +351,10 @@ class FormRenderer(object):
                 T.slot('description'),
                 T.slot('message'),
                 ],
+            T.div(class_='hiddenitems')[
+                T.slot('hiddenitems'),
+                T.invisible(pattern="hiddenitem")[T.slot('inputs')]
+                ],
             T.div(class_='actions')[
                 T.slot('actions'),
                 ],
@@ -374,6 +378,7 @@ class FormRenderer(object):
         tag.fillSlots('action', urlFactory(formAction(self.original.name)))
         tag.fillSlots('errors', self._renderErrors)
         tag.fillSlots('items', self._renderItems)
+        tag.fillSlots('hiddenitems', self._renderHiddenItems)
         tag.fillSlots('actions', self._renderActions)
         return tag
 
@@ -394,7 +399,19 @@ class FormRenderer(object):
             return
         itemPattern = inevow.IQ(ctx).patternGenerator('item')
         for item in self.original.items:
-            yield itemPattern(key=item[0], data=item, render=self._renderItem)
+            widget = self.original.widgetForItem(item[0])
+            if not getattr(widget,'hidden',False):
+                yield itemPattern(key=item[0], data=item, render=self._renderItem)
+
+    def _renderHiddenItems(self, ctx, data):
+        if self.original.items is None:
+            yield ''
+            return
+        hiddenItemPattern = inevow.IQ(ctx).patternGenerator('hiddenitem')
+        for item in self.original.items:
+            widget = self.original.widgetForItem(item[0])
+            if getattr(widget,'hidden',False):
+                yield hiddenItemPattern(key=item[0], data=item, render=self._renderHiddenItem)
         
     def _renderItem(self, ctx, data):
         
@@ -440,6 +457,31 @@ class FormRenderer(object):
             
             return ctx.tag
             
+        return _
+
+    def _renderHiddenItem(self, ctx, data):
+
+        def _(ctx, data):
+
+            name, type, label, description = data
+            form = self.original
+            formErrors = iforms.IFormErrors(ctx, None)
+            formData = iforms.IFormData(ctx)
+
+            widget = form.widgetForItem(name)
+
+            classes = [
+                'field',
+                type.__class__.__name__.lower(),
+                widget.__class__.__name__.lower(),
+                ]
+
+            ctx.tag.fillSlots('class', ' '.join(classes))
+            ctx.tag.fillSlots('fieldId', '%s-field'%util.keytocssid(ctx.key))
+            ctx.tag.fillSlots('id', util.keytocssid(ctx.key))
+            ctx.tag.fillSlots('inputs', widget.render(ctx, name, formData, formErrors))
+            return ctx.tag
+
         return _
     
     def _renderActions(self, ctx, data):
