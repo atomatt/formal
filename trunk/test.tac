@@ -4,7 +4,7 @@ from nevow import appserver, compy, loaders, rend, static, tags as T
 import forms
 import os
 from shutil import copyfileobj
-import mimetypes
+import mimetypes, datetime
 
 from forms import iforms, htmleditor, converters
 from fileresource import fileResource
@@ -12,7 +12,7 @@ from fileresource import fileResource
 class KeyToFileConverter( object ):
     __implements__ = iforms.IFileConvertible,
 
-    def fromType( self, value ):
+    def fromType( self, value, context=None ):
         """
             Given a string generate a (mimetype, filelike, fileName) or None
         """
@@ -106,6 +106,26 @@ class Page(rend.Page, forms.ResourceMixin):
         form.addField('time', forms.Time())
         form.addAction(self._submit)
         form.data = {'hidden_string': 101}
+        return form
+
+    def form_readonlyOneOfEach(self, ctx):
+        form = forms.Form(self._submit)
+        immutable=True
+        form.addField('string', forms.String(immutable=immutable), forms.TextInput)
+        form.addField('textarea', forms.String(immutable=immutable), forms.TextArea)
+        form.addField('password', forms.String(immutable=immutable), forms.CheckedPassword)
+        form.addField('integer', forms.Integer(immutable=immutable))
+        form.addField('float', forms.Float(immutable=immutable))
+        form.addField('boolean', forms.Boolean(immutable=immutable), forms.Checkbox)
+        form.addField('date', forms.Date(immutable=immutable), forms.widgetFactory(forms.MMYYDatePartsInput, cutoffYear=38))
+        form.addField('date2', forms.Date(immutable=immutable), forms.widgetFactory(forms.DatePartsInput, dayFirst=True))
+        form.addField('time', forms.Time(immutable=immutable))
+        form.addField('author', forms.Integer(immutable=immutable), lambda original: forms.SelectChoice(original, people))
+        form.addField('bar', forms.Sequence(forms.String(),immutable=immutable), forms.widgetFactory(forms.CheckboxMultiChoice, zip('abc','abc')),description='store your bar here')
+        form.addField('file', forms.File(immutable=immutable), forms.widgetFactory(forms.FileUploadWidget, convertibleFactory=KeyToFileConverter))
+        form.addAction(self._submit)
+        form.data = {'string':'hello', 'textarea':'some long text', 'password': ['one','one'], 'integer':10, 'float':22.22, 'boolean':True, 'author': 2, 'file':'dm.gif', 'date': datetime.date(2005, 10, 1), 'bar': ['a'], 'time': datetime.time(12, 51, 30)}
+
         return form
 
     def form_test(self, ctx):
