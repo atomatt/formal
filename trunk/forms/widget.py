@@ -536,10 +536,30 @@ class FileUploadWidget(object):
         else:
             return None
 
+class Hidden(object):
+    __implements__ = iforms.IWidget,
+
+    hidden = True
+    inputType = 'hidden'
+
+    def __init__(self, original):
+        self.original = original
+
+    def render(self, ctx, key, args, errors):
+        if errors:
+            value = args.get(key, [''])[0]
+        else:
+            value = iforms.IStringConvertible(self.original).fromType(args.get(key))
+        return T.input(type=self.inputType, name=key, id=keytocssid(ctx.key), value=value)
+
+    def processInput(self, ctx, key, args):
+        value = args.get(key, [''])[0].decode(util.getPOSTCharset(ctx))
+        value = iforms.IStringConvertible(self.original).toType(value)
+        return self.original.validate(value)
 
 __all__ = [
     'Checkbox', 'CheckboxMultiChoice', 'CheckedPassword','FileUploadRaw', 'FileUpload', 'FileUploadWidget',
     'Password', 'SelectChoice', 'TextArea', 'TextInput', 'DatePartsInput',
-    'MMYYDatePartsInput',
+    'MMYYDatePartsInput', 'Hidden'
     ]
     
