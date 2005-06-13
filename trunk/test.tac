@@ -96,6 +96,7 @@ class Page(rend.Page, forms.ResourceMixin):
 
     def form_oneOfEach(self, ctx):
         form = forms.Form(self._submit)
+        form.addField('hidden_string', forms.Integer(), forms.Hidden)
         form.addField('string', forms.String(required=True))
         form.addField('password', forms.String(), forms.CheckedPassword)
         form.addField('integer', forms.Integer())
@@ -104,6 +105,7 @@ class Page(rend.Page, forms.ResourceMixin):
         form.addField('date', forms.Date(), forms.widgetFactory(forms.MMYYDatePartsInput, cutoffYear=38))
         form.addField('time', forms.Time())
         form.addAction(self._submit)
+        form.data = {'hidden_string': 101}
         return form
 
     def form_test(self, ctx):
