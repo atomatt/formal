@@ -33,8 +33,11 @@ class TinyMCE(object):
 
     def renderImmutable(self, ctx, key, args, errors):
         value = iforms.IStringConvertible(self.original).fromType(args.get(key))
-        return T.div(id=key, class_='readonly-textarea readonly')[
-            T.xml(value) or '']
+        if value:
+            value=T.xml(value)
+        else:
+            value=''
+        return T.div(id=key, class_='readonly-textarea readonly')[value]
         
     def processInput(self, ctx, key, args):
         value = args.get(key, [''])[0].decode(util.getPOSTCharset(ctx))
