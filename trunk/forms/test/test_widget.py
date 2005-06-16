@@ -2,10 +2,11 @@ from twisted.trial import unittest
 from nevow import context, flat, inevow
 import forms
 from forms import iforms
+from zope.interface import implements
 
 
 class FakeRequest(object):
-    __implements__ = inevow.IRequest,
+    implements( inevow.IRequest )
     
     uri = '/'
     received_headers = {}
@@ -19,7 +20,7 @@ class FakeRequest(object):
         
         
 class FakeForm(object):
-    __implements__ = iforms.IForm,
+    implements( iforms.IForm )
     
     def __init__(self, data=None):
         if data is None:
@@ -28,7 +29,7 @@ class FakeForm(object):
 
 
 class FormFactory(object):
-    __implements__ = iforms.IFormFactory,
+    implements( iforms.IFormFactory )
     
     def __init__(self, form, *a, **k):
         super(FormFactory,self).__init__(*a, **k)
