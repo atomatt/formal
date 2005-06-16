@@ -23,10 +23,10 @@ class TextInput(object):
     def __init__(self, original):
         self.original = original
 
-    def _renderTag(self, ctx, key, value, disabled):
+    def _renderTag(self, ctx, key, value, readonly):
         tag=T.input(type=self.inputType, name=key, id=keytocssid(ctx.key), value=value)
-        if disabled:
-            tag(class_='disabled', disabled='disabled')
+        if readonly:
+            tag(class_='readonly', readonly='readonly')
         return tag
 
     def render(self, ctx, key, args, errors):
@@ -91,10 +91,10 @@ class TextArea(object):
     def __init__(self, original):
         self.original = original
 
-    def _renderTag(self, ctx, key, value, disabled):
+    def _renderTag(self, ctx, key, value, readonly):
         tag=T.textarea(name=key, id=keytocssid(ctx.key))[value or '']
-        if disabled:
-            tag(class_='disabled', disabled='disabled')
+        if readonly:
+            tag(class_='readonly', readonly='readonly')
         return tag
         
     def render(self, ctx, key, args, errors):
@@ -135,10 +135,10 @@ class CheckedPassword(object):
     def renderImmutable(self, ctx, key, args, errors):
         values = ('', '')
         return [
-            T.input(type='password', name=key, id=keytocssid(ctx.key), value=values[0], class_='disabled', disabled='disabled'),
+            T.input(type='password', name=key, id=keytocssid(ctx.key), value=values[0], class_='readonly', readonly='readonly'),
             T.br,
             T.label(for_='%s__confirm'%keytocssid(ctx.key))[' Confirm '],
-            T.input(type='password', name=key, id='%s__confirm'%keytocssid(ctx.key), value=values[1], class_='disabled', disabled='disabled')
+            T.input(type='password', name=key, id='%s__confirm'%keytocssid(ctx.key), value=values[1], class_='readonly', readonly='readonly')
         ]
         
     def processInput(self, ctx, key, args):
@@ -226,14 +226,14 @@ class DatePartsInput(object):
             return '%s__%s' % (prefix,part)
         return _
 
-    def _renderTag(self, ctx, year, month, day, namer, disabled):
+    def _renderTag(self, ctx, year, month, day, namer, readonly):
         yearTag = T.input(type="text", name=namer('year'), value=year, size=4)
         monthTag = T.input(type="text", name=namer('month'), value=month, size=2)
         dayTag = T.input(type="text", name=namer('day'), value=day, size=2)
-        if disabled:
+        if readonly:
             tags = (yearTag, monthTag, dayTag)
             for tag in tags:
-                tag(class_='disabled', disabled='disabled')
+                tag(class_='readonly', readonly='readonly')
 
         if self.dayFirst:
             return dayTag, ' / ', monthTag, ' / ', yearTag, ' (dd/mm/yyyy)'
@@ -291,13 +291,13 @@ class MMYYDatePartsInput(object):
             return '%s__%s' % (prefix,part)
         return _
             
-    def _renderTag(self, ctx, year, month, namer, disabled):
+    def _renderTag(self, ctx, year, month, namer, readonly):
         yearTag = T.input(type="text", name=namer('year'), value=year, size=2)
         monthTag = T.input(type="text", name=namer('month'), value=month, size=2)
-        if disabled:
+        if readonly:
             tags=(yearTag, monthTag)
             for tag in tags:
-                tag(class_='disabled', disabled='disabled')
+                tag(class_='readonly', readonly='readonly')
         return monthTag, ' / ', yearTag, ' (mm/yy)'
 
     def render(self, ctx, key, args, errors):

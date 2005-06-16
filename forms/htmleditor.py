@@ -1,4 +1,4 @@
-from nevow import tags as T
+from nevow import tags as T, util
 from forms import iforms
 from zope.interface import implements
 
@@ -30,9 +30,13 @@ class TinyMCE(object):
         else:
             value = iforms.IStringConvertible(self.original).fromType(args.get(key))
         return T.textarea(name=key, id=key, mce_editable='true')[value or '']
+
+    def renderImmutable(self, ctx, key, args, errors):
+        value = iforms.IStringConvertible(self.original).fromType(args.get(key))
+        return T.textarea(name=key, id=key, class_='readonly', readonly='readonly')[value or '']
         
     def processInput(self, ctx, key, args):
-        value = args.get(key, [''])[0]
+        value = args.get(key, [''])[0].decode(util.getPOSTCharset(ctx))
         value = iforms.IStringConvertible(self.original).toType(value)
         return self.original.validate(value)
 

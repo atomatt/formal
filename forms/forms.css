@@ -102,3 +102,8 @@
   margin-left: 100px;
 }
 
+.nevow-form .disabled, .nevow-form .readonly {
+  background-color: #FFF;
+  color: #777;
+}
+
