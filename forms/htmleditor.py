@@ -37,7 +37,9 @@ class TinyMCE(object):
             value=T.xml(value)
         else:
             value=''
-        return T.div(id=key, class_='readonly-textarea readonly')[value]
+        return T.div(id=key, class_="readonly-textarea-container") [
+            T.div(class_='readonly-textarea readonly')[value]
+        ]
         
     def processInput(self, ctx, key, args):
         value = args.get(key, [''])[0].decode(util.getPOSTCharset(ctx))
