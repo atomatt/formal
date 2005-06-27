@@ -697,7 +697,6 @@ class FileUploadWidget(object):
 class Hidden(object):
     __implements__ = iforms.IWidget,
 
-    hidden = True
     inputType = 'hidden'
 
     def __init__(self, original):

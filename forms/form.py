@@ -73,13 +73,13 @@ class Form(object):
             self.callback = callback
         self.resourceManager = ResourceManager()
     
-    def addField(self, name, type, widgetFactory=None, label=None, description=None):
+    def addField(self, name, type, widgetFactory=None, label=None, description=None, cssClass=None):
         if self.items is None:
             self.items = []
         type.name = name
         if label is None:
             label = util.titleFromName(name)
-        self.items.append( (name,type,label,description) )
+        self.items.append( (name,type,label,description,cssClass) )
         if widgetFactory is not None:
             if self.widgets is None:
                 self.widgets = {}
@@ -94,7 +94,7 @@ class Form(object):
             
     def widgetForItem(self, itemName):
         
-        for name, type, label, description in self.items:
+        for name, type, label, description, cssClass in self.items:
             if name == itemName:
                 break
         else:
@@ -143,7 +143,7 @@ class Form(object):
         
         # Iterate the items and collect the form data and/or errors.
         data = {}
-        for name, type, label, description in self.items:
+        for name, type, label, description, cssClass in self.items:
             try:
                 if not type.immutable:
                     data[name] = self.widgetForItem(name).processInput(ctx, name, args)
@@ -156,7 +156,7 @@ class Form(object):
             return errors
 
         # toType
-        for name, type, label, description in self.items:
+        for name, type, label, description, cssClass in self.items:
             widget = self.widgetForItem(name)
             if hasattr( widget, 'convertibleFactory' ) and not type.immutable:
                 data[name] = widget.convertibleFactory.toType( data.get(name) )
@@ -401,7 +401,7 @@ class FormRenderer(object):
         itemPattern = inevow.IQ(ctx).patternGenerator('item')
         for item in self.original.items:
             widget = self.original.widgetForItem(item[0])
-            if not getattr(widget,'hidden',False):
+            if getattr(widget,'inputType','') != 'hidden':
                 yield itemPattern(key=item[0], data=item, render=self._renderItem)
 
     def _renderHiddenItems(self, ctx, data):
@@ -411,14 +411,14 @@ class FormRenderer(object):
         hiddenItemPattern = inevow.IQ(ctx).patternGenerator('hiddenitem')
         for item in self.original.items:
             widget = self.original.widgetForItem(item[0])
-            if getattr(widget,'hidden',False):
+            if getattr(widget,'inputType','') == 'hidden':
                 yield hiddenItemPattern(key=item[0], data=item, render=self._renderHiddenItem)
         
     def _renderItem(self, ctx, data):
         
         def _(ctx, data):
             
-            name, type, label, description = data
+            name, type, label, description, cssClass = data
             form = self.original
             formErrors = iforms.IFormErrors(ctx, None)
             formData = iforms.IFormData(ctx)
@@ -434,6 +434,8 @@ class FormRenderer(object):
                 type.__class__.__name__.lower(),
                 widget.__class__.__name__.lower(),
                 ]
+            if cssClass:
+                classes.append(cssClass)
                 
             if error is None:
                 message = ''
@@ -461,20 +463,13 @@ class FormRenderer(object):
 
         def _(ctx, data):
 
-            name, type, label, description = data
+            name, type, label, description, cssClass = data
             form = self.original
             formErrors = iforms.IFormErrors(ctx, None)
             formData = iforms.IFormData(ctx)
 
             widget = form.widgetForItem(name)
 
-            classes = [
-                'field',
-                type.__class__.__name__.lower(),
-                widget.__class__.__name__.lower(),
-                ]
-
-            ctx.tag.fillSlots('class', ' '.join(classes))
             ctx.tag.fillSlots('fieldId', '%s-field'%util.keytocssid(ctx.key))
             ctx.tag.fillSlots('id', util.keytocssid(ctx.key))
             ctx.tag.fillSlots('inputs', widget.render(ctx, name, formData, formErrors))
