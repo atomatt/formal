@@ -2,6 +2,11 @@
 HTML forms.
 """
 
+
+version_info = (0, 1, 0)
+version = '.'.join([str(i) for i in version_info])
+
+
 from nevow import static
 
 from forms.types import *
