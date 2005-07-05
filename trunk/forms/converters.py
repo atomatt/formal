@@ -24,6 +24,7 @@ class NullConverter(Adapter):
 
 class NumberToStringConverter(Adapter):
     implements( iforms.IStringConvertible )
+    cast = None
     
     def fromType(self, value):
         if value is None:
