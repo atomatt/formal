@@ -19,9 +19,14 @@ def widgetFactory(widgetClass, *a, **k):
     def _(original):
         return widgetClass(original, *a, **k)
     return _
-    
-import os.path
-defaultCSS = static.File(os.path.join(os.path.split(__file__)[0], 'forms.css'))
+
+try:
+    import pkg_resources
+except ImportError:
+    import os.path
+    defaultCSS = static.File(os.path.join(os.path.split(__file__)[0], 'forms.css'))
+else:
+    defaultCSS = static.File(pkg_resources.resource_filename('forms', 'forms.css'))
 
 # Register standard adapters
 from nevow.compy import registerAdapter
