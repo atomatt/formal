@@ -5,12 +5,6 @@ Form types.
 from forms import iforms, validation
 from zope.interface import implements
 
-"""
-  - DateTime
-  - Structure
-  - Mapping
-"""
-
 
 class String(object):
     
