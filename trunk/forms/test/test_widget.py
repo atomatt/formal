@@ -5,6 +5,9 @@ from forms import iforms
 from zope.interface import implements
 
 
+skip = "All the widget tests need rewriting :-/"
+
+
 class FakeRequest(object):
     implements( inevow.IRequest )
     
