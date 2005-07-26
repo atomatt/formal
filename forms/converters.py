@@ -147,7 +147,7 @@ class DateToDateTupleConverter(Adapter):
             return None
         try:
             value = date(*value)
-        except ValueError, e:
+        except (TypeError, ValueError), e:
             raise validation.FieldValidationError('Invalid date: '+str(e))
         return value
         
