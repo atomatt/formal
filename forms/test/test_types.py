@@ -3,10 +3,6 @@ from twisted.trial import unittest
 import forms
 
 
-class FakeContext(object):
-    pass
-
-
 class TestValidate(unittest.TestCase):
     
     def testString(self):
