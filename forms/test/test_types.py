@@ -60,3 +60,13 @@ class TestValidate(unittest.TestCase):
         self.assertEquals(forms.Time(missing=time(12,30,30)).validate(None), time(12,30,30))
         self.assertEquals(forms.Time(missing=time(12,30,30)).validate(time(12,30,31)), time(12,30,31))
         
+    def test_sequence(self):
+        self.assertEquals(forms.Sequence(forms.String()).validate(None), None)
+        self.assertEquals(forms.Sequence(forms.String()).validate(['foo']), ['foo'])
+        self.assertEquals(forms.Sequence(forms.String(), missing=['foo']).validate(None), ['foo'])
+        self.assertEquals(forms.Sequence(forms.String(), missing=['foo']).validate(['bar']), ['bar'])
+    
+    def test_file(self):
+        pass
+    test_file.skip = "write tests"
+    
