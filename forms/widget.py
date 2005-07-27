@@ -4,7 +4,7 @@ certain format.
 """
 
 from nevow import inevow, tags as T, util, url, static
-from forms import iforms, validation
+from forms import converters, iforms, validation
 from forms.util import keytocssid
 from forms.form import formWidgetResource
 from zope.interface import implements
@@ -504,12 +504,15 @@ class FileUpload(object):
 
         value = iforms.IStringConvertible(self.original).fromType(value)
         return self.original.validate(value)
-
+        
+        
 class FileUploadWidget(object):
     implements( iforms.IWidget )
 
     FROM_RESOURCE_MANAGER = 'rm'
     FROM_CONVERTIBLE = 'cf'
+    
+    convertibleFactory = converters.NullConverter
 
     def _namer(self, prefix):
         def _(part):
@@ -518,7 +521,8 @@ class FileUploadWidget(object):
 
     def __init__( self, original, convertibleFactory=None, originalKeyIsURL=False ): 
         self.original = original
-        self.convertibleFactory = convertibleFactory()
+        if convertibleFactory is not None:
+            self.convertibleFactory = convertibleFactory
         self.originalKeyIsURL = originalKeyIsURL
 
     def _blankField( self, field ):
@@ -688,7 +692,7 @@ class FileUploadWidget(object):
                 filelike.close()
                 return static.Data( data, mimetype ), []
 
-            d = defer.maybeDeferred( self.convertibleFactory.fromType, segments[1], context=ctx )
+            d = defer.maybeDeferred( self.convertibleFactory(self.original).fromType, segments[1], context=ctx )
             d.addCallback( _ )
             return d
         else:
