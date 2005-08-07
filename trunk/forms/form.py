@@ -167,7 +167,7 @@ class Form(object):
             
         d = defer.maybeDeferred(callback, ctx, self, data)
         d.addCallback( _clearUpResources )
-        d.addCallbacks(self._cbFormProcessed, self._cbFormProcessingFailed, callbackArgs=[ctx], errbackArgs=[ctx])
+        d.addErrback(self._cbFormProcessingFailed, ctx)
         return d
         
     def _cbFormProcessingFailed(self, failure, ctx):
@@ -176,11 +176,6 @@ class Form(object):
         errors = iforms.IFormErrors(ctx)
         errors.add(failure.value)
         return errors
-        
-    def _cbFormProcessed(self, redirect, ctx):
-        if redirect is None:
-            redirect = url.URL.fromContext(ctx)
-        return redirect, ()
         
     def addError(self, name, error):
         if self.errors is None:
@@ -277,10 +272,13 @@ class ResourceMixin(object):
         
     def _formProcessed(self, r, ctx):
         if isinstance(r, FormErrors):
-            return NoAddSlashHack(self), ()
-        if r is not None:
-            return r
-        return url.URL.fromContext(ctx)
+            if r:
+                return NoAddSlashHack(self), ()
+            else:
+                r = None
+        if r is None:
+            r = url.URL.fromContext(ctx)
+        return r, ()
 
 
 class IKnownForms(Interface):
