@@ -177,18 +177,6 @@ class Form(object):
         errors.add(failure.value)
         return errors
         
-    def addError(self, name, error):
-        if self.errors is None:
-            self.errors = []
-        self.errors.append( (name, error) )
-        
-    def getError(self, name):
-        if self.errors is None:
-            return None
-        for n, e in self.errors:
-            if name == n:
-                return e
-        
                 
 class FormErrors(object):
     implements( iforms.IFormErrors )
