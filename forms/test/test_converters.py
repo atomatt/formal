@@ -69,6 +69,7 @@ class TestConverters(unittest.TestCase):
         self.assertEquals(c.fromType(time(10, 12, 24)), '10:12:24')
         self.assertEquals(c.toType(''), None)
         self.assertEquals(c.toType(' '), None)
+        self.assertEquals(c.toType('12:56'), time(12, 56))
         self.assertEquals(c.toType('12:56:00'), time(12, 56))
         self.assertEquals(c.toType('10:12:24'), time(10, 12, 24))
         self.assertRaises(validation.FieldValidationError, c.toType, 'foo')
