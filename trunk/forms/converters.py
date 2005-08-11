@@ -121,7 +121,14 @@ class TimeToStringConverter(Adapter):
             ms = 0
             
         try:
-            h, m, s = value.split(':')  
+            parts = value.split(':')  
+            if len(parts)<2 or len(parts)>3:
+                raise ValueError()
+            if len(parts) == 2:
+                h, m = parts
+                s = 0
+            else:
+                h, m, s = parts
             h, m, s, ms = int(h), int(m), int(s), int(ms)
         except:
             raise validation.FieldValidationError('Invalid time')
