@@ -1,7 +1,4 @@
-try:
-    from setuptools import setup
-except:
-    from distutils.core import setup
+from setuptools import setup, find_packages
 
 import forms
 
@@ -11,7 +8,7 @@ setup(
     description='HTML forms framework for Nevow',
     author='Matt Goodall',
     author_email='matt@pollenation.net',
-    packages=['forms', 'forms.test'],
+    packages=find_packages(),
     package_data={
         'forms': ['forms.css'],
         }
