@@ -148,8 +148,8 @@ class Form(object):
                 if not type.immutable:
                     data[name] = self.widgetForItem(name).processInput(ctx, name, args)
                 else:
-                    data[name] = self.data[name]
-                    errors.data[name] = self.data[name]
+                    data[name] = self.data.get(name)
+                    errors.data[name] = self.data.get(name)
             except validation.FieldError, e:
                 if e.fieldName is None:
                     e.fieldName = name
