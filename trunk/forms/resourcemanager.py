@@ -52,9 +52,11 @@ class ResourceManager( object ):
         fileName = fileName.replace( '_', '-' )
 
         (target, path) = tempfile.mkstemp( '__' + fileName )
+        
+        # target is a file handle so reopen it as a file instance.
         os.close( target )
-
         target = open( path, 'w' )
+        
         copyfileobj( filelike, target )
         target.close()
         resourceId = self._toResourceId( path )
