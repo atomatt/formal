@@ -53,9 +53,8 @@ class ResourceManager( object ):
 
         (target, path) = tempfile.mkstemp( '__' + fileName )
         
-        # target is a file handle so reopen it as a file instance.
-        os.close( target )
-        target = open( path, 'w' )
+        # target is a file handle. We want a file object.
+        target = os.fdopen(target, 'w')
         
         copyfileobj( filelike, target )
         target.close()
