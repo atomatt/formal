@@ -9,6 +9,8 @@ examples = [
     'forms.examples.required',
     'forms.examples.missing',
     'forms.examples.prepopulate',
+    'forms.examples.fileupload',
+    'forms.examples.smartupload',
     ]
 
 def makeSite(application):
