@@ -49,7 +49,8 @@ class ResourceManager( object ):
             except OSError:
                 pass
 
-        fileName = fileName.replace( '_', '-' )
+        # Encode the filename to avoid any unicode filesystem errors.
+        fileName = self._encodeFilename(fileName)
 
         (target, path) = tempfile.mkstemp( '__' + fileName )
         
@@ -68,7 +69,7 @@ class ResourceManager( object ):
             return None
         fileName = match.group( 1 )
         path = os.sep.join( (tempfile.gettempdir(), resourceId) )
-        return path, fileName
+        return path, self._decodeFilename(fileName)
 
     def _toResourceId( self, path ):
         path = path[len(tempfile.gettempdir()):]
@@ -83,4 +84,18 @@ class ResourceManager( object ):
                 os.remove( path )
             except OSError:
                 pass
+        
+    def _encodeFilename(self, filename):
+        """
+        Encode the filename (which may be unicode) so it's safe to use with
+        the filesystem.
+        """
+        return filename.encode('utf-8').encode('base64')[:-1]
+        
+    def _decodeFilename(self, filename):
+        """
+        Undo what _encodeFilename did.
+        """
+        filename = filename + '\n'
+        return filename.decode('base64').decode('utf-8')
         
