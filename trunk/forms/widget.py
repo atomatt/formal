@@ -10,11 +10,17 @@ from forms.form import formWidgetResource
 from zope.interface import implements
 from twisted.internet import defer
 
+
 # Marker object for args that are not supplied
 _UNSET = object()
         
         
 class TextInput(object):
+    """
+    A text input field.
+    
+    <input type="text" ... />
+    """
     implements( iforms.IWidget )
     
     inputType = 'text'
@@ -47,7 +53,13 @@ class TextInput(object):
         value = iforms.IStringConvertible(self.original).toType(value)
         return self.original.validate(value)
         
+        
 class Checkbox(object):
+    """
+    A checkbox input field.
+    
+    <input type="checkbox" ... />
+    """
     implements( iforms.IWidget )
         
     def __init__(self, original):
@@ -81,11 +93,21 @@ class Checkbox(object):
 
         
 class Password(TextInput):
+    """
+    A text input field that hides the text.
+    
+    <input type="password" ... />
+    """
     inputType = 'password'
     showValueOnFailure = False
     
     
 class TextArea(object):
+    """
+    A large text entry area that accepts newline characters.
+    
+    <textarea>...</textarea>
+    """
     implements( iforms.IWidget )
     
     def __init__(self, original):
@@ -115,6 +137,9 @@ class TextArea(object):
         
         
 class CheckedPassword(object):
+    """
+    Two password entry fields that must contain the same value to validate.
+    """
     implements( iforms.IWidget )
     
     def __init__(self, original):
@@ -154,6 +179,21 @@ class CheckedPassword(object):
         
         
 class SelectChoice(object):
+    """
+    A drop-down list of options.
+    
+    <select>
+      <option value="...">...</option>
+    </select>
+    
+    options:
+        A sequence of objects adaptable to IKey and ILabel. IKey is used as the
+        <option>'s value attribute; ILabel is used as the <option>'s child.
+        IKey and ILabel adapters for tuple are provided.
+    noneOption:
+        An object adaptable to IKey and ILabel that is used to identify when
+        nothing has been selected. Defaults to ('', '')
+    """
     implements( iforms.IWidget )
     
     options = None
@@ -188,21 +228,16 @@ class SelectChoice(object):
         return tag
     
     def render(self, ctx, key, args, errors):
-        
         converter = iforms.IStringConvertible(self.original)
-        
         if errors:
             value = args.get(key, [''])[0]
         else:
             value = converter.fromType(args.get(key))
-
         return self._renderTag(ctx, key, value, converter, False)
             
     def renderImmutable(self, ctx, key, args, errors):
         converter = iforms.IStringConvertible(self.original)
-        
         value = converter.fromType(args.get(key))
-
         return self._renderTag(ctx, key, value, converter, True)
         
     def processInput(self, ctx, key, args):
@@ -212,6 +247,14 @@ class SelectChoice(object):
         
         
 class DatePartsInput(object):
+    """
+    Three text input fields for entering a date in parts.
+    
+    Default format is mm/dd/yyyy
+    
+    dayFirst:
+        Make the day the first input field. dd/mm/yyyy
+    """
     implements( iforms.IWidget )
     
     dayFirst = False
@@ -257,7 +300,6 @@ class DatePartsInput(object):
         namer = self._namer(key)
         year, month, day = converter.fromType(args.get(key))
         return self._renderTag(ctx, year, month, day, namer, True)
-
             
     def processInput(self, ctx, key, args):
         namer = self._namer(key)
@@ -277,6 +319,9 @@ class DatePartsInput(object):
 
 
 class MMYYDatePartsInput(object):
+    """
+    Two input fields for entering the month and year.
+    """
     implements( iforms.IWidget )
     
     cutoffYear = 70
@@ -348,7 +393,11 @@ class MMYYDatePartsInput(object):
         value = iforms.IDateTupleConvertible(self.original).toType( value )
         return self.original.validate(value)
         
+        
 class CheckboxMultiChoice(object):
+    """
+    Multiple choice list, rendered as a list of checkbox fields.
+    """
     implements( iforms.IWidget )
     
     options = None
@@ -507,6 +556,15 @@ class FileUpload(object):
         
         
 class FileUploadWidget(object):
+    """
+    File upload widget that carries the uploaded file around until the form
+    validates.
+    
+    The widget uses the resource manager to save the file to temporary storage
+    until the form validates. This makes file uploads behave like most of the
+    other widgets, i.e. the value is kept when a form is redisplayed due to
+    validation errors.
+    """
     implements( iforms.IWidget )
 
     FROM_RESOURCE_MANAGER = 'rm'
@@ -699,6 +757,9 @@ class FileUploadWidget(object):
             return None
 
 class Hidden(object):
+    """
+    A hidden form field.
+    """
     __implements__ = iforms.IWidget,
 
     inputType = 'hidden'
