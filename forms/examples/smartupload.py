@@ -12,5 +12,4 @@ def makeForm(ctx):
 
 def formSubmitted(ctx, form, data):
     print form, data
-    print '*****', len(data['file'][1].read())
     
