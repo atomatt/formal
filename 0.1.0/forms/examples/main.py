@@ -9,10 +9,6 @@ examples = [
     'forms.examples.required',
     'forms.examples.missing',
     'forms.examples.prepopulate',
-    'forms.examples.fileupload',
-    'forms.examples.smartupload',
-    'forms.examples.selections',
-    'forms.examples.dates',
     ]
 
 def makeSite(application):
@@ -52,7 +48,6 @@ class FormPage(forms.ResourceMixin, rend.Page):
         T.html[
             T.head[
                 T.title(data=T.directive('title'), render=rend.data),
-                T.link(rel='stylesheet', type='text/css', href=url.root.child('examples.css')),
                 T.link(rel='stylesheet', type='text/css', href=url.root.child('forms.css')),
                 ],
             T.body[

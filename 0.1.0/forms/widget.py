@@ -3,7 +3,6 @@ Widgets are small components that render form fields for inputing data in a
 certain format.
 """
 
-import itertools
 from nevow import inevow, tags as T, util, url, static
 from forms import converters, iforms, validation
 from forms.util import keytocssid
@@ -11,17 +10,11 @@ from forms.form import formWidgetResource
 from zope.interface import implements
 from twisted.internet import defer
 
-
 # Marker object for args that are not supplied
 _UNSET = object()
         
         
 class TextInput(object):
-    """
-    A text input field.
-    
-    <input type="text" ... />
-    """
     implements( iforms.IWidget )
     
     inputType = 'text'
@@ -54,13 +47,7 @@ class TextInput(object):
         value = iforms.IStringConvertible(self.original).toType(value)
         return self.original.validate(value)
         
-        
 class Checkbox(object):
-    """
-    A checkbox input field.
-    
-    <input type="checkbox" ... />
-    """
     implements( iforms.IWidget )
         
     def __init__(self, original):
@@ -94,21 +81,11 @@ class Checkbox(object):
 
         
 class Password(TextInput):
-    """
-    A text input field that hides the text.
-    
-    <input type="password" ... />
-    """
     inputType = 'password'
     showValueOnFailure = False
     
     
 class TextArea(object):
-    """
-    A large text entry area that accepts newline characters.
-    
-    <textarea>...</textarea>
-    """
     implements( iforms.IWidget )
     
     def __init__(self, original):
@@ -138,9 +115,6 @@ class TextArea(object):
         
         
 class CheckedPassword(object):
-    """
-    Two password entry fields that must contain the same value to validate.
-    """
     implements( iforms.IWidget )
     
     def __init__(self, original):
@@ -179,22 +153,11 @@ class CheckedPassword(object):
         return self.original.validate(pwds[0])
         
         
-class ChoiceBase(object):
-    """
-    A base class for widgets that provide the UI to select one or more items
-    from a list.
+class SelectChoice(object):
+    implements( iforms.IWidget )
     
-    options:
-        A sequence of objects adaptable to IKey and ILabel. IKey is used as the
-        <option>'s value attribute; ILabel is used as the <option>'s child.
-        IKey and ILabel adapters for tuple are provided.
-    noneOption:
-        An object adaptable to IKey and ILabel that is used to identify when
-        nothing has been selected. Defaults to ('', '')
-    """
-        
     options = None
-    noneOption = None
+    noneOption = ('', '')
     
     def __init__(self, original, options=None, noneOption=_UNSET):
         self.original = original
@@ -203,20 +166,6 @@ class ChoiceBase(object):
         if noneOption is not _UNSET:
             self.noneOption = noneOption
 
-        
-class SelectChoice(ChoiceBase):
-    """
-    A drop-down list of options.
-    
-    <select>
-      <option value="...">...</option>
-    </select>
-    
-    """
-    implements( iforms.IWidget )
-    
-    noneOption = ('', '')
-    
     def _renderTag(self, ctx, key, value, converter, disabled):
 
         def renderOptions(ctx, data):
@@ -239,70 +188,21 @@ class SelectChoice(ChoiceBase):
         return tag
     
     def render(self, ctx, key, args, errors):
+        
         converter = iforms.IStringConvertible(self.original)
+        
         if errors:
             value = args.get(key, [''])[0]
         else:
             value = converter.fromType(args.get(key))
+
         return self._renderTag(ctx, key, value, converter, False)
             
     def renderImmutable(self, ctx, key, args, errors):
         converter = iforms.IStringConvertible(self.original)
+        
         value = converter.fromType(args.get(key))
-        return self._renderTag(ctx, key, value, converter, True)
-        
-    def processInput(self, ctx, key, args):
-        value = args.get(key, [''])[0]
-        value = iforms.IStringConvertible(self.original).toType(value)
-        return self.original.validate(value)
-        
-        
-class RadioChoice(ChoiceBase):
-    """
-    A list of options in the form of radio buttons.
-    
-    <input type="radio" ... value="..."/><label>...</label><br />
-    <input type="radio" ... value="..."/><label>...</label><br />
-    """
-    implements( iforms.IWidget )
-    
-    def _renderTag(self, ctx, key, value, converter, disabled):
-        
-        def renderOption(ctx, itemKey, itemLabel, num, selected):
-            cssid = (keytocssid(ctx.key),'-',num)
-            tag = T.input(name=key, type='radio', id=cssid, value=itemKey)
-            if selected:
-                tag = tag(checked='checked')
-            return tag, ' ', T.label(for_=cssid)[itemLabel], T.br
-        
-        def renderOptions(ctx, data):
-            # A counter to assign unique ids to each input
-            idCounter = itertools.count()
-            if self.noneOption is not None:
-                itemKey = iforms.IKey(self.noneOption).key()
-                itemLabel = iforms.ILabel(self.noneOption).label()
-                yield renderOption(ctx, itemKey, itemLabel, idCounter.next(), itemKey==value)
-            if not data:
-                return
-            for item in data:
-                itemKey = iforms.IKey(item).key()
-                itemLabel = iforms.ILabel(item).label()
-                itemKey = converter.fromType(itemKey)
-                yield renderOption(ctx, itemKey, itemLabel, idCounter.next(), itemKey==value)
-            
-        return T.invisible(data=self.options)[renderOptions]
-    
-    def render(self, ctx, key, args, errors):
-        converter = iforms.IStringConvertible(self.original)
-        if errors:
-            value = args.get(key, [''])[0]
-        else:
-            value = converter.fromType(args.get(key))
-        return self._renderTag(ctx, key, value, converter, False)
-            
-    def renderImmutable(self, ctx, key, args, errors):
-        converter = iforms.IStringConvertible(self.original)
-        value = converter.fromType(args.get(key))
+
         return self._renderTag(ctx, key, value, converter, True)
         
     def processInput(self, ctx, key, args):
@@ -312,14 +212,6 @@ class RadioChoice(ChoiceBase):
         
         
 class DatePartsInput(object):
-    """
-    Three text input fields for entering a date in parts.
-    
-    Default format is mm/dd/yyyy
-    
-    dayFirst:
-        Make the day the first input field. dd/mm/yyyy
-    """
     implements( iforms.IWidget )
     
     dayFirst = False
@@ -365,6 +257,7 @@ class DatePartsInput(object):
         namer = self._namer(key)
         year, month, day = converter.fromType(args.get(key))
         return self._renderTag(ctx, year, month, day, namer, True)
+
             
     def processInput(self, ctx, key, args):
         namer = self._namer(key)
@@ -384,9 +277,6 @@ class DatePartsInput(object):
 
 
 class MMYYDatePartsInput(object):
-    """
-    Two input fields for entering the month and year.
-    """
     implements( iforms.IWidget )
     
     cutoffYear = 70
@@ -458,19 +348,18 @@ class MMYYDatePartsInput(object):
         value = iforms.IDateTupleConvertible(self.original).toType( value )
         return self.original.validate(value)
         
-        
 class CheckboxMultiChoice(object):
-    """
-    Multiple choice list, rendered as a list of checkbox fields.
-    """
     implements( iforms.IWidget )
     
     options = None
+    noneOption = ('', '')
     
-    def __init__(self, original, options=None):
+    def __init__(self, original, options=None, noneOption=_UNSET):
         self.original = original
         if options is not None:
             self.options = options
+        if noneOption is not _UNSET:
+            self.noneOption = noneOption
     
     def _renderTag(self, ctx, key, values, converter, disabled):
         
@@ -618,15 +507,6 @@ class FileUpload(object):
         
         
 class FileUploadWidget(object):
-    """
-    File upload widget that carries the uploaded file around until the form
-    validates.
-    
-    The widget uses the resource manager to save the file to temporary storage
-    until the form validates. This makes file uploads behave like most of the
-    other widgets, i.e. the value is kept when a form is redisplayed due to
-    validation errors.
-    """
     implements( iforms.IWidget )
 
     FROM_RESOURCE_MANAGER = 'rm'
@@ -819,9 +699,6 @@ class FileUploadWidget(object):
             return None
 
 class Hidden(object):
-    """
-    A hidden form field.
-    """
     __implements__ = iforms.IWidget,
 
     inputType = 'hidden'
@@ -847,6 +724,6 @@ class Hidden(object):
 __all__ = [
     'Checkbox', 'CheckboxMultiChoice', 'CheckedPassword','FileUploadRaw', 'FileUpload', 'FileUploadWidget',
     'Password', 'SelectChoice', 'TextArea', 'TextInput', 'DatePartsInput',
-    'MMYYDatePartsInput', 'Hidden', 'RadioChoice',
+    'MMYYDatePartsInput', 'Hidden'
     ]
     

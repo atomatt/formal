@@ -49,14 +49,12 @@ class ResourceManager( object ):
             except OSError:
                 pass
 
-        # Encode the filename to avoid any unicode filesystem errors.
-        fileName = self._encodeFilename(fileName)
+        fileName = fileName.replace( '_', '-' )
 
         (target, path) = tempfile.mkstemp( '__' + fileName )
-        
-        # target is a file handle. We want a file object.
-        target = os.fdopen(target, 'w')
-        
+        os.close( target )
+
+        target = open( path, 'w' )
         copyfileobj( filelike, target )
         target.close()
         resourceId = self._toResourceId( path )
@@ -69,7 +67,7 @@ class ResourceManager( object ):
             return None
         fileName = match.group( 1 )
         path = os.sep.join( (tempfile.gettempdir(), resourceId) )
-        return path, self._decodeFilename(fileName)
+        return path, fileName
 
     def _toResourceId( self, path ):
         path = path[len(tempfile.gettempdir()):]
@@ -84,18 +82,4 @@ class ResourceManager( object ):
                 os.remove( path )
             except OSError:
                 pass
-        
-    def _encodeFilename(self, filename):
-        """
-        Encode the filename (which may be unicode) so it's safe to use with
-        the filesystem.
-        """
-        return filename.encode('utf-8').encode('base64')[:-1]
-        
-    def _decodeFilename(self, filename):
-        """
-        Undo what _encodeFilename did.
-        """
-        filename = filename + '\n'
-        return filename.decode('base64').decode('utf-8')
         
