@@ -3,6 +3,7 @@ Widgets are small components that render form fields for inputing data in a
 certain format.
 """
 
+import itertools
 from nevow import inevow, tags as T, util, url, static
 from forms import converters, iforms, validation
 from forms.util import keytocssid
@@ -178,13 +179,10 @@ class CheckedPassword(object):
         return self.original.validate(pwds[0])
         
         
-class SelectChoice(object):
+class ChoiceBase(object):
     """
-    A drop-down list of options.
-    
-    <select>
-      <option value="...">...</option>
-    </select>
+    A base class for widgets that provide the UI to select one or more items
+    from a list.
     
     options:
         A sequence of objects adaptable to IKey and ILabel. IKey is used as the
@@ -194,10 +192,9 @@ class SelectChoice(object):
         An object adaptable to IKey and ILabel that is used to identify when
         nothing has been selected. Defaults to ('', '')
     """
-    implements( iforms.IWidget )
-    
+        
     options = None
-    noneOption = ('', '')
+    noneOption = None
     
     def __init__(self, original, options=None, noneOption=_UNSET):
         self.original = original
@@ -206,6 +203,20 @@ class SelectChoice(object):
         if noneOption is not _UNSET:
             self.noneOption = noneOption
 
+        
+class SelectChoice(ChoiceBase):
+    """
+    A drop-down list of options.
+    
+    <select>
+      <option value="...">...</option>
+    </select>
+    
+    """
+    implements( iforms.IWidget )
+    
+    noneOption = ('', '')
+    
     def _renderTag(self, ctx, key, value, converter, disabled):
 
         def renderOptions(ctx, data):
@@ -226,6 +237,60 @@ class SelectChoice(object):
         if disabled:
             tag(class_='disabled', disabled='disabled')
         return tag
+    
+    def render(self, ctx, key, args, errors):
+        converter = iforms.IStringConvertible(self.original)
+        if errors:
+            value = args.get(key, [''])[0]
+        else:
+            value = converter.fromType(args.get(key))
+        return self._renderTag(ctx, key, value, converter, False)
+            
+    def renderImmutable(self, ctx, key, args, errors):
+        converter = iforms.IStringConvertible(self.original)
+        value = converter.fromType(args.get(key))
+        return self._renderTag(ctx, key, value, converter, True)
+        
+    def processInput(self, ctx, key, args):
+        value = args.get(key, [''])[0]
+        value = iforms.IStringConvertible(self.original).toType(value)
+        return self.original.validate(value)
+        
+        
+class RadioChoice(ChoiceBase):
+    """
+    A list of options in the form of radio buttons.
+    
+    <input type="radio" ... value="..."/><label>...</label><br />
+    <input type="radio" ... value="..."/><label>...</label><br />
+    """
+    implements( iforms.IWidget )
+    
+    def _renderTag(self, ctx, key, value, converter, disabled):
+        
+        def renderOption(ctx, itemKey, itemLabel, num, selected):
+            cssid = (keytocssid(ctx.key),'-',num)
+            tag = T.input(name=key, type='radio', id=cssid, value=itemKey)
+            if selected:
+                tag = tag(checked='checked')
+            return tag, ' ', T.label(for_=cssid)[itemLabel], T.br
+        
+        def renderOptions(ctx, data):
+            # A counter to assign unique ids to each input
+            idCounter = itertools.count()
+            if self.noneOption is not None:
+                itemKey = iforms.IKey(self.noneOption).key()
+                itemLabel = iforms.ILabel(self.noneOption).label()
+                yield renderOption(ctx, itemKey, itemLabel, idCounter.next(), itemKey==value)
+            if not data:
+                return
+            for item in data:
+                itemKey = iforms.IKey(item).key()
+                itemLabel = iforms.ILabel(item).label()
+                itemKey = converter.fromType(itemKey)
+                yield renderOption(ctx, itemKey, itemLabel, idCounter.next(), itemKey==value)
+            
+        return T.invisible(data=self.options)[renderOptions]
     
     def render(self, ctx, key, args, errors):
         converter = iforms.IStringConvertible(self.original)
@@ -394,21 +459,11 @@ class MMYYDatePartsInput(object):
         return self.original.validate(value)
         
         
-class CheckboxMultiChoice(object):
+class CheckboxMultiChoice(ChoiceBase):
     """
     Multiple choice list, rendered as a list of checkbox fields.
     """
     implements( iforms.IWidget )
-    
-    options = None
-    noneOption = ('', '')
-    
-    def __init__(self, original, options=None, noneOption=_UNSET):
-        self.original = original
-        if options is not None:
-            self.options = options
-        if noneOption is not _UNSET:
-            self.noneOption = noneOption
     
     def _renderTag(self, ctx, key, values, converter, disabled):
         
@@ -785,6 +840,6 @@ class Hidden(object):
 __all__ = [
     'Checkbox', 'CheckboxMultiChoice', 'CheckedPassword','FileUploadRaw', 'FileUpload', 'FileUploadWidget',
     'Password', 'SelectChoice', 'TextArea', 'TextInput', 'DatePartsInput',
-    'MMYYDatePartsInput', 'Hidden'
+    'MMYYDatePartsInput', 'Hidden', 'RadioChoice',
     ]
     

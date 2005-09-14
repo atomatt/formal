@@ -10,6 +10,7 @@ def makeForm(ctx):
     form.addField('required', forms.String(required=True))
     form.addField('oneString', forms.String(), forms.widgetFactory(forms.SelectChoice, options=strings))
     form.addField('anotherString', forms.String(), forms.widgetFactory(forms.SelectChoice, options=data_strings))
+    form.addField('oneMoreString', forms.String(required=True), forms.widgetFactory(forms.RadioChoice, options=data_strings))
     form.addField('oneDate', forms.Date(), forms.widgetFactory(forms.SelectChoice, options=dates))
     form.addField('multipleStrings', forms.Sequence(forms.String()), forms.widgetFactory(forms.CheckboxMultiChoice, options=strings))
     form.addField('multipleDates', forms.Sequence(forms.Date()), forms.widgetFactory(forms.CheckboxMultiChoice, options=dates))
