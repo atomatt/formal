@@ -24,6 +24,10 @@
   width: 100px;
 }
 
+.nevow-form .inputs {
+  margin-left: 100px;
+}
+
 .nevow-form .required label {
   font-style: italic;
   font-weight: bold;
@@ -78,7 +82,6 @@
 
 .nevow-form .checkboxmultichoice .inputs {
   clear: both;
-  margin-left:100px;
 }
 
 .nevow-form .checkboxmultichoice .inputs label {
@@ -90,16 +93,8 @@
   color:#000;
 }
 
-
-.nevow-form .fileupload input {
-  margin-left: 100px;
-}
 .nevow-form .fileupload img {
   height:30px;
-}
-
-.nevow-form .fileuploadwidget .inputs {
-  margin-left: 100px;
 }
 
 .nevow-form .disabled, .nevow-form .readonly {
@@ -112,3 +107,13 @@
   overflow: scroll;
   height: 300px;
 }
+
+.nevow-form .radiochoice .inputs input {
+  width: auto;
+}
+
+.nevow-form .radiochoice .inputs label {
+  display: inline;
+  float: none;
+}
+
