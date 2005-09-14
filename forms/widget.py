@@ -459,11 +459,18 @@ class MMYYDatePartsInput(object):
         return self.original.validate(value)
         
         
-class CheckboxMultiChoice(ChoiceBase):
+class CheckboxMultiChoice(object):
     """
     Multiple choice list, rendered as a list of checkbox fields.
     """
     implements( iforms.IWidget )
+    
+    options = None
+    
+    def __init__(self, original, options=None):
+        self.original = original
+        if options is not None:
+            self.options = options
     
     def _renderTag(self, ctx, key, values, converter, disabled):
         
