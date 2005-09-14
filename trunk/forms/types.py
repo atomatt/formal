@@ -18,20 +18,28 @@ class Type(object):
     missing = None
     # Instance cannot be changed
     immutable = False
+    # List of validators to test the value against
+    validators = []
 
-    def __init__(self, name=None, required=None, missing=None, immutable=None):
+    def __init__(self, name=None, required=None, missing=None, immutable=None, validators=None):
         if name is not None:
             self.name = name
-        if required is not None:
-            self.required = required
         if missing is not None:
             self.missing = missing
         if immutable is not None:
             self.immutable = immutable
+        if validators is not None:
+            self.validators = validators[:]
+        else:
+            self.validators = self.validators[:]
+        if required is None:
+            required = self.required
+        if required:
+            self.validators.append(validation.RequiredValidator())
 
     def validate(self, value):
-        if self.required and value is None:
-            raise validation.FieldRequiredError('required field')
+        for validator in self.validators:
+            validator.validate(self, value)
         if value is None:
             value = self.missing
         return value
@@ -58,8 +66,8 @@ class String(Type):
         
 class Integer(Type):
     pass
-        
-        
+    
+    
 class Float(Type):
     pass
         
@@ -85,6 +93,12 @@ class Sequence(Type):
         super(Sequence, self).__init__(**k)
         if type is not None:
             self.type = type
+            
+    def validate(self, value):
+        # Map empty sequence to None
+        if not value:
+            value = None
+        return super(Sequence, self).validate(value)
 
 
 class File(Type):
