@@ -12,6 +12,7 @@ examples = [
     'forms.examples.fileupload',
     'forms.examples.smartupload',
     'forms.examples.selections',
+    'forms.examples.dates',
     ]
 
 def makeSite(application):
