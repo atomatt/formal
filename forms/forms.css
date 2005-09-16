@@ -25,7 +25,7 @@
 }
 
 .nevow-form .inputs {
-  margin-left: 100px;
+  margin-left: 110px;
 }
 
 .nevow-form .required label {
@@ -57,7 +57,7 @@
 
 .nevow-form .message, .nevow-form .description {
   display: block;
-  margin-left: 100px;
+  margin-left: 110px;
   font-size: 79%;
 }
 
