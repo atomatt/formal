@@ -184,19 +184,14 @@ class Form(object):
 class FormErrors(object):
     implements( iforms.IFormErrors )
     
-    errors = None
-    
     def __init__(self, formName):
         self.formName = formName
+        self.errors = []
     
     def add(self, error):
-        if self.errors is None:
-            self.errors = []
         self.errors.append(error)
         
     def getFieldError(self, name):
-        if self.errors is None:
-            return None
         fieldErrors = [e for e in self.errors if isinstance(e, validation.FieldError)]
         for error in fieldErrors:
             if error.fieldName == name:
@@ -206,7 +201,7 @@ class FormErrors(object):
         return [e for e in self.errors if isinstance(e, validation.FormError)]
         
     def __nonzero__(self):
-        return self.errors is not None
+        return len(self.errors) != 0
         
         
 class ResourceMixin(object):
