@@ -327,21 +327,23 @@ class FormRenderer(object):
     
     loader = loaders.stan(
         T.form(id=T.slot('id'), action=T.slot('action'), class_='nevow-form', method='post', enctype='multipart/form-data', **{'accept-charset':'utf-8'})[
-            T.input(type='hidden', name='_charset_'),
-            T.slot('errors'),
-            T.slot('items'),
-            T.div(id=T.slot('fieldId'), pattern='item', _class=T.slot('class'))[
-                T.label(_for=T.slot('id'))[T.slot('label')],
-                T.div(_class='inputs')[T.slot('inputs')],
-                T.slot('description'),
-                T.slot('message'),
-                ],
-            T.div(class_='hiddenitems')[
-                T.slot('hiddenitems'),
-                T.invisible(pattern="hiddenitem")[T.slot('inputs')]
-                ],
-            T.div(class_='actions')[
-                T.slot('actions'),
+            T.fieldset[
+                T.input(type='hidden', name='_charset_'),
+                T.slot('errors'),
+                T.slot('items'),
+                T.div(id=T.slot('fieldId'), pattern='item', _class=T.slot('class'))[
+                    T.label(_for=T.slot('id'))[T.slot('label')],
+                    T.div(_class='inputs')[T.slot('inputs')],
+                    T.slot('description'),
+                    T.slot('message'),
+                    ],
+                T.div(class_='hiddenitems')[
+                    T.slot('hiddenitems'),
+                    T.invisible(pattern="hiddenitem")[T.slot('inputs')]
+                    ],
+                T.div(class_='actions')[
+                    T.slot('actions'),
+                    ],
                 ],
             ]
         )
