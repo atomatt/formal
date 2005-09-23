@@ -3,6 +3,9 @@ from twisted.python import reflect
 from nevow import appserver, loaders, rend, static, tags as T, url
 import forms
 
+DOCTYPE = T.xml('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">')
+CHARSET = T.xml('<meta http-equiv="content-type" content="text/html; charset=utf-8" />')
+
 examples = [
     'forms.examples.simple',
     'forms.examples.types',
@@ -23,15 +26,19 @@ def makeSite(application):
 class RootPage(rend.Page):
 
     docFactory = loaders.stan(
-        T.html[
-            T.head[
-                T.title['Forms Examples'],
-                T.link(rel='stylesheet', type='text/css', href=url.root.child('examples.css')),
+        T.invisible[
+            DOCTYPE,
+            T.html[
+                T.head[
+                    CHARSET,
+                    T.title['Forms Examples'],
+                    T.link(rel='stylesheet', type='text/css', href=url.root.child('examples.css')),
+                    ],
+                T.body[
+                    T.directive('examples'),
+                    ],
                 ],
-            T.body[
-                T.directive('examples'),
-                ],
-            ]
+            ],
         )
 
     def render_examples(self, ctx, data):
@@ -49,18 +56,22 @@ class RootPage(rend.Page):
 
 class FormPage(forms.ResourceMixin, rend.Page):
     docFactory = loaders.stan(
-        T.html[
-            T.head[
-                T.title(data=T.directive('title'), render=rend.data),
-                T.link(rel='stylesheet', type='text/css', href=url.root.child('examples.css')),
-                T.link(rel='stylesheet', type='text/css', href=url.root.child('forms.css')),
+        T.invisible[
+            DOCTYPE,
+            T.html[
+                T.head[
+                    CHARSET,
+                    T.title(data=T.directive('title'), render=rend.data),
+                    T.link(rel='stylesheet', type='text/css', href=url.root.child('examples.css')),
+                    T.link(rel='stylesheet', type='text/css', href=url.root.child('forms.css')),
+                    ],
+                T.body[
+                    T.h1(data=T.directive('title'), render=rend.data),
+                    T.p(data=T.directive('description'), render=rend.data),
+                    T.directive('form example'),
+                    ],
                 ],
-            T.body[
-                T.h1(data=T.directive('title'), render=rend.data),
-                T.p(data=T.directive('description'), render=rend.data),
-                T.directive('form example'),
-                ],
-            ]
+            ],
         )
 
     def data_title(self, ctx, data):
