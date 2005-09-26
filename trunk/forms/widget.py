@@ -111,11 +111,18 @@ class TextArea(object):
     """
     implements( iforms.IWidget )
     
-    def __init__(self, original):
+    cols = 48
+    rows = 6
+    
+    def __init__(self, original, cols=None, rows=None):
         self.original = original
+        if cols is not None:
+            self.cols = cols
+        if rows is not None:
+            self.rows = rows
 
     def _renderTag(self, ctx, key, value, readonly):
-        tag=T.textarea(name=key, id=keytocssid(ctx.key))[value or '']
+        tag=T.textarea(name=key, id=keytocssid(ctx.key), cols=self.cols, rows=self.rows)[value or '']
         if readonly:
             tag(class_='readonly', readonly='readonly')
         return tag
