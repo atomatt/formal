@@ -332,7 +332,7 @@ class FormRenderer(object):
                 T.slot('errors'),
                 T.slot('items'),
                 T.div(id=T.slot('fieldId'), pattern='item', _class=T.slot('class'))[
-                    T.label(_for=T.slot('id'))[T.slot('label')],
+                    T.label(_class='label', _for=T.slot('id'))[T.slot('label')],
                     T.div(_class='inputs')[T.slot('inputs')],
                     T.slot('description'),
                     T.slot('message'),
