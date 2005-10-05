@@ -16,21 +16,21 @@ WIDGET_RESOURCE = '__widget_res__'
 
 
 def renderForm(name):
-    
+
     def _(ctx, data):
-        
+
         def _processForm( form, ctx, name ):
             # Find the form
             ctx.remember(form, iforms.IForm)
-            
+
             # Create a keyed tag that will render the form when flattened.
             tag = T.invisible(key=name)[inevow.IRenderer(form)]
-            
+
             # Create a new context, referencing the above tag, so that we don't
             # pollute the current context with anything the form needs during
             # rendering.
             ctx = context.WovenContext(parent=ctx, tag=tag)
-            
+
             # Find errors for *this* form and remember things on the context
             errors = iforms.IFormErrors(ctx, None)
             if errors is not None and errors.formName == name:
@@ -38,17 +38,17 @@ def renderForm(name):
             else:
                 ctx.remember(None, iforms.IFormErrors)
                 ctx.remember(form.data or {}, iforms.IFormData)
-                
+
             return ctx
 
         d = defer.succeed( ctx )
         d.addCallback( locateForm, name )
         d.addCallback( _processForm, ctx, name )
         return d
-        
+
     return _
 
-    
+
 class Action(object):
     """Tracks an action that has been added to a form.
     """
@@ -61,18 +61,18 @@ class Action(object):
 class Form(object):
 
     implements( iforms.IForm )
-    
+
     callback = None
     items = None
     actions = None
     widgets = None
     data = None
-    
+
     def __init__(self, callback=None):
         if callback is not None:
             self.callback = callback
         self.resourceManager = ResourceManager()
-    
+
     def addField(self, name, type, widgetFactory=None, label=None, description=None, cssClass=None):
         if self.items is None:
             self.items = []
@@ -84,22 +84,22 @@ class Form(object):
             if self.widgets is None:
                 self.widgets = {}
             self.widgets[name] = widgetFactory
-            
+
     def addAction(self, callback, name="submit", validate=True):
         if self.actions is None:
             self.actions = []
         if name in [action.name for action in self.actions]:
             raise ValueError('Action with name %r already exists.' % name)
         self.actions.append( Action(callback, name, validate) )
-            
+
     def widgetForItem(self, itemName):
-        
+
         for name, type, label, description, cssClass in self.items:
             if name == itemName:
                 break
         else:
             raise KeyError()
-            
+
         if self.widgets is not None:
             try:
                 widgetFactory = self.widgets[name]
@@ -107,11 +107,11 @@ class Form(object):
                 pass
             else:
                 return widgetFactory(type)
-                
+
         return iforms.IWidget(type)
-        
+
     def process(self, ctx):
-        
+
         # Unflatten the request into nested dicts.
         args = {}
         for name, value in inevow.IRequest(ctx).args.iteritems():
@@ -121,7 +121,7 @@ class Form(object):
             for g in group:
                 d = args.setdefault(g,{})
             d[name] = value
-            
+
         # Find the callback to use, defaulting to the form default
         callback, validate = self.callback, True
         if self.actions is not None:
@@ -135,12 +135,12 @@ class Form(object):
 
         if callback is None:
             raise Exception('The form has no callback and no action was found.')
-            
+
         # Store an errors object in the context
         errors = FormErrors(self.name)
         errors.data = args
         ctx.remember(errors, iforms.IFormErrors)
-        
+
         # Iterate the items and collect the form data and/or errors.
         data = {}
         for name, type, label, description, cssClass in self.items:
@@ -151,10 +151,11 @@ class Form(object):
                     data[name] = self.data.get(name)
                     errors.data[name] = self.data.get(name)
             except validation.FieldError, e:
-                if e.fieldName is None:
-                    e.fieldName = name
-                errors.add(e)
-                
+                if validate:
+                    if e.fieldName is None:
+                        e.fieldName = name
+                    errors.add(e)
+
         if errors:
             return errors
 
@@ -167,71 +168,71 @@ class Form(object):
         def _clearUpResources( r ):
             self.resourceManager.clearUpResources()
             return r
-            
+
         d = defer.maybeDeferred(callback, ctx, self, data)
         d.addCallback( _clearUpResources )
         d.addErrback(self._cbFormProcessingFailed, ctx)
         return d
-        
+
     def _cbFormProcessingFailed(self, failure, ctx):
         e = failure.value
         failure.trap(validation.FormError, validation.FieldError)
         errors = iforms.IFormErrors(ctx)
         errors.add(failure.value)
         return errors
-        
-                
+
+
 class FormErrors(object):
     implements( iforms.IFormErrors )
-    
+
     def __init__(self, formName):
         self.formName = formName
         self.errors = []
-    
+
     def add(self, error):
         self.errors.append(error)
-        
+
     def getFieldError(self, name):
         fieldErrors = [e for e in self.errors if isinstance(e, validation.FieldError)]
         for error in fieldErrors:
             if error.fieldName == name:
                 return error
-                
+
     def getFormErrors(self):
         return [e for e in self.errors if isinstance(e, validation.FormError)]
-        
+
     def __nonzero__(self):
         return len(self.errors) != 0
-        
-        
+
+
 class ResourceMixin(object):
     implements( iforms.IFormFactory )
-    
+
     def __init__(self, *a, **k):
         super(ResourceMixin, self).__init__(*a, **k)
         self.remember(self, iforms.IFormFactory)
-    
+
     def render_form(self, name):
         def _(ctx, data):
             return renderForm(name)
         return _
-        
+
     def formFactory(self, ctx, name):
-        
+
         factory = getattr(self, 'form_%s'%name, None)
         if factory is not None:
             return factory(ctx)
-        
+
         s = super(ResourceMixin, self)
         if hasattr(s,'formFactory'):
             return s.formFactory(ctx, name)
-            
+
     def locateChild(self, ctx, segments):
 
         # Leave now if this it not meant for me.
         if not segments[0].startswith(FORM_ACTION) and not segments[0].startswith(WIDGET_RESOURCE):
             return super(ResourceMixin, self).locateChild(ctx, segments)
-            
+
         # Find the form name, the form and remember them.
         formName = segments[0].split(ACTION_SEP)[1]
         d = defer.succeed( ctx )
@@ -255,7 +256,7 @@ class ResourceMixin(object):
     def _fileFromWidget( self, ctx, form, segments ):
         widget = form.widgetForItem( segments[0] )
         return widget.getResource( ctx, segments[1:] )
-        
+
     def _formProcessed(self, r, ctx):
         if isinstance(r, FormErrors):
             if r:
@@ -271,19 +272,19 @@ class IKnownForms(Interface):
     """Marker interface used to locate a dict instance containing the named
     forms we know about during this request.
     """
-    
-    
+
+
 class KnownForms(dict):
     implements( IKnownForms )
-        
+
 
 def locateForm(ctx, name):
     """Locate a form by name.
-    
+
     Initially, a form is located by calling on an IFormFactory that is found
     on the context. Once a form has been found, it is remembered in an
     KnownForms instance for the lifetime of the request.
-    
+
     This ensures that the form that is located during form processing will be
     the same instance that is located when a form is rendered after validation
     failure.
@@ -321,10 +322,10 @@ def formAction(name):
 def formWidgetResource(name):
     return '%s%s%s' % (WIDGET_RESOURCE, ACTION_SEP, name)
 
-    
+
 class FormRenderer(object):
     implements( inevow.IRenderer )
-    
+
     loader = loaders.stan(
         T.form(id=T.slot('id'), action=T.slot('action'), class_='nevow-form', method='post', enctype='multipart/form-data', **{'accept-charset':'utf-8'})[
             T.fieldset[
@@ -347,19 +348,19 @@ class FormRenderer(object):
                 ],
             ]
         )
-    
+
     def __init__(self, original, *a, **k):
         super(FormRenderer, self).__init__(*a, **k)
         self.original = original
-        
+
     def rend(self, ctx, data):
-        
+
         segs = inevow.ICurrentSegments(ctx)
         if segs and segs[-1].startswith(FORM_ACTION):
             urlFactory = url.here.sibling
         else:
             urlFactory = url.here.child
-        
+
         tag = T.invisible[self.loader.load()]
         tag.fillSlots('id', util.keytocssid(ctx.key))
         tag.fillSlots('action', urlFactory(formAction(self.original.name)))
@@ -379,7 +380,7 @@ class FormRenderer(object):
             T.p['Please correct the following errors:'],
             T.ul[[T.li[str(error)] for error in errors]],
             ]
-            
+
     def _renderItems(self, ctx, data):
         if self.original.items is None:
             yield ''
@@ -399,22 +400,22 @@ class FormRenderer(object):
             widget = self.original.widgetForItem(item[0])
             if getattr(widget,'inputType','') == 'hidden':
                 yield hiddenItemPattern(key=item[0], data=item, render=self._renderHiddenItem)
-        
+
     def _renderItem(self, ctx, data):
-        
+
         def _(ctx, data):
-            
+
             name, type, label, description, cssClass = data
             form = self.original
             formErrors = iforms.IFormErrors(ctx, None)
             formData = iforms.IFormData(ctx)
-            
+
             widget = form.widgetForItem(name)
             if formErrors is None:
                 error = None
             else:
                 error = formErrors.getFieldError(name)
-            
+
             classes = [
                 'field',
                 type.__class__.__name__.lower(),
@@ -422,7 +423,7 @@ class FormRenderer(object):
                 ]
             if cssClass:
                 classes.append(cssClass)
-                
+
             if error is None:
                 message = ''
             else:
@@ -440,9 +441,9 @@ class FormRenderer(object):
             ctx.tag.fillSlots('inputs', render(ctx, name, formData, formErrors))
             ctx.tag.fillSlots('message', message)
             ctx.tag.fillSlots('description', T.div(class_='description')[description or ''])
-            
+
             return ctx.tag
-            
+
         return _
 
     def _renderHiddenItem(self, ctx, data):
@@ -462,29 +463,29 @@ class FormRenderer(object):
             return ctx.tag
 
         return _
-    
+
     def _renderActions(self, ctx, data):
-        
+
         if self.original.actions is None:
             yield ''
             return
-            
+
         for action in self.original.actions:
             yield T.invisible(data=action, render=self._renderAction)
-            
+
     def _renderAction(self, ctx, data):
         return T.input(type='submit', id='%s-action-%s'%(util.keytocssid(ctx.key), data.name), name=data.name, value=util.titleFromName(data.name))
-        
-        
+
+
 class NoAddSlashHack:
     implements( inevow.IResource )
-    
+
     def __init__(self, wrapped):
         self.wrapped = wrapped
-        
+
     def __getattr__(self, name):
         return getattr(self.wrapped, name)
-        
+
     def renderHTTP(self, ctx):
         MISSING = object()
         addSlash = getattr(self.wrapped, 'addSlash', MISSING)
@@ -497,8 +498,8 @@ class NoAddSlashHack:
                 self.wrapped.addSlash = addSlash
             else:
                 del self.wrapped.addSlash
-        return r    
+        return r
 
-    
+
 registerAdapter(FormRenderer, Form, inevow.IRenderer)
 
