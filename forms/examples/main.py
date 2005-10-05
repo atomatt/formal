@@ -16,6 +16,7 @@ examples = [
     'forms.examples.smartupload',
     'forms.examples.selections',
     'forms.examples.dates',
+    'forms.examples.extrabutton',
     ]
 
 def makeSite(application):
