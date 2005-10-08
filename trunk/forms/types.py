@@ -12,8 +12,6 @@ class Type(object):
 
     # Name of the instance
     name = None
-    # Instance is required
-    required = False
     # Value to use if no value entered
     missing = None
     # Instance cannot be changed
@@ -44,46 +42,61 @@ class Type(object):
             value = self.missing
         return value
 
+    def hasValidator(self, validatorType):
+        """
+        Check for the existance of a validator of a specific type.
+        """
+        for v in self.validators:
+            if isinstance(v, validatorType):
+                return True
+        return False
+
+    def required():
+        def get(self):
+            return self.hasValidator(validation.RequiredValidator)
+        return get,
+    required = property(*required())
+
 
 class String(Type):
 
     # Strip the value before validation
     strip = False
-    
+
     def __init__(self, **k):
         strip = k.pop('strip', None)
         if strip is not None:
             self.strip = strip
         super(String, self).__init__(**k)
-        
+
     def validate(self, value):
         if value is not None and self.strip:
             value = value.strip()
         if not value:
             value = None
         return super(String, self).validate(value)
-        
-        
+
+
 class Integer(Type):
     pass
-    
-    
+
+
 class Float(Type):
     pass
-        
-        
+
+
 class Boolean(Type):
     pass
-        
-        
+
+
 class Date(Type):
     pass
-        
-        
+
+
 class Time(Type):
     pass
-        
-        
+
+
 class Sequence(Type):
 
     # Type of items in the sequence
@@ -93,7 +106,7 @@ class Sequence(Type):
         super(Sequence, self).__init__(**k)
         if type is not None:
             self.type = type
-            
+
     def validate(self, value):
         # Map empty sequence to None
         if not value:
@@ -108,4 +121,4 @@ class File(Type):
 __all__ = [
     'Boolean', 'Date', 'File', 'Float', 'Integer', 'Sequence', 'String', 'Time',
     ]
-    
+
