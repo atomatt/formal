@@ -416,11 +416,17 @@ class FormRenderer(object):
             else:
                 error = formErrors.getFieldError(name)
 
+            # Basic classes are 'field', the type's class name and the widget's
+            # class name.
             classes = [
                 'field',
                 type.__class__.__name__.lower(),
                 widget.__class__.__name__.lower(),
                 ]
+            # Add a required class
+            if type.required:
+                classes.append('required')
+            # Add a user-specified class
             if cssClass:
                 classes.append(cssClass)
 
