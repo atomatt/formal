@@ -530,29 +530,5 @@ class FormRenderer(object):
         return T.input(type='submit', id='%s-action-%s'%(util.keytocssid(ctx.key), data.name), name=data.name, value=util.titleFromName(data.name))
 
 
-class NoAddSlashHack:
-    implements( inevow.IResource )
-
-    def __init__(self, wrapped):
-        self.wrapped = wrapped
-
-    def __getattr__(self, name):
-        return getattr(self.wrapped, name)
-
-    def renderHTTP(self, ctx):
-        MISSING = object()
-        addSlash = getattr(self.wrapped, 'addSlash', MISSING)
-        if addSlash:
-            self.wrapped.addSlash = False
-        try:
-            r = self.wrapped.renderHTTP(ctx)
-        finally:
-            if addSlash is not MISSING:
-                self.wrapped.addSlash = addSlash
-            else:
-                del self.wrapped.addSlash
-        return r
-
-
 registerAdapter(FormRenderer, Form, inevow.IRenderer)
 
