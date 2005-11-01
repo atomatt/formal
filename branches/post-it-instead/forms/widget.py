@@ -696,14 +696,9 @@ class FileUploadWidget(object):
             originalKey = args.get( key )
         originalKey = self._blankField( originalKey )
 
-        if errors:
-            urlFactory = url.URL.fromContext( ctx ).sibling
-        else:
-            urlFactory = url.URL.fromContext( ctx ).child
-
         if resourceId:
             # Have an uploaded file, so render a URL to the uploaded file
-            tmpURL = urlFactory(formWidgetResource(form.name)).child(key).child( self.FROM_RESOURCE_MANAGER ).child( resourceId )
+            tmpURL = url.here.child(formWidgetResource(form.name)).child(key).child( self.FROM_RESOURCE_MANAGER ).child( resourceId )
             yield T.p[T.img(src=tmpURL)]
         elif originalKey:
             # The is no uploaded file, but there is an original, so render a
@@ -711,7 +706,7 @@ class FileUploadWidget(object):
             if self.originalKeyIsURL:
                 tmpURL = originalKey
             else:
-                tmpURL = urlFactory(formWidgetResource(form.name)).child(key).child( self.FROM_CONVERTIBLE ).child( originalKey )
+                tmpURL = url.here.child(formWidgetResource(form.name)).child(key).child( self.FROM_CONVERTIBLE ).child( originalKey )
             yield T.p[T.img(src=tmpURL)]
         else:
             # No uploaded file, no original
@@ -738,18 +733,13 @@ class FileUploadWidget(object):
             originalKey = args.get( key )
         originalKey = self._blankField( originalKey )
 
-        if errors:
-            urlFactory = url.URL.fromContext( ctx ).sibling
-        else:
-            urlFactory = url.URL.fromContext( ctx ).child
-
         if originalKey:
             # The is no uploaded file, but there is an original, so render a
             # URL to it
             if self.originalKeyIsURL:
                 tmpURL = originalKey
             else:
-                tmpURL = urlFactory(formWidgetResource(form.name)).child(key).child(self.FROM_CONVERTIBLE).child(originalKey)
+                tmpURL = url.here.child(formWidgetResource(form.name)).child(key).child(self.FROM_CONVERTIBLE).child(originalKey)
             yield T.p[T.img(src=tmpURL)]
         else:
             # No uploaded file, no original

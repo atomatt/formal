@@ -227,6 +227,20 @@ class ResourceMixin(object):
         if hasattr(s,'formFactory'):
             return s.formFactory(ctx, name)
 
+    def locateChild(self, ctx, segments):
+        # Leave now if this it not meant for me.
+        if not segments[0].startswith(WIDGET_RESOURCE):
+            return super(ResourceMixin, self).locateChild(ctx, segments)
+        # Serve up file from the resource manager
+        formName = segments[0].split(ACTION_SEP)[1]
+        d = locateForm(ctx, formName)
+        def rememberForm(form, ctx):
+            ctx.remember(form, iforms.IForm)
+            return form
+        d.addCallback(rememberForm, ctx)
+        d.addCallback(lambda form: self._fileFromWidget(ctx, form, segments[1:]))
+        return d
+
     def renderHTTP(self, ctx):
         # Just to help a bit
         def callSuper():
@@ -240,7 +254,7 @@ class ResourceMixin(object):
         formName = request.args.get(FORM_NAME_KEY, [None])[0]
         if formName is None:
             return callSuper()
-        # Find the actual form
+        # Find the actual form and process it
         d = defer.succeed(ctx)
         d.addCallback(locateForm, formName)
         d.addCallback(self._processForm, ctx)
@@ -248,12 +262,6 @@ class ResourceMixin(object):
 
     def _processForm(self, form, ctx):
         ctx.remember(form, iforms.IForm)
-
-#        # Serve up file from the resource manager
-#        if segments[0].startswith( WIDGET_RESOURCE ):
-#            return self._fileFromWidget( ctx, form, segments[1:] )
-
-        # Process the form.
         d = defer.maybeDeferred(form.process, ctx)
         d.addCallback(self._formProcessed, ctx)
         return d
@@ -262,11 +270,13 @@ class ResourceMixin(object):
         widget = form.widgetForItem(segments[0])
         return widget.getResource(ctx, segments[1:])
 
-    def _formProcessed(self, r, ctx):
-        if isinstance(r, FormErrors):
+    def _formProcessed(self, result, ctx):
+        if isinstance(result, FormErrors):
             resource = super(ResourceMixin, self).renderHTTP(ctx)
-        elif r is None:
+        elif result is None:
             resource = url.URL.fromContext(ctx)
+        else:
+            resource = result
         return resource
 
 
