@@ -10,9 +10,8 @@ from resourcemanager import ResourceManager
 from zope.interface import implements
 
 
-ACTION_SEP = '!!'
-WIDGET_RESOURCE = '__widget_res__'
-FORM_NAME_KEY = '__nevow_form__'
+SEPARATOR = '!!'
+FORMS_KEY = '__nevow_form__'
 
 
 def renderForm(name):
@@ -20,7 +19,7 @@ def renderForm(name):
     def _(ctx, data):
 
         def _processForm( form, ctx, name ):
-            # Find the form
+            # Remember the form
             ctx.remember(form, iforms.IForm)
 
             # Create a keyed tag that will render the form when flattened.
@@ -218,21 +217,21 @@ class ResourceMixin(object):
         return _
 
     def formFactory(self, ctx, name):
-
+        # Find the factory method
         factory = getattr(self, 'form_%s'%name, None)
         if factory is not None:
             return factory(ctx)
-
+        # Try the super class
         s = super(ResourceMixin, self)
         if hasattr(s,'formFactory'):
             return s.formFactory(ctx, name)
 
     def locateChild(self, ctx, segments):
         # Leave now if this it not meant for me.
-        if not segments[0].startswith(WIDGET_RESOURCE):
+        if not segments[0].startswith(FORMS_KEY):
             return super(ResourceMixin, self).locateChild(ctx, segments)
         # Serve up file from the resource manager
-        formName = segments[0].split(ACTION_SEP)[1]
+        formName = segments[0].split(SEPARATOR)[1]
         d = locateForm(ctx, formName)
         def rememberForm(form, ctx):
             ctx.remember(form, iforms.IForm)
@@ -251,7 +250,7 @@ class ResourceMixin(object):
         if request.method != 'POST':
             return callSuper()
         # Try to find the form name
-        formName = request.args.get(FORM_NAME_KEY, [None])[0]
+        formName = request.args.get(FORMS_KEY, [None])[0]
         if formName is None:
             return callSuper()
         # Find the actual form and process it
@@ -329,7 +328,7 @@ def locateForm(ctx, name):
     return d
 
 def formWidgetResource(name):
-    return '%s%s%s' % (WIDGET_RESOURCE, ACTION_SEP, name)
+    return '%s%s%s' % (FORMS_KEY, SEPARATOR, name)
 
 class FormRenderer(object):
     implements( inevow.IRenderer )
@@ -338,7 +337,7 @@ class FormRenderer(object):
         T.form(id=T.slot('id'), action=T.slot('action'), class_='nevow-form', method='post', enctype='multipart/form-data', **{'accept-charset':'utf-8'})[
             T.fieldset[
                 T.input(type='hidden', name='_charset_'),
-                T.input(type='hidden', name=FORM_NAME_KEY, value=T.slot('name')),
+                T.input(type='hidden', name=FORMS_KEY, value=T.slot('name')),
                 T.slot('errors'),
                 T.slot('items'),
                 T.div(id=T.slot('fieldId'), pattern='item', _class=T.slot('class'))[
