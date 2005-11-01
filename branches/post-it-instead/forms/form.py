@@ -227,48 +227,48 @@ class FormResource(object):
         return widget.getResource(ctx, segments[1:])
 
 
-class ResourceMixin(object):
-    implements( iforms.IFormFactory )
+class ResourceComponent(object):
+    """
+    I provide the IResource behaviour needed to process and render a page
+    containing a Form.
+    """
 
-    child___nevow_form__ = FormResource()
+    def __init__(self, **k):
+        parent = k.pop('parent')
+        super(ResourceComponent, self).__init__(**k)
+        self.parent = parent
 
-    def __init__(self, *a, **k):
-        super(ResourceMixin, self).__init__(*a, **k)
-        self.remember(self, iforms.IFormFactory)
-
-    def render_form(self, name):
-        def _(ctx, data):
-            return renderForm(name)
-        return _
-
-    def formFactory(self, ctx, name):
-        # Find the factory method
-        factory = getattr(self, 'form_%s'%name, None)
-        if factory is not None:
-            return factory(ctx)
-        # Try the super class
-        s = super(ResourceMixin, self)
-        if hasattr(s,'formFactory'):
-            return s.formFactory(ctx, name)
+    def locateChild(self, ctx, segments):
+        if segments[0] == FORMS_KEY:
+            self.remember(ctx)
+            return FormResource(), segments[1:]
+        return appserver.NotFound
 
     def renderHTTP(self, ctx):
-        # Just to help a bit
-        def callSuper():
-            return super(ResourceMixin, self).renderHTTP(ctx)
         # Get hold of the request
         request = inevow.IRequest(ctx)
         # Intercept POST requests to see if it's for me
         if request.method != 'POST':
-            return callSuper()
+            return None
         # Try to find the form name
         formName = request.args.get(FORMS_KEY, [None])[0]
         if formName is None:
-            return callSuper()
+            return None
         # Find the actual form and process it
+        self.remember(ctx)
         d = defer.succeed(ctx)
         d.addCallback(locateForm, formName)
         d.addCallback(self._processForm, ctx)
         return d
+
+    def remember(self, ctx):
+        ctx.remember(self.parent, iforms.IFormFactory)
+
+    def render_form(self, name):
+        def _(ctx, data):
+            self.remember(ctx)
+            return renderForm(name)
+        return _
 
     def _processForm(self, form, ctx):
         ctx.remember(form, iforms.IForm)
@@ -278,12 +278,50 @@ class ResourceMixin(object):
 
     def _formProcessed(self, result, ctx):
         if isinstance(result, FormErrors):
-            resource = super(ResourceMixin, self).renderHTTP(ctx)
+            return None
         elif result is None:
             resource = url.URL.fromContext(ctx)
         else:
             resource = result
         return resource
+
+
+class ResourceMixin(object):
+    implements( iforms.IFormFactory )
+
+    def __init__(self, *a, **k):
+        super(ResourceMixin, self).__init__(*a, **k)
+        self.remember(self, iforms.IFormFactory)
+        self.__formsComponent = ResourceComponent(parent=self)
+
+    def locateChild(self, ctx, segments):
+        def gotResult(result):
+            if result is not appserver.NotFound:
+                return result
+            return super(ResourceMixin, self).locateChild(ctx, segments)
+        d = defer.maybeDeferred(self.__formsComponent.locateChild, ctx, segments)
+        d.addCallback(gotResult)
+        return d
+
+    def renderHTTP(self, ctx):
+        def gotResult(result):
+            if result is not None:
+                return result
+            return super(ResourceMixin, self).renderHTTP(ctx)
+        d = defer.maybeDeferred(self.__formsComponent.renderHTTP, ctx)
+        d.addCallback(gotResult)
+        return d
+
+    def render_form(self, name):
+        return self.__formsComponent.render_form(name)
+
+    def formFactory(self, ctx, name):
+        factory = getattr(self, 'form_%s'%name, None)
+        if factory is not None:
+            return factory(ctx)
+        s = super(ResourceMixin, self)
+        if hasattr(s,'formFactory'):
+            return s.formFactory(ctx, name)
 
 
 class IKnownForms(Interface):
@@ -319,7 +357,7 @@ def locateForm(ctx, name):
     if form is not None:
         return form
     # Not known yet, ask a form factory to create the form
-    factory = iforms.IFormFactory(ctx)
+    factory = ctx.locate(iforms.IFormFactory)
 
     def cacheForm( form, name ):
         if form is None:
