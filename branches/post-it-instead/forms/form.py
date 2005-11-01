@@ -3,7 +3,7 @@ Form implementation and high-level renderers.
 """
 
 from twisted.internet import defer
-from nevow import context, loaders, inevow, tags as T, url
+from nevow import appserver, context, loaders, inevow, tags as T, url
 from nevow.compy import registerAdapter, Interface
 from forms import iforms, util, validation
 from resourcemanager import ResourceManager
@@ -12,6 +12,7 @@ from zope.interface import implements
 
 SEPARATOR = '!!'
 FORMS_KEY = '__nevow_form__'
+WIDGET_RESOURCE_KEY = 'widget_resource'
 
 
 def renderForm(name):
@@ -204,8 +205,32 @@ class FormErrors(object):
         return len(self.errors) != 0
 
 
+class FormResource(object):
+    implements(inevow.IResource)
+
+    def locateChild(self, ctx, segments):
+        # The form name is the first segment
+        formName = segments[0]
+        if segments[1] == WIDGET_RESOURCE_KEY:
+            # Serve up file from the resource manager
+            d = locateForm(ctx, formName)
+            d.addCallback(self._fileFromWidget, ctx, segments[2:])
+            return d
+        return appserver.NotFound
+
+    def renderHTTP(self, ctx):
+        raise NotImplemented()
+
+    def _fileFromWidget(self, form, ctx, segments):
+        ctx.remember(form, iforms.IForm)
+        widget = form.widgetForItem(segments[0])
+        return widget.getResource(ctx, segments[1:])
+
+
 class ResourceMixin(object):
     implements( iforms.IFormFactory )
+
+    child___nevow_form__ = FormResource()
 
     def __init__(self, *a, **k):
         super(ResourceMixin, self).__init__(*a, **k)
@@ -225,20 +250,6 @@ class ResourceMixin(object):
         s = super(ResourceMixin, self)
         if hasattr(s,'formFactory'):
             return s.formFactory(ctx, name)
-
-    def locateChild(self, ctx, segments):
-        # Leave now if this it not meant for me.
-        if not segments[0].startswith(FORMS_KEY):
-            return super(ResourceMixin, self).locateChild(ctx, segments)
-        # Serve up file from the resource manager
-        formName = segments[0].split(SEPARATOR)[1]
-        d = locateForm(ctx, formName)
-        def rememberForm(form, ctx):
-            ctx.remember(form, iforms.IForm)
-            return form
-        d.addCallback(rememberForm, ctx)
-        d.addCallback(lambda form: self._fileFromWidget(ctx, form, segments[1:]))
-        return d
 
     def renderHTTP(self, ctx):
         # Just to help a bit
@@ -264,10 +275,6 @@ class ResourceMixin(object):
         d = defer.maybeDeferred(form.process, ctx)
         d.addCallback(self._formProcessed, ctx)
         return d
-
-    def _fileFromWidget(self, ctx, form, segments):
-        widget = form.widgetForItem(segments[0])
-        return widget.getResource(ctx, segments[1:])
 
     def _formProcessed(self, result, ctx):
         if isinstance(result, FormErrors):
@@ -327,8 +334,8 @@ def locateForm(ctx, name):
     d.addCallback( cacheForm, name )
     return d
 
-def formWidgetResource(name):
-    return '%s%s%s' % (FORMS_KEY, SEPARATOR, name)
+def widgetResourceURL(name):
+    return url.here.child(FORMS_KEY).child(name).child(WIDGET_RESOURCE_KEY)
 
 class FormRenderer(object):
     implements( inevow.IRenderer )

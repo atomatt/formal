@@ -7,7 +7,7 @@ import itertools
 from nevow import inevow, tags as T, util, url, static
 from forms import converters, iforms, validation
 from forms.util import keytocssid
-from forms.form import formWidgetResource
+from forms.form import widgetResourceURL
 from zope.interface import implements
 from twisted.internet import defer
 
@@ -698,7 +698,7 @@ class FileUploadWidget(object):
 
         if resourceId:
             # Have an uploaded file, so render a URL to the uploaded file
-            tmpURL = url.here.child(formWidgetResource(form.name)).child(key).child( self.FROM_RESOURCE_MANAGER ).child( resourceId )
+            tmpURL = widgetResourceURL(form.name).child(key).child( self.FROM_RESOURCE_MANAGER ).child(resourceId)
             yield T.p[T.img(src=tmpURL)]
         elif originalKey:
             # The is no uploaded file, but there is an original, so render a
@@ -706,7 +706,7 @@ class FileUploadWidget(object):
             if self.originalKeyIsURL:
                 tmpURL = originalKey
             else:
-                tmpURL = url.here.child(formWidgetResource(form.name)).child(key).child( self.FROM_CONVERTIBLE ).child( originalKey )
+                tmpURL = widgetResourceURL(form.name).child(key).child( self.FROM_CONVERTIBLE ).child( originalKey )
             yield T.p[T.img(src=tmpURL)]
         else:
             # No uploaded file, no original
@@ -739,7 +739,7 @@ class FileUploadWidget(object):
             if self.originalKeyIsURL:
                 tmpURL = originalKey
             else:
-                tmpURL = url.here.child(formWidgetResource(form.name)).child(key).child(self.FROM_CONVERTIBLE).child(originalKey)
+                tmpURL = widgetResourceURL(form.name).child(key).child(self.FROM_CONVERTIBLE).child(originalKey)
             yield T.p[T.img(src=tmpURL)]
         else:
             # No uploaded file, no original
