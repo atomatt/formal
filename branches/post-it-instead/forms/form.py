@@ -11,8 +11,8 @@ from zope.interface import implements
 
 
 ACTION_SEP = '!!'
-FORM_ACTION = '__nevow_form__'
 WIDGET_RESOURCE = '__widget_res__'
+FORM_NAME_KEY = '__nevow_form__'
 
 
 def renderForm(name):
@@ -227,45 +227,47 @@ class ResourceMixin(object):
         if hasattr(s,'formFactory'):
             return s.formFactory(ctx, name)
 
-    def locateChild(self, ctx, segments):
-
-        # Leave now if this it not meant for me.
-        if not segments[0].startswith(FORM_ACTION) and not segments[0].startswith(WIDGET_RESOURCE):
-            return super(ResourceMixin, self).locateChild(ctx, segments)
-
-        # Find the form name, the form and remember them.
-        formName = segments[0].split(ACTION_SEP)[1]
-        d = defer.succeed( ctx )
-        d.addCallback( locateForm, formName )
-        d.addCallback( self._processForm, ctx, segments )
+    def renderHTTP(self, ctx):
+        # Just to help a bit
+        def callSuper():
+            return super(ResourceMixin, self).renderHTTP(ctx)
+        # Get hold of the request
+        request = inevow.IRequest(ctx)
+        # Intercept POST requests to see if it's for me
+        if request.method != 'POST':
+            return callSuper()
+        # Try to find the form name
+        formName = request.args.get(FORM_NAME_KEY, [None])[0]
+        if formName is None:
+            return callSuper()
+        # Find the actual form
+        d = defer.succeed(ctx)
+        d.addCallback(locateForm, formName)
+        d.addCallback(self._processForm, ctx)
         return d
 
-    def _processForm( self, form, ctx, segments ):
+    def _processForm(self, form, ctx):
         ctx.remember(form, iforms.IForm)
 
-        # Serve up file from the resource manager
-        if segments[0].startswith( WIDGET_RESOURCE ):
-            return self._fileFromWidget( ctx, form, segments[1:] )
+#        # Serve up file from the resource manager
+#        if segments[0].startswith( WIDGET_RESOURCE ):
+#            return self._fileFromWidget( ctx, form, segments[1:] )
 
         # Process the form.
         d = defer.maybeDeferred(form.process, ctx)
         d.addCallback(self._formProcessed, ctx)
         return d
 
-
-    def _fileFromWidget( self, ctx, form, segments ):
-        widget = form.widgetForItem( segments[0] )
-        return widget.getResource( ctx, segments[1:] )
+    def _fileFromWidget(self, ctx, form, segments):
+        widget = form.widgetForItem(segments[0])
+        return widget.getResource(ctx, segments[1:])
 
     def _formProcessed(self, r, ctx):
         if isinstance(r, FormErrors):
-            if r:
-                return NoAddSlashHack(self), ()
-            else:
-                r = None
-        if r is None:
-            r = url.URL.fromContext(ctx)
-        return r, ()
+            resource = super(ResourceMixin, self).renderHTTP(ctx)
+        elif r is None:
+            resource = url.URL.fromContext(ctx)
+        return resource
 
 
 class IKnownForms(Interface):
@@ -316,12 +318,8 @@ def locateForm(ctx, name):
     d.addCallback( cacheForm, name )
     return d
 
-def formAction(name):
-    return '%s%s%s' % (FORM_ACTION, ACTION_SEP, name)
-
 def formWidgetResource(name):
     return '%s%s%s' % (WIDGET_RESOURCE, ACTION_SEP, name)
-
 
 class FormRenderer(object):
     implements( inevow.IRenderer )
@@ -330,6 +328,7 @@ class FormRenderer(object):
         T.form(id=T.slot('id'), action=T.slot('action'), class_='nevow-form', method='post', enctype='multipart/form-data', **{'accept-charset':'utf-8'})[
             T.fieldset[
                 T.input(type='hidden', name='_charset_'),
+                T.input(type='hidden', name=FORM_NAME_KEY, value=T.slot('name')),
                 T.slot('errors'),
                 T.slot('items'),
                 T.div(id=T.slot('fieldId'), pattern='item', _class=T.slot('class'))[
@@ -354,16 +353,10 @@ class FormRenderer(object):
         self.original = original
 
     def rend(self, ctx, data):
-
-        segs = inevow.ICurrentSegments(ctx)
-        if segs and segs[-1].startswith(FORM_ACTION):
-            urlFactory = url.here.sibling
-        else:
-            urlFactory = url.here.child
-
         tag = T.invisible[self.loader.load()]
+        tag.fillSlots('name', self.original.name)
         tag.fillSlots('id', util.keytocssid(ctx.key))
-        tag.fillSlots('action', urlFactory(formAction(self.original.name)))
+        tag.fillSlots('action', url.here)
         tag.fillSlots('errors', self._renderErrors)
         tag.fillSlots('items', self._renderItems)
         tag.fillSlots('hiddenitems', self._renderHiddenItems)
