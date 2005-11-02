@@ -1,5 +1,6 @@
-from forms import iforms
 from zope.interface import implements
+from nevow import inevow
+from forms import iforms
 
 
 def titleFromName(name):
@@ -25,20 +26,38 @@ def titleFromName(name):
 
     return ''.join(_())
 
-    
+
 def keytocssid(key):
     return '-'.join(key.split('.'))
-    
-        
+
+
 class SequenceKeyLabelAdapter(object):
     implements( iforms.IKey, iforms.ILabel )
-    
+
     def __init__(self, original):
         self.original = original
-        
+
     def key(self):
         return self.original[0]
-        
+
     def label(self):
         return self.original[1]
-        
+
+
+class LazyResource(object):
+    implements(inevow.IResource)
+
+    def __init__(self, factory):
+        self.factory = factory
+        self._resource = None
+
+    def locateChild(self, ctx, segments):
+        return self.resource().locateCHild(ctx, segments)
+
+    def renderHTTP(self, ctx):
+        return self.resource().renderHTTP(ctx)
+
+    def resource(self):
+        if self._resource is None:
+            self._resource = self.factory()
+        return self._resource
