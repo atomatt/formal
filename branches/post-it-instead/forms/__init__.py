@@ -12,7 +12,7 @@ from nevow import static
 from forms.types import *
 from forms.validation import *
 from forms.widget import *
-from forms.form import Form, ResourceComponent, ResourceMixin, renderForm
+from forms.form import Form, ResourceMixin, renderForm
 from forms import iforms
 
 def widgetFactory(widgetClass, *a, **k):

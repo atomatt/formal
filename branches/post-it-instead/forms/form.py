@@ -227,7 +227,7 @@ class FormResource(object):
         return widget.getResource(ctx, segments[1:])
 
 
-class ResourceComponent(object):
+class FormsResourceBehaviour(object):
     """
     I provide the IResource behaviour needed to process and render a page
     containing a Form.
@@ -235,7 +235,7 @@ class ResourceComponent(object):
 
     def __init__(self, **k):
         parent = k.pop('parent')
-        super(ResourceComponent, self).__init__(**k)
+        super(FormsResourceBehaviour, self).__init__(**k)
         self.parent = parent
 
     def locateChild(self, ctx, segments):
@@ -292,14 +292,14 @@ class ResourceMixin(object):
     def __init__(self, *a, **k):
         super(ResourceMixin, self).__init__(*a, **k)
         self.remember(self, iforms.IFormFactory)
-        self.__formsComponent = ResourceComponent(parent=self)
+        self.__formsBehaviour = FormsResourceBehaviour(parent=self)
 
     def locateChild(self, ctx, segments):
         def gotResult(result):
             if result is not appserver.NotFound:
                 return result
             return super(ResourceMixin, self).locateChild(ctx, segments)
-        d = defer.maybeDeferred(self.__formsComponent.locateChild, ctx, segments)
+        d = defer.maybeDeferred(self.__formsBehaviour.locateChild, ctx, segments)
         d.addCallback(gotResult)
         return d
 
@@ -308,12 +308,12 @@ class ResourceMixin(object):
             if result is not None:
                 return result
             return super(ResourceMixin, self).renderHTTP(ctx)
-        d = defer.maybeDeferred(self.__formsComponent.renderHTTP, ctx)
+        d = defer.maybeDeferred(self.__formsBehaviour.renderHTTP, ctx)
         d.addCallback(gotResult)
         return d
 
     def render_form(self, name):
-        return self.__formsComponent.render_form(name)
+        return self.__formsBehaviour.render_form(name)
 
     def formFactory(self, ctx, name):
         factory = getattr(self, 'form_%s'%name, None)
