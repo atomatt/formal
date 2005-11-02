@@ -52,10 +52,11 @@ class RootPage(rend.Page):
 
     def childFactory(self, ctx, name):
         if name in examples:
-            return FormPage(reflect.namedAny(name))
+            return FormExamplePage(reflect.namedAny(name))
 
 
-class FormPage(forms.ResourceMixin, rend.Page):
+
+class FormExamplePage(forms.ResourceMixin, rend.Page):
     docFactory = loaders.stan(
         T.invisible[
             DOCTYPE,
