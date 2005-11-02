@@ -3,12 +3,11 @@ HTML forms.
 """
 
 
-version_info = (0, 3, 0)
+version_info = (0, 3, 1)
 version = '.'.join([str(i) for i in version_info])
 
 
 from nevow import static
-
 from forms.types import *
 from forms.validation import *
 from forms.widget import *
@@ -26,7 +25,9 @@ except ImportError:
     import os.path
     defaultCSS = static.File(os.path.join(os.path.split(__file__)[0], 'forms.css'))
 else:
-    defaultCSS = static.File(pkg_resources.resource_filename('forms', 'forms.css'))
+    from forms.util import LazyResource
+    defaultCSS = LazyResource(lambda: static.File(pkg_resources.resource_filename('forms', 'forms.css')))
+    del LazyResource
 
 # Register standard adapters
 from nevow.compy import registerAdapter
