@@ -3,16 +3,16 @@ Form implementation and high-level renderers.
 """
 
 from twisted.internet import defer
-from nevow import context, loaders, inevow, tags as T, url
+from nevow import appserver, context, loaders, inevow, tags as T, url
 from nevow.compy import registerAdapter, Interface
 from forms import iforms, util, validation
 from resourcemanager import ResourceManager
 from zope.interface import implements
 
 
-ACTION_SEP = '!!'
-FORM_ACTION = '__nevow_form__'
-WIDGET_RESOURCE = '__widget_res__'
+SEPARATOR = '!!'
+FORMS_KEY = '__nevow_form__'
+WIDGET_RESOURCE_KEY = 'widget_resource'
 
 
 def renderForm(name):
@@ -20,7 +20,7 @@ def renderForm(name):
     def _(ctx, data):
 
         def _processForm( form, ctx, name ):
-            # Find the form
+            # Remember the form
             ctx.remember(form, iforms.IForm)
 
             # Create a keyed tag that will render the form when flattened.
@@ -205,67 +205,123 @@ class FormErrors(object):
         return len(self.errors) != 0
 
 
+class FormResource(object):
+    implements(inevow.IResource)
+
+    def locateChild(self, ctx, segments):
+        # The form name is the first segment
+        formName = segments[0]
+        if segments[1] == WIDGET_RESOURCE_KEY:
+            # Serve up file from the resource manager
+            d = locateForm(ctx, formName)
+            d.addCallback(self._fileFromWidget, ctx, segments[2:])
+            return d
+        return appserver.NotFound
+
+    def renderHTTP(self, ctx):
+        raise NotImplemented()
+
+    def _fileFromWidget(self, form, ctx, segments):
+        ctx.remember(form, iforms.IForm)
+        widget = form.widgetForItem(segments[0])
+        return widget.getResource(ctx, segments[1:])
+
+
+class FormsResourceBehaviour(object):
+    """
+    I provide the IResource behaviour needed to process and render a page
+    containing a Form.
+    """
+
+    def __init__(self, **k):
+        parent = k.pop('parent')
+        super(FormsResourceBehaviour, self).__init__(**k)
+        self.parent = parent
+
+    def locateChild(self, ctx, segments):
+        if segments[0] == FORMS_KEY:
+            self.remember(ctx)
+            return FormResource(), segments[1:]
+        return appserver.NotFound
+
+    def renderHTTP(self, ctx):
+        # Get hold of the request
+        request = inevow.IRequest(ctx)
+        # Intercept POST requests to see if it's for me
+        if request.method != 'POST':
+            return None
+        # Try to find the form name
+        formName = request.args.get(FORMS_KEY, [None])[0]
+        if formName is None:
+            return None
+        # Find the actual form and process it
+        self.remember(ctx)
+        d = defer.succeed(ctx)
+        d.addCallback(locateForm, formName)
+        d.addCallback(self._processForm, ctx)
+        return d
+
+    def remember(self, ctx):
+        ctx.remember(self.parent, iforms.IFormFactory)
+
+    def render_form(self, name):
+        def _(ctx, data):
+            self.remember(ctx)
+            return renderForm(name)
+        return _
+
+    def _processForm(self, form, ctx):
+        ctx.remember(form, iforms.IForm)
+        d = defer.maybeDeferred(form.process, ctx)
+        d.addCallback(self._formProcessed, ctx)
+        return d
+
+    def _formProcessed(self, result, ctx):
+        if isinstance(result, FormErrors):
+            return None
+        elif result is None:
+            resource = url.URL.fromContext(ctx)
+        else:
+            resource = result
+        return resource
+
+
 class ResourceMixin(object):
     implements( iforms.IFormFactory )
 
     def __init__(self, *a, **k):
         super(ResourceMixin, self).__init__(*a, **k)
         self.remember(self, iforms.IFormFactory)
+        self.__formsBehaviour = FormsResourceBehaviour(parent=self)
+
+    def locateChild(self, ctx, segments):
+        def gotResult(result):
+            if result is not appserver.NotFound:
+                return result
+            return super(ResourceMixin, self).locateChild(ctx, segments)
+        d = defer.maybeDeferred(self.__formsBehaviour.locateChild, ctx, segments)
+        d.addCallback(gotResult)
+        return d
+
+    def renderHTTP(self, ctx):
+        def gotResult(result):
+            if result is not None:
+                return result
+            return super(ResourceMixin, self).renderHTTP(ctx)
+        d = defer.maybeDeferred(self.__formsBehaviour.renderHTTP, ctx)
+        d.addCallback(gotResult)
+        return d
 
     def render_form(self, name):
-        def _(ctx, data):
-            return renderForm(name)
-        return _
+        return self.__formsBehaviour.render_form(name)
 
     def formFactory(self, ctx, name):
-
         factory = getattr(self, 'form_%s'%name, None)
         if factory is not None:
             return factory(ctx)
-
         s = super(ResourceMixin, self)
         if hasattr(s,'formFactory'):
             return s.formFactory(ctx, name)
-
-    def locateChild(self, ctx, segments):
-
-        # Leave now if this it not meant for me.
-        if not segments[0].startswith(FORM_ACTION) and not segments[0].startswith(WIDGET_RESOURCE):
-            return super(ResourceMixin, self).locateChild(ctx, segments)
-
-        # Find the form name, the form and remember them.
-        formName = segments[0].split(ACTION_SEP)[1]
-        d = defer.succeed( ctx )
-        d.addCallback( locateForm, formName )
-        d.addCallback( self._processForm, ctx, segments )
-        return d
-
-    def _processForm( self, form, ctx, segments ):
-        ctx.remember(form, iforms.IForm)
-
-        # Serve up file from the resource manager
-        if segments[0].startswith( WIDGET_RESOURCE ):
-            return self._fileFromWidget( ctx, form, segments[1:] )
-
-        # Process the form.
-        d = defer.maybeDeferred(form.process, ctx)
-        d.addCallback(self._formProcessed, ctx)
-        return d
-
-
-    def _fileFromWidget( self, ctx, form, segments ):
-        widget = form.widgetForItem( segments[0] )
-        return widget.getResource( ctx, segments[1:] )
-
-    def _formProcessed(self, r, ctx):
-        if isinstance(r, FormErrors):
-            if r:
-                return NoAddSlashHack(self), ()
-            else:
-                r = None
-        if r is None:
-            r = url.URL.fromContext(ctx)
-        return r, ()
 
 
 class IKnownForms(Interface):
@@ -301,7 +357,7 @@ def locateForm(ctx, name):
     if form is not None:
         return form
     # Not known yet, ask a form factory to create the form
-    factory = iforms.IFormFactory(ctx)
+    factory = ctx.locate(iforms.IFormFactory)
 
     def cacheForm( form, name ):
         if form is None:
@@ -316,12 +372,8 @@ def locateForm(ctx, name):
     d.addCallback( cacheForm, name )
     return d
 
-def formAction(name):
-    return '%s%s%s' % (FORM_ACTION, ACTION_SEP, name)
-
-def formWidgetResource(name):
-    return '%s%s%s' % (WIDGET_RESOURCE, ACTION_SEP, name)
-
+def widgetResourceURL(name):
+    return url.here.child(FORMS_KEY).child(name).child(WIDGET_RESOURCE_KEY)
 
 class FormRenderer(object):
     implements( inevow.IRenderer )
@@ -330,6 +382,7 @@ class FormRenderer(object):
         T.form(id=T.slot('id'), action=T.slot('action'), class_='nevow-form', method='post', enctype='multipart/form-data', **{'accept-charset':'utf-8'})[
             T.fieldset[
                 T.input(type='hidden', name='_charset_'),
+                T.input(type='hidden', name=FORMS_KEY, value=T.slot('name')),
                 T.slot('errors'),
                 T.slot('items'),
                 T.div(id=T.slot('fieldId'), pattern='item', _class=T.slot('class'))[
@@ -354,16 +407,10 @@ class FormRenderer(object):
         self.original = original
 
     def rend(self, ctx, data):
-
-        segs = inevow.ICurrentSegments(ctx)
-        if segs and segs[-1].startswith(FORM_ACTION):
-            urlFactory = url.here.sibling
-        else:
-            urlFactory = url.here.child
-
         tag = T.invisible[self.loader.load()]
+        tag.fillSlots('name', self.original.name)
         tag.fillSlots('id', util.keytocssid(ctx.key))
-        tag.fillSlots('action', urlFactory(formAction(self.original.name)))
+        tag.fillSlots('action', url.here)
         tag.fillSlots('errors', self._renderErrors)
         tag.fillSlots('items', self._renderItems)
         tag.fillSlots('hiddenitems', self._renderHiddenItems)
@@ -481,30 +528,6 @@ class FormRenderer(object):
 
     def _renderAction(self, ctx, data):
         return T.input(type='submit', id='%s-action-%s'%(util.keytocssid(ctx.key), data.name), name=data.name, value=util.titleFromName(data.name))
-
-
-class NoAddSlashHack:
-    implements( inevow.IResource )
-
-    def __init__(self, wrapped):
-        self.wrapped = wrapped
-
-    def __getattr__(self, name):
-        return getattr(self.wrapped, name)
-
-    def renderHTTP(self, ctx):
-        MISSING = object()
-        addSlash = getattr(self.wrapped, 'addSlash', MISSING)
-        if addSlash:
-            self.wrapped.addSlash = False
-        try:
-            r = self.wrapped.renderHTTP(ctx)
-        finally:
-            if addSlash is not MISSING:
-                self.wrapped.addSlash = addSlash
-            else:
-                del self.wrapped.addSlash
-        return r
 
 
 registerAdapter(FormRenderer, Form, inevow.IRenderer)
