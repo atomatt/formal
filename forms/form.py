@@ -159,12 +159,6 @@ class Form(object):
         if errors:
             return errors
 
-        # toType
-        for name, type, label, description, cssClass in self.items:
-            widget = self.widgetForItem(name)
-            if hasattr( widget, 'convertibleFactory' ) and not type.immutable:
-                data[name] = widget.convertibleFactory(type).toType( data.get(name) )
-
         def _clearUpResources( r ):
             self.resourceManager.clearUpResources()
             return r
