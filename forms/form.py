@@ -52,10 +52,14 @@ def renderForm(name):
 class Action(object):
     """Tracks an action that has been added to a form.
     """
-    def __init__(self, callback, name, validate):
+    def __init__(self, callback, name, validate, label):
         self.callback = callback
         self.name = name
         self.validate = validate
+        if label is None:
+            self.label = util.titleFromName(name)
+        else:
+            self.label = label
 
 
 class Form(object):
@@ -85,12 +89,12 @@ class Form(object):
                 self.widgets = {}
             self.widgets[name] = widgetFactory
 
-    def addAction(self, callback, name="submit", validate=True):
+    def addAction(self, callback, name="submit", validate=True, label=None):
         if self.actions is None:
             self.actions = []
         if name in [action.name for action in self.actions]:
             raise ValueError('Action with name %r already exists.' % name)
-        self.actions.append( Action(callback, name, validate) )
+        self.actions.append( Action(callback, name, validate, label) )
 
     def widgetForItem(self, itemName):
 
@@ -521,7 +525,7 @@ class FormRenderer(object):
             yield T.invisible(data=action, render=self._renderAction)
 
     def _renderAction(self, ctx, data):
-        return T.input(type='submit', id='%s-action-%s'%(util.keytocssid(ctx.key), data.name), name=data.name, value=util.titleFromName(data.name))
+        return T.input(type='submit', id='%s-action-%s'%(util.keytocssid(ctx.key), data.name), name=data.name, value=data.label)
 
 
 registerAdapter(FormRenderer, Form, inevow.IRenderer)
