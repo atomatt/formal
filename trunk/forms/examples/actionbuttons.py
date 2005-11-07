@@ -1,13 +1,13 @@
 from nevow import url
 import forms
 
-title = 'Extra Button'
-description = 'Example of adding an extra, non-validating button'
+title = 'Action Button'
+description = 'Example of non-validating button, buttons with non-default labels, etc'
 
 def makeForm(ctx):
     form = forms.Form()
     form.addField('aString', forms.String(required=True))
-    form.addAction(formSubmitted)
+    form.addAction(formSubmitted, label="Click, click, clickety-click!")
     form.addAction(redirect, 'back', validate=False)
     return form
 
