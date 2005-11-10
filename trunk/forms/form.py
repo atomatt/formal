@@ -5,6 +5,7 @@ Form implementation and high-level renderers.
 from twisted.internet import defer
 from nevow import appserver, context, loaders, inevow, tags as T, url
 from nevow.compy import registerAdapter, Interface
+from nevow.util import getPOSTCharset
 from forms import iforms, util, validation
 from resourcemanager import ResourceManager
 from zope.interface import implements
@@ -116,9 +117,16 @@ class Form(object):
 
     def process(self, ctx):
 
+        # Get the request args
+        requestArgs = inevow.IRequest(ctx).args
+
+        # Decode the request arg names
+        charset = getPOSTCharset(ctx)
+        requestArgs = dict([(k.decode(charset),v) for k,v in requestArgs.iteritems()])
+
         # Unflatten the request into nested dicts.
         args = {}
-        for name, value in inevow.IRequest(ctx).args.iteritems():
+        for name, value in requestArgs.iteritems():
             name = name.split('.')
             group, name = name[:-1], name[-1]
             d = args
