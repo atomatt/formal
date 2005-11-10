@@ -768,7 +768,9 @@ class FileUploadWidget(object):
 
         # Validating against an uploaded file. Should the fact that there is
         # original file meet a required field validation?
-        return self.original.validate( resourceManager.getResourceForWidget( key ) )
+        value = resourceManager.getResourceForWidget( key )
+        value = self.convertibleFactory(self.original).toType( value )
+        return self.original.validate( value )
 
     def _registerWithResourceManager( self, key, args, resourceManager ):
         """
