@@ -3,7 +3,7 @@ HTML forms.
 """
 
 
-version_info = (0, 3, 3)
+version_info = (0, 3, 4)
 version = '.'.join([str(i) for i in version_info])
 
 
