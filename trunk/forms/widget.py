@@ -5,6 +5,7 @@ certain format.
 
 import itertools
 from nevow import inevow, tags as T, util, url, static
+from nevow.i18n import _
 from forms import converters, iforms, validation
 from forms.util import keytocssid
 from forms.form import widgetResourceURL
@@ -319,10 +320,10 @@ class DatePartsInput(object):
     """
     Three text input fields for entering a date in parts.
 
-    Default format is mm/dd/yyyy
+    Default format is month/day/year
 
     dayFirst:
-        Make the day the first input field. dd/mm/yyyy
+        Make the day the first input field. day/month/year
     """
     implements( iforms.IWidget )
 
@@ -348,9 +349,9 @@ class DatePartsInput(object):
                 tag(class_='readonly', readonly='readonly')
 
         if self.dayFirst:
-            return dayTag, ' / ', monthTag, ' / ', yearTag, ' (dd/mm/yyyy)'
+            return dayTag, ' / ', monthTag, ' / ', yearTag, ' ', _('(day/month/year)')
         else:
-            return monthTag, ' / ', dayTag, ' / ', yearTag, ' (mm/dd/yyyy)'
+            return monthTag, ' / ', dayTag, ' / ', yearTag, ' ', _('(month/day/year)')
 
     def render(self, ctx, key, args, errors):
         converter = iforms.IDateTupleConvertible(self.original)
@@ -378,6 +379,8 @@ class DatePartsInput(object):
             value = None
         elif len(value) != 3:
             raise validation.FieldValidationError("Invalid date")
+        if value is not None and len(value[0]) != 4:
+            raise validation.FieldValidationError("Please enter a 4-digit year")
         if value is not None:
             try:
                 value = [int(p) for p in value]
