@@ -843,9 +843,35 @@ class Hidden(object):
         value = iforms.IStringConvertible(self.original).toType(value)
         return self.original.validate(value)
 
+class ReSTTextArea(TextArea):
+    """
+    A large text entry area that accepts ReST and previews it as HTML
+
+    """
+
+    def _renderTag(self, ctx, key, value, readonly):
+        value = value or ''
+        try:
+            from docutils.core import publish_parts
+
+            restValue = publish_parts( value, writer_name='html' )['body']
+#                settings_overrides={'input_encoding':'unicode', 'output_encoding':'unicode'})
+        except:
+            restValue=value
+        tag = [
+            T.textarea(name=key, id=keytocssid(ctx.key), cols=self.cols, rows=self.rows)[value],
+            T.br,
+            T.label(class_='previewlabel')[' Preview '],
+            T.div(class_='htmlpreview')[T.xml(restValue)],
+            ]
+        if readonly:
+            tag[0](class_='readonly', readonly='readonly')
+        return tag
+
+
 __all__ = [
     'Checkbox', 'CheckboxMultiChoice', 'CheckedPassword','FileUploadRaw', 'FileUpload', 'FileUploadWidget',
     'Password', 'SelectChoice', 'TextArea', 'TextInput', 'DatePartsInput',
-    'MMYYDatePartsInput', 'Hidden', 'RadioChoice',
+    'MMYYDatePartsInput', 'Hidden', 'RadioChoice', 'ReSTTextArea'
     ]
 

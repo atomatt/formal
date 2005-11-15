@@ -17,6 +17,7 @@ examples = [
     'forms.examples.selections',
     'forms.examples.dates',
     'forms.examples.actionbuttons',
+    'forms.examples.restwidget',
     ]
 
 def makeSite(application):
