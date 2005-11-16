@@ -117,11 +117,16 @@
   float: none;
 }
 
-.nevow-form .resttextarea .htmlpreview {
-  border: 1px solid #ccc;
+.nevow-form .resttextarea .preview {
+  display: block;
 }
 
-.nevow-form .resttextarea .previewlabel {
-  margin-left: -110px;
+.nevow-form .resttextarea .preview-hidden {
+  display: none;
+}
+
+.nevow-form .resttextarea .preview-frame {
+  height: 500px;
+  width: 80%;
 }
 
