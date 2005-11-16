@@ -4,13 +4,14 @@ certain format.
 """
 
 import itertools
-from nevow import inevow, tags as T, util, url, static
+from nevow import inevow, tags as T, util, url, static, rend, loaders
 from nevow.i18n import _
 from forms import converters, iforms, validation
 from forms.util import keytocssid
-from forms.form import widgetResourceURL
+from forms.form import widgetResourceURL, widgetResourceURLFromContext
 from zope.interface import implements
 from twisted.internet import defer
+from cStringIO import StringIO
 
 
 # Marker object for args that are not supplied
@@ -788,7 +789,7 @@ class FileUploadWidget(object):
         if resourceId:
             resourceManager.register( key, resourceId )
 
-    def getResource( self, ctx, segments ):
+    def getResource( self, ctx, key, segments ):
         """
             Return an Resource that contains the image, either a file
             from the resource manager, or a data object from the convertible.
@@ -846,27 +847,105 @@ class Hidden(object):
 class ReSTTextArea(TextArea):
     """
     A large text entry area that accepts ReST and previews it as HTML
+    This will accept a restWriter parameter
 
     """
 
-    def _renderTag(self, ctx, key, value, readonly):
-        value = value or ''
+    def __init__(self, original, **kwds):
         try:
-            from docutils.core import publish_parts
+            self.restWriter = kwds.pop('restWriter')
+        except KeyError:
+            self.restWriter = None
+        TextArea.__init__(self, original, **kwds)
 
-            restValue = publish_parts( value, writer_name='html' )['body']
-#                settings_overrides={'input_encoding':'unicode', 'output_encoding':'unicode'})
-        except:
-            restValue=value
-        tag = [
-            T.textarea(name=key, id=keytocssid(ctx.key), cols=self.cols, rows=self.rows)[value],
-            T.br,
-            T.label(class_='previewlabel')[' Preview '],
-            T.div(class_='htmlpreview')[T.xml(restValue)],
-            ]
+    def _renderTag(self, ctx, key, value, readonly):
+        tag=T.invisible()
+        ta=T.textarea(name=key, id=keytocssid(ctx.key), cols=self.cols, rows=self.rows)[value or '']
         if readonly:
-            tag[0](class_='readonly', readonly='readonly')
+            ta(class_='readonly', readonly='readonly')
+        tag[ta]
+
+        if not readonly:
+            try:
+                import docutils
+                
+                form = iforms.IForm( ctx )
+                srcId = keytocssid(ctx.key)
+                previewDiv = srcId + '-preview-div'
+                frameId = srcId + '-preview-frame'
+                targetURL = widgetResourceURLFromContext(ctx, form.name).child(key).child( srcId )
+                tag[T.br()]
+                tag[T.button(onClick="return Forms.ReSTWidget.preview('%s', '%s', '%s');"%(previewDiv, frameId, targetURL))['Preview ...']]
+                tag[T.div(id=previewDiv, class_="preview-hidden")[
+                        T.iframe(class_="preview-frame", name=frameId, id=frameId),
+                        T.br(),
+                        T.button(onClick="return Forms.ReSTWidget.previewHide('%s');"%(previewDiv))['Close']
+                    ]
+                ]
+            except:
+                pass
+
         return tag
+
+    def getResource(self, ctx, key, segments):
+        return ReSTPreview(ctx, self.restWriter, key, segments[0]), segments[1:]
+
+
+class ReSTPreview(rend.Page):
+
+    def __init__(self, ctx, restWriter, key, srcId):
+        self.restWriter = restWriter
+
+        form = iforms.IForm( ctx )
+        u = widgetResourceURLFromContext(ctx, form.name).child(key).child( srcId ).child('_submit')
+        self.destId=srcId + '-dest'
+        formId=srcId + '-form'
+
+        stan = T.html()[
+            T.head()[
+                T.script(type="text/javascript")["""
+                function ReSTTranslate() {
+                    dest = document.getElementById('%(destId)s');
+                    form = document.getElementById('%(formId)s');
+                    src = parent.document.getElementById('%(srcId)s');
+                    dest.value = src.value;
+                    form.submit(); 
+                }    
+
+                """%{'srcId':srcId, 'destId':self.destId, 'formId':formId}]
+            ],
+            T.body()[
+                T.form(id=formId, method="POST", action=u)[
+                    T.input(type="hidden", name=self.destId, id=self.destId)
+                ],
+                T.script(type="text/javascript")["ReSTTranslate();"],
+            ],
+        ]
+
+        self.docFactory = loaders.stan(stan)
+
+    def child__submit(self, ctx):
+        args = inevow.IRequest(ctx).args
+        value = args.get(self.destId, [''])[0]
+
+        from docutils.core import publish_parts
+
+        if self.restWriter:
+            restValue = publish_parts(value, writer=self.restWriter)['body']
+        else:
+            restValue = publish_parts(value, writer_name='html')['body']
+
+        stan = T.html()[
+            T.body()[
+                T.div()[
+                    T.xml(restValue)
+                ]
+            ],
+        ]
+
+        self.docFactory = loaders.stan(stan)
+
+        return self
 
 
 __all__ = [

@@ -230,7 +230,7 @@ class FormResource(object):
     def _fileFromWidget(self, form, ctx, segments):
         ctx.remember(form, iforms.IForm)
         widget = form.widgetForItem(segments[0])
-        return widget.getResource(ctx, segments[1:])
+        return widget.getResource(ctx, segments[0], segments[1:])
 
 
 class FormsResourceBehaviour(object):
@@ -380,6 +380,13 @@ def locateForm(ctx, name):
 
 def widgetResourceURL(name):
     return url.here.child(FORMS_KEY).child(name).child(WIDGET_RESOURCE_KEY)
+
+def widgetResourceURLFromContext(ctx,name):
+    # Could this replace widgetResourceURL?
+    u = url.URL.fromContext(ctx)
+    if u.pathList()[-1] != FORMS_KEY:
+        u = u.child(FORMS_KEY)
+    return u.child(name).child(WIDGET_RESOURCE_KEY)
 
 class FormRenderer(object):
     implements( inevow.IRenderer )
