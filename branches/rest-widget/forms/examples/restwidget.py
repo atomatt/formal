@@ -18,11 +18,8 @@ def makeForm(ctx):
     w.translator_class = CustomisedHTMLTranslator
 
     form = forms.Form()
-    form.addField('aString', forms.String(required=True))
     form.addField('restString', forms.String(required=True), forms.widgetFactory(forms.ReSTTextArea, restWriter=w))
     form.addAction(formSubmitted)
-
-    form.data = dict(restString='Hello World')
 
     return form
 
