@@ -928,14 +928,25 @@ class ReSTPreview(rend.Page):
         args = inevow.IRequest(ctx).args
         value = args.get(self.destId, [''])[0]
 
-        from docutils.core import publish_parts
+        from docutils.utils import SystemMessage
 
-        if self.restWriter:
-            restValue = publish_parts(value, writer=self.restWriter)['body']
-        else:
-            restValue = publish_parts(value, writer_name='html')['body']
+        try:
+            if self.restWriter:
+                restValue = self._html_fragment(value, writer=self.restWriter)
+            else:
+                restValue = self._html_fragment(value, writer_name='html')
+        except SystemMessage, e:
+            restValue = str(e)
 
         stan = T.html()[
+            T.head()[
+                T.style(type="text/css")["""
+                
+                    .system-message {border: 1px solid red; background-color: #FFFFDD; margin: 5px; padding: 5px;}
+                    .system-message-title { font-weight: bold;}
+                """
+                ]
+            ],
             T.body()[
                 T.div()[
                     T.xml(restValue)
@@ -946,6 +957,18 @@ class ReSTPreview(rend.Page):
         self.docFactory = loaders.stan(stan)
 
         return self
+    
+    def _html_fragment(self, input_string, writer=None, writer_name=None):
+        from docutils.core import publish_parts
+
+        overrides = {'input_encoding': 'utf8',
+                     'doctitle_xform': 0,
+                     'initial_header_level': 1}
+        parts = publish_parts(
+            source=input_string, 
+            writer_name=writer_name, writer=writer, settings_overrides=overrides)
+        fragment = parts['fragment']
+        return fragment.encode('utf8')
 
 
 __all__ = [
