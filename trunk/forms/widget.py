@@ -318,21 +318,43 @@ class RadioChoice(ChoiceBase):
 
 class DatePartsInput(object):
     """
-    Three text input fields for entering a date in parts.
+    A date entry widget that uses three <input> elements for the day, month and
+    year parts.
 
-    Default format is month/day/year
+    The default entry format is the US (month, day, year) but can be switched to
+    the more common (day, month, year) by setting the dayFirst attribute to
+    True.
+    
+    By default the widget is designed to only accept unambiguous years, i.e.
+    the user must enter 4 character dates.
+    
+    Many people find it convenient or even necessary to allow a 2 character
+    year. This can be allowed by setting the twoCharCutoffYear attribute to an
+    integer value between 0 and 99. Anything greater than or equal to the cutoff
+    year will be considered part of the 20th century (1900 + year); anything
+    less the cutoff year is a 21st century (2000 + year) date.
+    
+    A typical twoCharCutoffYear value is 70 (i.e. 1970). However, that value is
+    somewhat arbitrary. It's the year that time began according to the PC, but
+    it doesn't mean much to your non-techie user.
 
     dayFirst:
-        Make the day the first input field. day/month/year
+        Make the day the first input field, i.e. day, month, year
+    twoCharCutoffYear:
+        Allow 2 char years and set the year where the century flips between
+        20th and 21st century.
     """
     implements( iforms.IWidget )
 
     dayFirst = False
+    twoCharCutoffYear = None
 
-    def __init__(self, original, dayFirst=None):
+    def __init__(self, original, dayFirst=None, twoCharCutoffYear=None):
         self.original = original
         if dayFirst is not None:
             self.dayFirst = dayFirst
+        if twoCharCutoffYear is not None:
+            self.twoCharCutoffYear = twoCharCutoffYear
 
     def _namer(self, prefix):
         def _(part):
@@ -373,21 +395,41 @@ class DatePartsInput(object):
 
     def processInput(self, ctx, key, args):
         namer = self._namer(key)
-        value = [args.get(namer(part), [''])[0].strip() for part in ('year', 'month', 'day')]
-        value = [p for p in value if p]
-        if not value:
-            value = None
-        elif len(value) != 3:
+        # Get the form field values as a (y,m,d) tuple
+        ymd = [args.get(namer(part), [''])[0].strip() for part in ('year', 'month', 'day')]
+        # Remove parts that were not entered.
+        ymd = [p for p in ymd if p]
+        # Nothing entered means None otherwise we need all three.
+        if not ymd:
+            ymd = None
+        elif len(ymd) != 3:
             raise validation.FieldValidationError("Invalid date")
-        if value is not None and len(value[0]) != 4:
-            raise validation.FieldValidationError("Please enter a 4-digit year")
-        if value is not None:
+        # So, we have what looks like a good attempt to enter a date.
+        if ymd is not None:
+            # If a 2-char year is allowed then prepend the century.
+            if self.twoCharCutoffYear is not None and len(ymd[0]) == 2:
+                try:
+                    if int(ymd[0]) >= self.twoCharCutoffYear:
+                        century = '19'
+                    else:
+                        century = '20'
+                    ymd[0] = century + ymd[0]
+                except ValueError:
+                    pass
+            # By now, we should have a year of at least 4 characters.
+            if len(ymd[0]) < 4:
+                if self.twoCharCutoffYear is not None:
+                    msg = "Please enter a 2 or 4 digit year"
+                else:
+                    msg = "Please enter a 4 digit year"
+                raise validation.FieldValidationError(msg)
+            # Map to integers
             try:
-                value = [int(p) for p in value]
+                ymd = [int(p) for p in ymd]
             except ValueError, e:
                 raise validation.FieldValidationError("Invalid date")
-        value = iforms.IDateTupleConvertible(self.original).toType(value)
-        return self.original.validate(value)
+        ymd = iforms.IDateTupleConvertible(self.original).toType(ymd)
+        return self.original.validate(ymd)
 
 
 class MMYYDatePartsInput(object):
