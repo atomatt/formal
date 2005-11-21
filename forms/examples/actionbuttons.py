@@ -1,18 +1,21 @@
 from nevow import url
 import forms
+from forms.examples import main
 
-title = 'Action Button'
-description = 'Example of non-validating button, buttons with non-default labels, etc'
+class ActionButtonsPage(main.FormExamplePage):
 
-def makeForm(ctx):
-    form = forms.Form()
-    form.addField('aString', forms.String(required=True))
-    form.addAction(formSubmitted, label="Click, click, clickety-click!")
-    form.addAction(redirect, 'back', validate=False)
-    return form
-
-def formSubmitted(ctx, form, data):
-    print form, data
-
-def redirect(ctx, form, data):
-    return url.rootaccessor(ctx)
+    title = 'Action Button'
+    description = 'Example of non-validating button, buttons with non-default labels, etc'
+    
+    def form_example(self, ctx):
+        form = forms.Form()
+        form.addField('aString', forms.String(required=True))
+        form.addAction(self.submitted, label="Click, click, clickety-click!")
+        form.addAction(self.redirect, 'back', validate=False)
+        return form
+    
+    def submitted(self, ctx, form, data):
+        print form, data
+    
+    def redirect(self, ctx, form, data):
+        return url.rootaccessor(ctx)

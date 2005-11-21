@@ -1,14 +1,16 @@
 import forms
+from forms.examples import main
 
-title = 'File Upload'
-description = 'Uploading a file'
+class FileUploadFormPage(main.FormExamplePage):
 
-def makeForm(ctx):
-    form = forms.Form()
-    form.addField('file', forms.File())
-    form.addAction(formSubmitted)
-    return form
-
-def formSubmitted(ctx, form, data):
-    print form, data
-
+    title = 'File Upload'
+    description = 'Uploading a file'
+    
+    def form_example(self, ctx):
+        form = forms.Form()
+        form.addField('file', forms.File())
+        form.addAction(self.submitted)
+        return form
+    
+    def submitted(self, ctx, form, data):
+        print form, data

@@ -1,19 +1,22 @@
 from datetime import datetime
 import forms
+from forms.examples import main
 
-title = 'Prepopulate'
-description = 'Example of prepopulating form fields'
+class PrepopulateFormPage(main.FormExamplePage):
 
-def makeForm(ctx):
-    form = forms.Form()
-    form.addField('aString', forms.String())
-    form.addField('aTime', forms.Time())
-    form.addAction(formSubmitted)
-    form.data = {
-        'aTime': datetime.utcnow().time(),
-        }
-    return form
-
-def formSubmitted(ctx, form, data):
-    print data
+    title = 'Prepopulate'
+    description = 'Example of prepopulating form fields'
+    
+    def form_example(self, ctx):
+        form = forms.Form()
+        form.addField('aString', forms.String())
+        form.addField('aTime', forms.Time())
+        form.addAction(self.submitted)
+        form.data = {
+            'aTime': datetime.utcnow().time(),
+            }
+        return form
+    
+    def submitted(self, ctx, form, data):
+        print data
 

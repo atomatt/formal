@@ -1,19 +1,22 @@
 import forms
+from forms.examples import main
 
-title = 'Form Types'
-description = 'Example of using different typed fields.'
+class TypesFormPage(main.FormExamplePage):
 
-def makeForm(ctx):
-    form = forms.Form()
-    form.addField('aString', forms.String())
-    form.addField('aInteger', forms.Integer())
-    form.addField('aFloat', forms.Float())
-    form.addField('aBoolean', forms.Boolean())
-    form.addField('aDate', forms.Date())
-    form.addField('aTime', forms.Time())
-    form.addAction(formSubmitted)
-    return form
+    title = 'Form Types'
+    description = 'Example of using different typed fields.'
 
-def formSubmitted(ctx, form, data):
-    print data
+    def form_example(self, ctx):
+        form = forms.Form()
+        form.addField('aString', forms.String())
+        form.addField('aInteger', forms.Integer())
+        form.addField('aFloat', forms.Float())
+        form.addField('aBoolean', forms.Boolean())
+        form.addField('aDate', forms.Date())
+        form.addField('aTime', forms.Time())
+        form.addAction(self.submitted)
+        return form
+    
+    def submitted(self, ctx, form, data):
+        print data
 

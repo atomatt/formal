@@ -7,16 +7,16 @@ DOCTYPE = T.xml('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http:
 CHARSET = T.xml('<meta http-equiv="content-type" content="text/html; charset=utf-8" />')
 
 examples = [
-    'forms.examples.simple',
-    'forms.examples.types',
-    'forms.examples.required',
-    'forms.examples.missing',
-    'forms.examples.prepopulate',
-    'forms.examples.fileupload',
-    'forms.examples.smartupload',
-    'forms.examples.selections',
-    'forms.examples.dates',
-    'forms.examples.actionbuttons',
+    'forms.examples.simple.SimpleFormPage',
+    'forms.examples.types.TypesFormPage',
+    'forms.examples.required.RequiredFormPage',
+    'forms.examples.missing.MissingFormPage',
+    'forms.examples.prepopulate.PrepopulateFormPage',
+    'forms.examples.fileupload.FileUploadFormPage',
+    'forms.examples.smartupload.SmartUploadFormPage',
+    'forms.examples.selections.SelectionFormPage',
+    'forms.examples.dates.DatesFormPage',
+    'forms.examples.actionbuttons.ActionButtonsPage',
     ]
 
 def makeSite(application):
@@ -25,6 +25,10 @@ def makeSite(application):
     return site
 
 class RootPage(rend.Page):
+    """
+    Main page that lists the examples and makes the example page a child
+    resource.
+    """
 
     docFactory = loaders.stan(
         T.invisible[
@@ -44,19 +48,28 @@ class RootPage(rend.Page):
 
     def render_examples(self, ctx, data):
         for name in examples:
-            module = reflect.namedAny(name)
+            cls = reflect.namedAny(name)
             yield T.div(class_='example')[
-                T.h1[T.a(href=url.here.child(name))[module.title]],
-                T.p[module.description],
+                T.h1[T.a(href=url.here.child(name))[cls.title]],
+                T.p[cls.description],
                 ]
 
     def childFactory(self, ctx, name):
         if name in examples:
-            return FormExamplePage(reflect.namedAny(name))
-
+            cls = reflect.namedAny(name)
+            return cls()
 
 
 class FormExamplePage(forms.ResourceMixin, rend.Page):
+    """
+    A base page for the actual examples. The page renders something sensible,
+    including the title example and description. It also include the "example"
+    form in an appropriate place.
+    
+    Each example page is expected to provide the title and description
+    attributes as well as a form_example method that builds and returns a
+    forms.Form instance.
+    """
     docFactory = loaders.stan(
         T.invisible[
             DOCTYPE,
@@ -77,17 +90,13 @@ class FormExamplePage(forms.ResourceMixin, rend.Page):
         )
 
     def data_title(self, ctx, data):
-        return self.original.title
+        return self.title
 
     def data_description(self, ctx, data):
-        return self.original.description
-
-    def form_example(self, ctx):
-        return self.original.makeForm(ctx)
+        return self.description
 
 
 # Add child_ attributes
 examples_css = pkg_resources.resource_filename('forms.examples', 'examples.css')
 setattr(RootPage, 'child_examples.css', static.File(examples_css))
 setattr(RootPage, 'child_forms.css', forms.defaultCSS)
-

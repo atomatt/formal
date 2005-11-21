@@ -1,15 +1,17 @@
 import forms
+from forms.examples import main
 
-title = 'Required Fields'
-description = 'Demonstration of required fields'
+class RequiredFormPage(main.FormExamplePage):
 
-def makeForm(ctx):
-    form = forms.Form()
-    form.addField('name', forms.String(required=True))
-    form.addField('age', forms.Integer())
-    form.addAction(formSubmitted)
-    return form
+    title = 'Required Fields'
+    description = 'Demonstration of required fields'
 
-def formSubmitted(ctx, form, data):
-    print data
+    def form_example(self, ctx):
+        form = forms.Form()
+        form.addField('name', forms.String(required=True))
+        form.addField('age', forms.Integer())
+        form.addAction(self.submitted)
+        return form
     
+    def submitted(self, ctx, form, data):
+        print data
