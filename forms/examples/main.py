@@ -15,7 +15,7 @@ examples = [
     'forms.examples.fileupload.FileUploadFormPage',
     'forms.examples.smartupload.SmartUploadFormPage',
     'forms.examples.selections.SelectionFormPage',
-    'forms.examples.dates.DatesFormPage',
+    'forms.examples.datestimes.DatesTimesFormPage',
     'forms.examples.actionbuttons.ActionButtonsPage',
     ]
 
