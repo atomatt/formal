@@ -3,22 +3,49 @@ from zope.interface import implements
 from forms import iforms
 
 
-class FormError(Exception):
+class FormsError(Exception):
+    """
+    Base class for all Forms errors. A single string, message, is accepted and
+    stored as an attribute.
+    
+    The message is not passed on to the Exception base class because it doesn't
+    seem to be able to handle unicode at all.
+    """
+    def __init__(self, message):
+        Exception.__init__(self, message)
+        self.message = message
+
+
+class FormError(FormsError):
+    """
+    Form validation error. Raise this, typically from a submit callback, to
+    signal that the form (not an individual field) failed to validate.
+    """
     pass
     
     
-class FieldError(Exception):
+class FieldError(FormsError):
+    """
+    Base class for field-related exceptions. The failure message and the failing
+    field name are stored as attributes.
+    """
     def __init__(self, message, fieldName=None):
-        Exception.__init__(self, message)
-        self.message = message
+        FormsError.__init__(self, message)
         self.fieldName = fieldName
     
     
 class FieldValidationError(FieldError):
+    """
+    Exception that signals that a field failed to validate.
+    """
     pass
     
     
 class FieldRequiredError(FieldValidationError):
+    """
+    Exception that signals that a field that is marked as required was not
+    entered.
+    """
     pass
     
     

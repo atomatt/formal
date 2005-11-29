@@ -431,7 +431,7 @@ class FormRenderer(object):
             return ''
         return T.div(class_='errors')[
             T.p['Please correct the following errors:'],
-            T.ul[[T.li[str(error)] for error in errors]],
+            T.ul[[T.li[error.message] for error in errors]],
             ]
 
     def _renderItems(self, ctx, data):
