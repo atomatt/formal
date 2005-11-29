@@ -37,10 +37,10 @@ class SillyValidator(object):
     """
     implements(iforms.IValidator)
     
-    word = 'silly'
+    word = u'silly'
     
     def validate(self, field, value):
         if value is None:
             return
         if value.lower() != self.word.lower():
-            raise forms.FieldValidationError('You must enter %r'%self.word)
+            raise forms.FieldValidationError(u'You must enter \'%s\''%self.word)
