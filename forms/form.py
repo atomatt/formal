@@ -487,7 +487,7 @@ class FormRenderer(object):
                 message = ''
             else:
                 classes.append('error')
-                message = T.div(class_='message')[str(error)]
+                message = T.div(class_='message')[error.message]
 
             ctx.tag.fillSlots('class', ' '.join(classes))
             ctx.tag.fillSlots('fieldId', '%s-field'%util.keytocssid(ctx.key))
