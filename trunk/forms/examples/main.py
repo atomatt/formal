@@ -17,6 +17,7 @@ examples = [
     'forms.examples.selections.SelectionFormPage',
     'forms.examples.datestimes.DatesTimesFormPage',
     'forms.examples.actionbuttons.ActionButtonsPage',
+    'forms.examples.validator.ValidatorFormPage',
     ]
 
 def makeSite(application):
