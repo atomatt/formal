@@ -294,18 +294,21 @@ class FormsResourceBehaviour(object):
 
 class ResourceMixin(object):
     implements( iforms.IFormFactory )
-
-    def __init__(self, *a, **k):
-        super(ResourceMixin, self).__init__(*a, **k)
-        self.remember(self, iforms.IFormFactory)
-        self.__formsBehaviour = FormsResourceBehaviour(parent=self)
-
+    
+    __formsBehaviour = None
+    
+    def __behaviour(self):
+        if self.__formsBehaviour is None:
+            self.__formsBehaviour = FormsResourceBehaviour(parent=self)
+        return self.__formsBehaviour
+    
     def locateChild(self, ctx, segments):
         def gotResult(result):
             if result is not appserver.NotFound:
                 return result
             return super(ResourceMixin, self).locateChild(ctx, segments)
-        d = defer.maybeDeferred(self.__formsBehaviour.locateChild, ctx, segments)
+        self.remember(self, iforms.IFormFactory)
+        d = defer.maybeDeferred(self.__behaviour().locateChild, ctx, segments)
         d.addCallback(gotResult)
         return d
 
@@ -314,12 +317,13 @@ class ResourceMixin(object):
             if result is not None:
                 return result
             return super(ResourceMixin, self).renderHTTP(ctx)
-        d = defer.maybeDeferred(self.__formsBehaviour.renderHTTP, ctx)
+        self.remember(self, iforms.IFormFactory)
+        d = defer.maybeDeferred(self.__behaviour().renderHTTP, ctx)
         d.addCallback(gotResult)
         return d
 
     def render_form(self, name):
-        return self.__formsBehaviour.render_form(name)
+        return self.__behaviour().render_form(name)
 
     def formFactory(self, ctx, name):
         factory = getattr(self, 'form_%s'%name, None)
