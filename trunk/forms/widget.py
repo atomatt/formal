@@ -872,7 +872,9 @@ class Hidden(object):
 
     def render(self, ctx, key, args, errors):
         if errors:
-            value = args.get(key, [''])[0]
+            value = args.get(key, [''])
+            if isinstance(value, list):
+                value = value[0]
         else:
             value = iforms.IStringConvertible(self.original).fromType(args.get(key))
         return T.input(type=self.inputType, name=key, id=keytocssid(ctx.key), value=value)
