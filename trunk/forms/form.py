@@ -97,6 +97,14 @@ class Form(object):
             raise ValueError('Action with name %r already exists.' % name)
         self.actions.append( Action(callback, name, validate, label) )
 
+    def getField(self,fieldName):
+        for name, type, label, description, cssClass in self.items:
+            if name == fieldName:
+                return (name, type, label, description, cssClass)
+        else:
+            return None
+            
+
     def widgetForItem(self, itemName):
 
         for name, type, label, description, cssClass in self.items:
@@ -205,7 +213,7 @@ class FormErrors(object):
                 return error
 
     def getFormErrors(self):
-        return [e for e in self.errors if isinstance(e, validation.FormError)]
+        return self.errors
 
     def __nonzero__(self):
         return len(self.errors) != 0
@@ -433,10 +441,16 @@ class FormRenderer(object):
             errors = errors.getFormErrors()
         if not errors:
             return ''
-        return T.div(class_='errors')[
-            T.p['Please correct the following errors:'],
-            T.ul[[T.li[error.message] for error in errors]],
-            ]
+
+        errorList = T.ul()
+        for error in errors:
+            if isinstance(error, validation.FormError):
+                errorList[ T.li[ error.message ] ]
+        for error in errors:
+            if isinstance(error, validation.FieldError):
+                name, type, label, description, cssClass = self.original.getField(error.fieldName)
+                errorList[ T.li[ T.strong[ label, ' : ' ], error.message ] ]
+        return T.div(class_='errors')[ T.p['Please correct the following errors:'], errorList ]
 
     def _renderItems(self, ctx, data):
         if self.original.items is None:
