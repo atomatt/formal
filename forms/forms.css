@@ -117,11 +117,11 @@
   float: none;
 }
 
-.nevow-form .resttextarea .preview {
+.nevow-form .preview-show {
   display: block;
 }
 
-.nevow-form .resttextarea .preview-hidden {
+.nevow-form .preview-hidden {
   display: none;
 }
 
