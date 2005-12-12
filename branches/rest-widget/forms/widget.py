@@ -875,11 +875,11 @@ class ReSTTextArea(TextArea):
                 frameId = srcId + '-preview-frame'
                 targetURL = widgetResourceURLFromContext(ctx, form.name).child(key).child( srcId )
                 tag[T.br()]
-                tag[T.button(onClick="return Forms.ReSTWidget.preview('%s', '%s', '%s');"%(previewDiv, frameId, targetURL))['Preview ...']]
+                tag[T.button(onClick="return Forms.Util.previewShow('%s', '%s', '%s');"%(previewDiv, frameId, targetURL))['Preview ...']]
                 tag[T.div(id=previewDiv, class_="preview-hidden")[
                         T.iframe(class_="preview-frame", name=frameId, id=frameId),
                         T.br(),
-                        T.button(onClick="return Forms.ReSTWidget.previewHide('%s');"%(previewDiv))['Close']
+                        T.button(onClick="return Forms.Util.previewHide('%s');"%(previewDiv))['Close']
                     ]
                 ]
             except:

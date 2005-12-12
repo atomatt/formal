@@ -89,13 +89,21 @@ class ResourceManager( object ):
         """
         Encode the filename (which may be unicode) so it's safe to use with
         the filesystem.
+        NOTE: the string encode('base64') can result in strings with '\n'
+        embedded in them. the base64.b64encode() does not appear to suffer this
+        problem.
         """
-        return filename.encode('utf-8').encode('base64')[:-1]
+        import base64
+        rv = filename.encode('utf-8')
+        rv = base64.b64encode(rv)
+        return rv
         
     def _decodeFilename(self, filename):
         """
         Undo what _encodeFilename did.
         """
-        filename = filename + '\n'
-        return filename.decode('base64').decode('utf-8')
+        import base64
+        rv = base64.b64decode(filename)
+        rv = rv.decode('utf-8')
+        return rv
         

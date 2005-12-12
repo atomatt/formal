@@ -2,19 +2,19 @@ if(typeof(Forms) == 'undefined') {
     Forms = {};
 }
 
-if(typeof(Forms.ReSTWidget) == 'undefined') {
-    Forms.ReSTWidget = {};
+if(typeof(Forms.Util) == 'undefined') {
+    Forms.Util = {};
 }
 
-Forms.ReSTWidget.preview = function(divId, frameId, u) {
+Forms.Util.previewShow = function(divId, frameId, u) {
     var div = document.getElementById(divId);
     var frame = document.getElementById(frameId);
-    div.className = 'preview';
+    div.className = 'preview-show';
     frame.src = u;
     return false;
 }
 
-Forms.ReSTWidget.previewHide = function(divId) {
+Forms.Util.previewHide = function(divId) {
     var div = document.getElementById(divId);
     div.className = 'preview-hidden';
     return false;
