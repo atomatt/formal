@@ -71,12 +71,12 @@ class Form(object):
     items = None
     actions = None
     widgets = None
-    data = None
 
     def __init__(self, callback=None):
         if callback is not None:
             self.callback = callback
         self.resourceManager = ResourceManager()
+        self.data = {}
 
     def addField(self, name, type, widgetFactory=None, label=None, description=None, cssClass=None):
         if self.items is None:
