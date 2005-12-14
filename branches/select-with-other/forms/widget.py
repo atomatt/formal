@@ -4,7 +4,8 @@ certain format.
 """
 
 import itertools
-from nevow import inevow, tags as T, util, url, static
+import pkg_resources
+from nevow import inevow, loaders, tags as T, util, url, static
 from nevow.i18n import _
 from forms import converters, iforms, validation
 from forms.util import keytocssid
@@ -265,6 +266,81 @@ class SelectChoice(ChoiceBase):
         converter = iforms.IStringConvertible(self.original)
         value = converter.fromType(args.get(key))
         return self._renderTag(ctx, key, value, converter, True)
+
+
+class SelectOtherChoice(object):
+    """
+    A <select> widget that includes an "Other ..." option. When the other
+    option is selected an <input> field is enabled to allow free text entry.
+
+    Unlike SelectChoice, the options items are not a (value,label) tuple
+    because that makes no sense with the free text entry facility.
+
+    TODO:
+      * Make the Other option configurable in the JS
+      * Refactor, refactor, refactor
+    """
+    implements(iforms.IWidget)
+
+    options = None
+    noneOption = ('', '')
+    otherOption = ('...', 'Other ...')
+
+    template = loaders.xmlfile(pkg_resources.resource_filename('forms', 'html/SelectOtherChoice.html'))
+
+    def __init__(self, original, options=None):
+        self.original = original
+        if options is not None:
+            self.options = options
+
+    def render(self, ctx, key, args, errors):
+
+        converter = iforms.IStringConvertible(self.original)
+        if errors:
+            value = args.get(key, [''])[0]
+        else:
+            value = converter.fromType(args.get(key))
+
+        if value is None:
+            value = iforms.IKey(self.noneOption).key()
+
+        optionGen = inevow.IQ(self.template).patternGenerator('option')
+        optionTags = []
+
+        if self.noneOption is not None:
+            tag = optionGen()
+            tag.fillSlots('value', iforms.IKey(self.noneOption).key())
+            tag.fillSlots('label', iforms.ILabel(self.noneOption).label())
+            optionTags.append(tag)
+
+        if self.options is not None:
+            for item in self.options:
+                tag = optionGen()
+                tag.fillSlots('value', item)
+                tag.fillSlots('label', item)
+                optionTags.append(tag)
+
+        tag = optionGen()
+        tag.fillSlots('value', self.otherOption[0])
+        tag.fillSlots('label', self.otherOption[1])
+        optionTags.append(tag)
+
+        tag = T.invisible[self.template.load(ctx)]
+        tag.fillSlots('key', key)
+        tag.fillSlots('id', keytocssid(ctx.key))
+        tag.fillSlots('options', optionTags)
+        tag.fillSlots('value', value)
+        return tag
+
+    def renderImmutable(self, ctx, key, args, errors):
+        raise NotImplemented
+
+    def processInput(self, ctx, key, args):
+        value = args.get(key, [''])[0]
+        value = iforms.IStringConvertible(self.original).toType(value)
+        if self.noneOption is not None and value == self.noneOption[0]:
+            value = None
+        return self.original.validate(value)
 
 
 class RadioChoice(ChoiceBase):
@@ -890,6 +966,6 @@ class Hidden(object):
 __all__ = [
     'Checkbox', 'CheckboxMultiChoice', 'CheckedPassword','FileUploadRaw', 'FileUpload', 'FileUploadWidget',
     'Password', 'SelectChoice', 'TextArea', 'TextInput', 'DatePartsInput',
-    'MMYYDatePartsInput', 'Hidden', 'RadioChoice',
+    'MMYYDatePartsInput', 'Hidden', 'RadioChoice', 'SelectOtherChoice'
     ]
 

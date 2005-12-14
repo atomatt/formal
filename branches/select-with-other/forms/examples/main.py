@@ -1,6 +1,7 @@
 import pkg_resources
+from zope.interface import implements
 from twisted.python import reflect
-from nevow import appserver, loaders, rend, static, tags as T, url
+from nevow import appserver, inevow, loaders, rend, static, tags as T, url
 import forms
 
 DOCTYPE = T.xml('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">')
@@ -25,6 +26,11 @@ def makeSite(application):
     site = appserver.NevowSite(root, logPath='web.log')
     return site
 
+class JSResource(rend.ChildLookupMixin, object):
+    implements(inevow.IResource)
+setattr(JSResource, 'child_Forms', forms.formsJS)
+setattr(JSResource, 'child_MochiKit.js', static.File('./MochiKit.js'))
+
 class RootPage(rend.Page):
     """
     Main page that lists the examples and makes the example page a child
@@ -46,6 +52,8 @@ class RootPage(rend.Page):
                 ],
             ],
         )
+
+    child_js = JSResource()
 
     def render_examples(self, ctx, data):
         for name in examples:
@@ -80,6 +88,9 @@ class FormExamplePage(forms.ResourceMixin, rend.Page):
                     T.title(data=T.directive('title'), render=rend.data),
                     T.link(rel='stylesheet', type='text/css', href=url.root.child('examples.css')),
                     T.link(rel='stylesheet', type='text/css', href=url.root.child('forms.css')),
+                    T.script(src='/js/MochiKit.js'),
+                    T.script(src='/js/Forms/Forms.js'),
+                    T.script(src='/js/Forms/SelectOtherChoice.js'),
                     ],
                 T.body[
                     T.h1(data=T.directive('title'), render=rend.data),

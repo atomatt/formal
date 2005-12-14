@@ -24,9 +24,11 @@ try:
 except ImportError:
     import os.path
     defaultCSS = static.File(os.path.join(os.path.split(__file__)[0], 'forms.css'))
+    formsJS = static.File(os.path.join(os.path.split(__file__)[0], 'js'))
 else:
     from forms.util import LazyResource
     defaultCSS = LazyResource(lambda: static.File(pkg_resources.resource_filename('forms', 'forms.css')))
+    formsJS = LazyResource(lambda: static.File(pkg_resources.resource_filename('forms', 'js')))
     del LazyResource
 
 # Register standard adapters

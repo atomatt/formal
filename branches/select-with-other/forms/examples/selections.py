@@ -39,6 +39,8 @@ class SelectionFormPage(main.FormExamplePage):
         form.addField('multipleDates', forms.Sequence(forms.Date()), forms.widgetFactory(forms.CheckboxMultiChoice, options=dates))
         form.addField('differentNoneSelect', forms.String(), forms.widgetFactory(forms.SelectChoice, options=strings, noneOption=differentNone))
         form.addField('differentNoneRadios', forms.String(), forms.widgetFactory(forms.RadioChoice, options=data_strings, noneOption=differentNone))
+        form.addField('selectOther', forms.String(), forms.widgetFactory(forms.SelectOtherChoice, options=['Mr', 'Mrs']))
+        form.addField('selectOtherRequired', forms.String(required=True), forms.widgetFactory(forms.SelectOtherChoice, options=['Mr', 'Mrs']))
         form.addAction(self.submitted)
         return form
     
