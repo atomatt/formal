@@ -52,7 +52,7 @@ class LazyResource(object):
         self._resource = None
 
     def locateChild(self, ctx, segments):
-        return self.resource().locateCHild(ctx, segments)
+        return self.resource().locateChild(ctx, segments)
 
     def renderHTTP(self, ctx):
         return self.resource().renderHTTP(ctx)
