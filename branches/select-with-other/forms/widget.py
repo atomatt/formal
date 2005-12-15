@@ -315,17 +315,22 @@ class SelectOtherChoice(object):
         optionTags = []
         selectOther = True
 
+        # We use these a couple of times
+        noneValue = iforms.IKey(self.noneOption).key()
+        noneLabel = iforms.IKey(self.noneOption).key()
+
+        # Add the None option
         if self.noneOption is not None:
-            noneValue = iforms.IKey(self.noneOption).key()
             if value == noneValue:
                 tag = selectedOptionGen()
                 selectOther = False
             else:
                 tag = optionGen()
             tag.fillSlots('value', noneValue)
-            tag.fillSlots('label', iforms.ILabel(self.noneOption).label())
+            tag.fillSlots('label', noneLabel)
             optionTags.append(tag)
 
+        # Add "real" options as provided.
         if self.options is not None:
             for item in self.options:
                 if value == item:
@@ -337,6 +342,13 @@ class SelectOtherChoice(object):
                 tag.fillSlots('label', item)
                 optionTags.append(tag)
 
+        # Add a blank line, with the None value
+        tag = optionGen()
+        tag.fillSlots('value', noneValue)
+        tag.fillSlots('label', '--')
+        optionTags.append(tag)
+
+        # Add the "Other ..." option
         if selectOther:
             tag = selectedOptionGen()
             otherValue = value
