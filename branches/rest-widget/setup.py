@@ -10,6 +10,6 @@ setup(
     author_email='matt@pollenation.net',
     packages=find_packages(),
     package_data={
-        'forms': ['forms.css'],
+        'forms': ['forms.css','forms.js'],
         }
     )
