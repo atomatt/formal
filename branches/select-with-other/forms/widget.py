@@ -293,11 +293,17 @@ class SelectOtherChoice(object):
         if options is not None:
             self.options = options
 
+    def _valueFromRequestArgs(self, key, args):
+        value = args.get(key, [''])[0]
+        if value == self.otherOption[0]:
+            value = args.get(key+'-other', [''])[0]
+        return value
+
     def render(self, ctx, key, args, errors):
 
         converter = iforms.IStringConvertible(self.original)
         if errors:
-            value = args.get(key, [''])[0]
+            value = self._valueFromRequestArgs(key, args)
         else:
             value = converter.fromType(args.get(key))
 
@@ -305,22 +311,38 @@ class SelectOtherChoice(object):
             value = iforms.IKey(self.noneOption).key()
 
         optionGen = inevow.IQ(self.template).patternGenerator('option')
+        selectedOptionGen = inevow.IQ(self.template).patternGenerator('selectedOption')
         optionTags = []
+        selectOther = True
 
         if self.noneOption is not None:
-            tag = optionGen()
-            tag.fillSlots('value', iforms.IKey(self.noneOption).key())
+            noneValue = iforms.IKey(self.noneOption).key()
+            if value == noneValue:
+                tag = selectedOptionGen()
+                selectOther = False
+            else:
+                tag = optionGen()
+            tag.fillSlots('value', noneValue)
             tag.fillSlots('label', iforms.ILabel(self.noneOption).label())
             optionTags.append(tag)
 
         if self.options is not None:
             for item in self.options:
-                tag = optionGen()
+                if value == item:
+                    tag = selectedOptionGen()
+                    selectOther = False
+                else:
+                    tag = optionGen()
                 tag.fillSlots('value', item)
                 tag.fillSlots('label', item)
                 optionTags.append(tag)
 
-        tag = optionGen()
+        if selectOther:
+            tag = selectedOptionGen()
+            otherValue = value
+        else:
+            tag = optionGen()
+            otherValue = ''
         tag.fillSlots('value', self.otherOption[0])
         tag.fillSlots('label', self.otherOption[1])
         optionTags.append(tag)
@@ -329,14 +351,14 @@ class SelectOtherChoice(object):
         tag.fillSlots('key', key)
         tag.fillSlots('id', keytocssid(ctx.key))
         tag.fillSlots('options', optionTags)
-        tag.fillSlots('value', value)
+        tag.fillSlots('otherValue', otherValue)
         return tag
 
     def renderImmutable(self, ctx, key, args, errors):
         raise NotImplemented
 
     def processInput(self, ctx, key, args):
-        value = args.get(key, [''])[0]
+        value = self._valueFromRequestArgs(key, args)
         value = iforms.IStringConvertible(self.original).toType(value)
         if self.noneOption is not None and value == self.noneOption[0]:
             value = None
