@@ -4,7 +4,8 @@ certain format.
 """
 
 import itertools
-from nevow import inevow, tags as T, util, url, static
+import pkg_resources
+from nevow import inevow, loaders, tags as T, util, url, static
 from nevow.i18n import _
 from forms import converters, iforms, validation
 from forms.util import keytocssid
@@ -265,6 +266,103 @@ class SelectChoice(ChoiceBase):
         converter = iforms.IStringConvertible(self.original)
         value = converter.fromType(args.get(key))
         return self._renderTag(ctx, key, value, converter, True)
+
+
+class SelectOtherChoice(object):
+    """
+    A <select> widget that includes an "Other ..." option. When the other
+    option is selected an <input> field is enabled to allow free text entry.
+
+    Unlike SelectChoice, the options items are not a (value,label) tuple
+    because that makes no sense with the free text entry facility.
+
+    TODO:
+      * Make the Other option configurable in the JS
+      * Refactor, refactor, refactor
+    """
+    implements(iforms.IWidget)
+
+    options = None
+    noneOption = ('', '')
+    otherOption = ('...', 'Other ...')
+
+    template = loaders.xmlfile(pkg_resources.resource_filename('forms', 'html/SelectOtherChoice.html'))
+
+    def __init__(self, original, options=None):
+        self.original = original
+        if options is not None:
+            self.options = options
+
+    def _valueFromRequestArgs(self, key, args):
+        value = args.get(key, [''])[0]
+        if value == self.otherOption[0]:
+            value = args.get(key+'-other', [''])[0]
+        return value
+
+    def render(self, ctx, key, args, errors):
+
+        converter = iforms.IStringConvertible(self.original)
+        if errors:
+            value = self._valueFromRequestArgs(key, args)
+        else:
+            value = converter.fromType(args.get(key))
+
+        if value is None:
+            value = iforms.IKey(self.noneOption).key()
+
+        optionGen = inevow.IQ(self.template).patternGenerator('option')
+        selectedOptionGen = inevow.IQ(self.template).patternGenerator('selectedOption')
+        optionTags = []
+        selectOther = True
+
+        if self.noneOption is not None:
+            noneValue = iforms.IKey(self.noneOption).key()
+            if value == noneValue:
+                tag = selectedOptionGen()
+                selectOther = False
+            else:
+                tag = optionGen()
+            tag.fillSlots('value', noneValue)
+            tag.fillSlots('label', iforms.ILabel(self.noneOption).label())
+            optionTags.append(tag)
+
+        if self.options is not None:
+            for item in self.options:
+                if value == item:
+                    tag = selectedOptionGen()
+                    selectOther = False
+                else:
+                    tag = optionGen()
+                tag.fillSlots('value', item)
+                tag.fillSlots('label', item)
+                optionTags.append(tag)
+
+        if selectOther:
+            tag = selectedOptionGen()
+            otherValue = value
+        else:
+            tag = optionGen()
+            otherValue = ''
+        tag.fillSlots('value', self.otherOption[0])
+        tag.fillSlots('label', self.otherOption[1])
+        optionTags.append(tag)
+
+        tag = T.invisible[self.template.load(ctx)]
+        tag.fillSlots('key', key)
+        tag.fillSlots('id', keytocssid(ctx.key))
+        tag.fillSlots('options', optionTags)
+        tag.fillSlots('otherValue', otherValue)
+        return tag
+
+    def renderImmutable(self, ctx, key, args, errors):
+        raise NotImplemented
+
+    def processInput(self, ctx, key, args):
+        value = self._valueFromRequestArgs(key, args)
+        value = iforms.IStringConvertible(self.original).toType(value)
+        if self.noneOption is not None and value == self.noneOption[0]:
+            value = None
+        return self.original.validate(value)
 
 
 class RadioChoice(ChoiceBase):
@@ -890,6 +988,6 @@ class Hidden(object):
 __all__ = [
     'Checkbox', 'CheckboxMultiChoice', 'CheckedPassword','FileUploadRaw', 'FileUpload', 'FileUploadWidget',
     'Password', 'SelectChoice', 'TextArea', 'TextInput', 'DatePartsInput',
-    'MMYYDatePartsInput', 'Hidden', 'RadioChoice',
+    'MMYYDatePartsInput', 'Hidden', 'RadioChoice', 'SelectOtherChoice'
     ]
 
