@@ -1,0 +1,10 @@
+2005-12-15  Matt Goodall <matt@pollenation.net>
+
+	Added a SelectOtherChoice widget. The widget is similar to the
+	SelectChoice but includes an "Other ..." option and an <input> field to
+	provide another value if the options in the list and not appropriate.
+
+2005-12-25  Matt Goodall <matt@pollenation.net>
+
+	Added ChangeLog. I should have done this a long time ago. Now I'll have to
+	revisit the commit log and try to write something sensible here.
