@@ -5,11 +5,11 @@ certain format.
 
 import itertools
 import pkg_resources
-from nevow import inevow, loaders, tags as T, util, url, static
+from nevow import inevow, loaders, tags as T, util, url, static, rend
 from nevow.i18n import _
 from forms import converters, iforms, validation
 from forms.util import keytocssid
-from forms.form import widgetResourceURL
+from forms.form import widgetResourceURL, widgetResourceURLFromContext
 from zope.interface import implements
 from twisted.internet import defer
 
@@ -928,7 +928,7 @@ class FileUploadWidget(object):
         if resourceId:
             resourceManager.register( key, resourceId )
 
-    def getResource( self, ctx, segments ):
+    def getResource( self, ctx, key, segments ):
         """
             Return an Resource that contains the image, either a file
             from the resource manager, or a data object from the convertible.
@@ -985,9 +985,11 @@ class Hidden(object):
         value = iforms.IStringConvertible(self.original).toType(value)
         return self.original.validate(value)
 
+
 __all__ = [
-    'Checkbox', 'CheckboxMultiChoice', 'CheckedPassword','FileUploadRaw', 'FileUpload', 'FileUploadWidget',
+    'Checkbox', 'CheckboxMultiChoice', 'CheckedPassword', 'FileUploadRaw',
     'Password', 'SelectChoice', 'TextArea', 'TextInput', 'DatePartsInput',
-    'MMYYDatePartsInput', 'Hidden', 'RadioChoice', 'SelectOtherChoice'
+    'MMYYDatePartsInput', 'Hidden', 'RadioChoice', 'SelectOtherChoice',
+    'FileUpload', 'FileUploadWidget',
     ]
 

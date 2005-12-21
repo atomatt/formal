@@ -117,3 +117,15 @@
   float: none;
 }
 
+.nevow-form .preview-show {
+  display: block;
+}
+
+.nevow-form .preview-hidden {
+  display: none;
+}
+
+.nevow-form .resttextarea .preview-frame {
+  height: 500px;
+  width: 80%;
+}

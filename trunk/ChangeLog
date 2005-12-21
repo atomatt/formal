@@ -1,3 +1,8 @@
+2005-12-21  Damian Staniforth <damian@pollenation.net>
+
+	Added a ReSTTextArea widget. The widget accepts ReST-format input and
+	includes a preview facility.
+
 2005-12-15  Matt Goodall <matt@pollenation.net>
 
 	Added a SelectOtherChoice widget. The widget is similar to the
