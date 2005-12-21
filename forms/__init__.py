@@ -3,7 +3,7 @@ HTML forms.
 """
 
 
-version_info = (0, 5, 0)
+version_info = (0, 6, 0)
 version = '.'.join([str(i) for i in version_info])
 
 
@@ -11,6 +11,7 @@ from nevow import static
 from forms.types import *
 from forms.validation import *
 from forms.widget import *
+from forms.widgets.restwidget import *
 from forms.form import Form, ResourceMixin, renderForm
 from forms import iforms
 
