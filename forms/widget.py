@@ -1009,7 +1009,9 @@ class ReSTTextArea(TextArea):
         if not readonly:
             try:
                 import docutils
-                
+            except ImportError:
+                raise
+            else:
                 form = iforms.IForm( ctx )
                 srcId = keytocssid(ctx.key)
                 previewDiv = srcId + '-preview-div'
@@ -1023,9 +1025,6 @@ class ReSTTextArea(TextArea):
                         T.button(onClick="return Forms.Util.previewHide('%s');"%(previewDiv))['Close']
                     ]
                 ]
-            except:
-                import sys
-                print '**** %s *****'%sys.exc_info()[1]
 
         return tag
 
