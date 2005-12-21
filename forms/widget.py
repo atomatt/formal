@@ -991,10 +991,13 @@ class ReSTTextArea(TextArea):
     This will accept a restWriter parameter
     """
 
+    restWriter = None
+
     def __init__(self, original, **kwds):
         restWriter = kwds.pop('restWriter', None)
         TextArea.__init__(self, original, **kwds)
-        self.restWriter = restWriter
+        if restWriter is not None:
+            self.restWriter = restWriter
 
     def _renderTag(self, ctx, key, value, readonly):
         tag=T.invisible()
