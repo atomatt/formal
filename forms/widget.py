@@ -5,11 +5,11 @@ certain format.
 
 import itertools
 import pkg_resources
-from nevow import inevow, loaders, tags as T, util, url, static
+from nevow import inevow, loaders, tags as T, util, url, static, rend
 from nevow.i18n import _
 from forms import converters, iforms, validation
 from forms.util import keytocssid
-from forms.form import widgetResourceURL
+from forms.form import widgetResourceURL, widgetResourceURLFromContext
 from zope.interface import implements
 from twisted.internet import defer
 
@@ -928,7 +928,7 @@ class FileUploadWidget(object):
         if resourceId:
             resourceManager.register( key, resourceId )
 
-    def getResource( self, ctx, segments ):
+    def getResource( self, ctx, key, segments ):
         """
             Return an Resource that contains the image, either a file
             from the resource manager, or a data object from the convertible.
@@ -985,9 +985,137 @@ class Hidden(object):
         value = iforms.IStringConvertible(self.original).toType(value)
         return self.original.validate(value)
 
+class ReSTTextArea(TextArea):
+    """
+    A large text entry area that accepts ReST and previews it as HTML
+    This will accept a restWriter parameter
+
+    """
+
+    def __init__(self, original, **kwds):
+        try:
+            self.restWriter = kwds.pop('restWriter')
+        except KeyError:
+            self.restWriter = None
+        TextArea.__init__(self, original, **kwds)
+
+    def _renderTag(self, ctx, key, value, readonly):
+        tag=T.invisible()
+        ta=T.textarea(name=key, id=keytocssid(ctx.key), cols=self.cols, rows=self.rows)[value or '']
+        if readonly:
+            ta(class_='readonly', readonly='readonly')
+        tag[ta]
+
+        if not readonly:
+            try:
+                import docutils
+                
+                form = iforms.IForm( ctx )
+                srcId = keytocssid(ctx.key)
+                previewDiv = srcId + '-preview-div'
+                frameId = srcId + '-preview-frame'
+                targetURL = widgetResourceURLFromContext(ctx, form.name).child(key).child( srcId )
+                tag[T.br()]
+                tag[T.button(onClick="return Forms.Util.previewShow('%s', '%s', '%s');"%(previewDiv, frameId, targetURL))['Preview ...']]
+                tag[T.div(id=previewDiv, class_="preview-hidden")[
+                        T.iframe(class_="preview-frame", name=frameId, id=frameId),
+                        T.br(),
+                        T.button(onClick="return Forms.Util.previewHide('%s');"%(previewDiv))['Close']
+                    ]
+                ]
+            except:
+                import sys
+                print '**** %s *****'%sys.exc_info()[1]
+
+        return tag
+
+    def getResource(self, ctx, key, segments):
+        return ReSTPreview(ctx, self.restWriter, key, segments[0]), segments[1:]
+
+
+class ReSTPreview(rend.Page):
+
+    def __init__(self, ctx, restWriter, key, srcId):
+        self.restWriter = restWriter
+
+        form = iforms.IForm( ctx )
+        u = widgetResourceURLFromContext(ctx, form.name).child(key).child( srcId ).child('_submit')
+        self.destId=srcId + '-dest'
+        formId=srcId + '-form'
+
+        stan = T.html()[
+            T.head()[
+                T.script(type="text/javascript")["""
+                function ReSTTranslate() {
+                    dest = document.getElementById('%(destId)s');
+                    form = document.getElementById('%(formId)s');
+                    src = parent.document.getElementById('%(srcId)s');
+                    dest.value = src.value;
+                    form.submit(); 
+                }    
+
+                """%{'srcId':srcId, 'destId':self.destId, 'formId':formId}]
+            ],
+            T.body()[
+                T.form(id=formId, method="POST", action=u)[
+                    T.input(type="hidden", name=self.destId, id=self.destId)
+                ],
+                T.script(type="text/javascript")["ReSTTranslate();"],
+            ],
+        ]
+
+        self.docFactory = loaders.stan(stan)
+
+    def child__submit(self, ctx):
+        args = inevow.IRequest(ctx).args
+        value = args.get(self.destId, [''])[0]
+
+        from docutils.utils import SystemMessage
+
+        try:
+            if self.restWriter:
+                restValue = self._html_fragment(value, writer=self.restWriter)
+            else:
+                restValue = self._html_fragment(value, writer_name='html')
+        except SystemMessage, e:
+            restValue = str(e)
+
+        stan = T.html()[
+            T.head()[
+                T.style(type="text/css")["""
+                
+                    .system-message {border: 1px solid red; background-color: #FFFFDD; margin: 5px; padding: 5px;}
+                    .system-message-title { font-weight: bold;}
+                """
+                ]
+            ],
+            T.body()[
+                T.div()[
+                    T.xml(restValue)
+                ]
+            ],
+        ]
+
+        self.docFactory = loaders.stan(stan)
+
+        return self
+    
+    def _html_fragment(self, input_string, writer=None, writer_name=None):
+        from docutils.core import publish_parts
+
+        overrides = {'input_encoding': 'utf8',
+                     'doctitle_xform': 0,
+                     'initial_header_level': 1}
+        parts = publish_parts(
+            source=input_string, 
+            writer_name=writer_name, writer=writer, settings_overrides=overrides)
+        fragment = parts['fragment']
+        return fragment.encode('utf8')
+
+
 __all__ = [
     'Checkbox', 'CheckboxMultiChoice', 'CheckedPassword','FileUploadRaw', 'FileUpload', 'FileUploadWidget',
     'Password', 'SelectChoice', 'TextArea', 'TextInput', 'DatePartsInput',
-    'MMYYDatePartsInput', 'Hidden', 'RadioChoice', 'SelectOtherChoice'
+    'MMYYDatePartsInput', 'Hidden', 'RadioChoice', 'SelectOtherChoice', 'ReSTTextArea'
     ]
 

@@ -19,6 +19,7 @@ examples = [
     'forms.examples.datestimes.DatesTimesFormPage',
     'forms.examples.actionbuttons.ActionButtonsPage',
     'forms.examples.validator.ValidatorFormPage',
+    'forms.examples.restwidget.ReSTWidgetFormPage'
     ]
 
 def makeSite(application):
@@ -81,6 +82,7 @@ class FormExamplePage(forms.ResourceMixin, rend.Page):
                     T.title(data=T.directive('title'), render=rend.data),
                     T.link(rel='stylesheet', type='text/css', href=url.root.child('examples.css')),
                     T.link(rel='stylesheet', type='text/css', href=url.root.child('forms.css')),
+                    T.script(type='text/javascript', src='js/forms.js'),
                     ],
                 T.body[
                     T.h1(data=T.directive('title'), render=rend.data),
@@ -102,3 +104,4 @@ class FormExamplePage(forms.ResourceMixin, rend.Page):
 examples_css = pkg_resources.resource_filename('forms.examples', 'examples.css')
 setattr(RootPage, 'child_examples.css', static.File(examples_css))
 setattr(RootPage, 'child_forms.css', forms.defaultCSS)
+setattr(RootPage, 'child_js', forms.formsJS)
