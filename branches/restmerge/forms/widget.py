@@ -989,15 +989,12 @@ class ReSTTextArea(TextArea):
     """
     A large text entry area that accepts ReST and previews it as HTML
     This will accept a restWriter parameter
-
     """
 
     def __init__(self, original, **kwds):
-        try:
-            self.restWriter = kwds.pop('restWriter')
-        except KeyError:
-            self.restWriter = None
+        restWriter = kwds.pop('restWriter', None)
         TextArea.__init__(self, original, **kwds)
+        self.restWriter = restWriter
 
     def _renderTag(self, ctx, key, value, readonly):
         tag=T.invisible()
