@@ -15,6 +15,12 @@ SEPARATOR = '!!'
 FORMS_KEY = '__nevow_form__'
 WIDGET_RESOURCE_KEY = 'widget_resource'
 
+class CoerceError(Exception):
+    """
+    One or more errors occurred while processing string inputs into
+    structured data.
+    """
+
 
 def renderForm(name):
 
@@ -123,15 +129,14 @@ class Form(object):
 
         return iforms.IWidget(type)
 
-    def process(self, ctx):
 
-        # Get the request args
-        requestArgs = inevow.IRequest(ctx).args
-
-        # Decode the request arg names
-        charset = getPOSTCharset(ctx)
-        requestArgs = dict([(k.decode(charset),v) for k,v in requestArgs.iteritems()])
-
+    def unflattenRequestArguments(self, requestArgs):
+        """
+        Transform a dictionary of request arguments with keys which contain
+        "." as a hierarchy delimiter into a group of nested dictionaries,
+        with each component of the hierarchy used as a key for either a more
+        deeply nested dictionary or a value.
+        """
         # Unflatten the request into nested dicts.
         args = {}
         for name, value in requestArgs.iteritems():
@@ -141,7 +146,16 @@ class Form(object):
             for g in group:
                 d = args.setdefault(g,{})
             d[name] = value
+        return args
 
+
+    def findAction(self, args):
+        """
+        Find the appropriate action which was selected, based on the values
+        in the request arguments.
+
+        @rtype: C{Action}
+        """
         # Find the callback to use, defaulting to the form default
         callback, validate = self.callback, True
         if self.actions is not None:
@@ -150,16 +164,21 @@ class Form(object):
                     # Remove it from the data
                     args.pop(action.name)
                     # Remember the callback and whether to validate
-                    callback, validate = action.callback, action.validate
-                    break
+                    return action.callback, action.validate
+        raise Exception('The form has no callback and no action was found.')
 
-        if callback is None:
-            raise Exception('The form has no callback and no action was found.')
 
-        # Store an errors object in the context
-        errors = FormErrors(self.name)
-        errors.data = args
-        ctx.remember(errors, iforms.IFormErrors)
+    def coerceInputs(self, ctx, action, args):
+        """
+        Given an action and a dictionary of lists of unicode string request
+        arguments, create a dictionary containing structured data.
+
+        @rtype: C{dict}
+        @return: A dictionary containing the results of "processing" the
+        inputs (turning strings into some kind of real objects).
+        """
+        # Collect errors for re-display or some other handling
+        errors = None
 
         # Iterate the items and collect the form data and/or errors.
         data = {}
@@ -171,29 +190,69 @@ class Form(object):
                     data[name] = self.data.get(name)
                     errors.data[name] = self.data.get(name)
             except validation.FieldError, e:
-                if validate:
+                if action.validate:
+                    if errors is None:
+                        errors = FormErrors(self.name)
+                        errors.data = args
                     if e.fieldName is None:
                         e.fieldName = name
                     errors.add(e)
-
         if errors:
-            return errors
+            raise CoerceError(errors)
+        return data
 
-        def _clearUpResources( r ):
+
+    def invokeCallback(self, callback, data):
+        def _clearUpResources(r):
             self.resourceManager.clearUpResources()
             return r
 
-        d = defer.maybeDeferred(callback, ctx, self, data)
-        d.addCallback( _clearUpResources )
-        d.addErrback(self._cbFormProcessingFailed, ctx)
+        d = defer.maybeDeferred(callback, self, data)
+        d.addCallback(_clearUpResources)
         return d
 
-    def _cbFormProcessingFailed(self, failure, ctx):
+
+    def _ebFormProcessingFailed(self, failure, ctx):
         e = failure.value
         failure.trap(validation.FormError, validation.FieldError)
         errors = iforms.IFormErrors(ctx)
         errors.add(failure.value)
         return errors
+
+
+    def processRequestContext(self, ctx):
+        # Get the request args
+        requestArgs = inevow.IRequest(ctx).args
+
+        # Decode the request arg names
+        charset = getPOSTCharset(ctx)
+        requestArgs = dict([(k.decode(charset),v) for k,v in requestArgs.iteritems()])
+
+        args = self.unflattenRequestArguments(requestArgs)
+        action = self.findAction(args)
+        try:
+            coercedData = self.coerceInputs(ctx, action, args)
+        except CoerceError, e:
+            errors = e.args[0]
+        else:
+            errors = FormErrors(self.name)
+            errors.data = self.data
+        ctx.remember(e.args[0], iforms.IFormErrors)
+        if errors:
+            return errors
+        d = self.invokeCallback(
+            lambda form, data: action.callback(ctx, form, data),
+            coercedData)
+        d.addErrback(self._ebFormProcessingFailed, ctx)
+        return d
+    process = processRequestContext
+
+
+    def processRequestArguments(self, requestArgs):
+        args = self.unflattenRequestArguments(requestArgs)
+        action = self.findAction(args)
+        coercedData = self.coerceInputs(None, action, args)
+        return self.invokeCallback(action.callback, coercedData)
 
 
 class FormErrors(object):

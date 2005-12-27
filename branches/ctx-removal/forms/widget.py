@@ -4,9 +4,9 @@ certain format.
 """
 
 import itertools
-import pkg_resources
 from nevow import inevow, loaders, tags as T, util, url, static, rend
 from nevow.i18n import _
+from nevow.util import resource_filename
 from forms import converters, iforms, validation
 from forms.util import keytocssid
 from forms.form import widgetResourceURL, widgetResourceURLFromContext
@@ -52,7 +52,7 @@ class TextInput(object):
         return self._renderTag(ctx, key, value, True)
 
     def processInput(self, ctx, key, args):
-        value = args.get(key, [''])[0].decode(util.getPOSTCharset(ctx))
+        value = args.get(key, [''])[0]
         value = iforms.IStringConvertible(self.original).toType(value)
         return self.original.validate(value)
 
@@ -141,7 +141,7 @@ class TextArea(object):
         return self._renderTag(ctx, key, value, True)
 
     def processInput(self, ctx, key, args):
-        value = args.get(key, [''])[0].decode(util.getPOSTCharset(ctx))
+        value = args.get(key, [''])[0]
         value = iforms.IStringConvertible(self.original).fromType(value)
         return self.original.validate(value)
 
@@ -286,7 +286,7 @@ class SelectOtherChoice(object):
     noneOption = ('', '')
     otherOption = ('...', 'Other ...')
 
-    template = loaders.xmlfile(pkg_resources.resource_filename('forms', 'html/SelectOtherChoice.html'))
+    template = loaders.xmlfile(resource_filename('forms', 'html/SelectOtherChoice.html'))
 
     def __init__(self, original, options=None):
         self.original = original
@@ -981,7 +981,7 @@ class Hidden(object):
         return self.render(ctx, key, args, errors)
 
     def processInput(self, ctx, key, args):
-        value = args.get(key, [''])[0].decode(util.getPOSTCharset(ctx))
+        value = args.get(key, [''])[0]
         value = iforms.IStringConvertible(self.original).toType(value)
         return self.original.validate(value)
 

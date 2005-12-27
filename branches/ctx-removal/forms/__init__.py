@@ -20,17 +20,12 @@ def widgetFactory(widgetClass, *a, **k):
         return widgetClass(original, *a, **k)
     return _
 
-try:
-    import pkg_resources
-except ImportError:
-    import os.path
-    defaultCSS = static.File(os.path.join(os.path.split(__file__)[0], 'forms.css'))
-    formsJS = static.File(os.path.join(os.path.split(__file__)[0], 'js'))
-else:
-    from forms.util import LazyResource
-    defaultCSS = LazyResource(lambda: static.File(pkg_resources.resource_filename('forms', 'forms.css')))
-    formsJS = LazyResource(lambda: static.File(pkg_resources.resource_filename('forms', 'js')))
-    del LazyResource
+from nevow.util import resource_filename as _resource_filename
+from forms.util import LazyResource
+
+defaultCSS = LazyResource(lambda: static.File(_resource_filename('forms', 'forms.css')))
+formsJS = LazyResource(lambda: static.File(_resource_filename('forms', 'js')))
+del LazyResource
 
 # Register standard adapters
 from nevow.compy import registerAdapter
