@@ -1,7 +1,8 @@
-import pkg_resources
+
 from zope.interface import implements
 from twisted.python import reflect
 from nevow import appserver, inevow, loaders, rend, static, tags as T, url
+from nevow.util import resource_filename
 import forms
 
 DOCTYPE = T.xml('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">')
@@ -101,7 +102,7 @@ class FormExamplePage(forms.ResourceMixin, rend.Page):
 
 
 # Add child_ attributes
-examples_css = pkg_resources.resource_filename('forms.examples', 'examples.css')
+examples_css = resource_filename('forms.examples', 'examples.css')
 setattr(RootPage, 'child_examples.css', static.File(examples_css))
 setattr(RootPage, 'child_forms.css', forms.defaultCSS)
 setattr(RootPage, 'child_js', forms.formsJS)
