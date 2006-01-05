@@ -79,6 +79,8 @@ class Form(object):
         self.data = {}
 
     def addField(self, name, type, widgetFactory=None, label=None, description=None, cssClass=None):
+        if not util.validIdentifier(name):
+            raise ValueError('%r is an invalid field name'%name)
         if self.items is None:
             self.items = []
         type.name = name
