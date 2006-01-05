@@ -1,6 +1,10 @@
+import re
 from zope.interface import implements
 from nevow import inevow
 from forms import iforms
+
+
+_IDENTIFIER_REGEX = re.compile('^[a-zA-Z_][a-zA-Z0-9_]*$')
 
 
 def titleFromName(name):
@@ -30,6 +34,12 @@ def titleFromName(name):
 def keytocssid(key):
     return '-'.join(key.split('.'))
 
+
+def validIdentifier(name):
+    """
+    Test that name is a valid Python identifier.
+    """
+    return _IDENTIFIER_REGEX.match(name) is not None
 
 class SequenceKeyLabelAdapter(object):
     implements( iforms.IKey, iforms.ILabel )
