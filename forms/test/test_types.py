@@ -16,6 +16,21 @@ class TestValidators(unittest.TestCase):
         self.assertEquals(t.required, True)
 
 
+class TestCreation(unittest.TestCase):
+
+    def test_immutablility(self):
+        self.assertEquals(forms.String().immutable, False)
+        self.assertEquals(forms.String(immutable=False).immutable, False)
+        self.assertEquals(forms.String(immutable=True).immutable, True)
+
+    def test_immutablilityOverride(self):
+        class String(forms.String):
+            immutable = True
+        self.assertEquals(String().immutable, True)
+        self.assertEquals(String(immutable=False).immutable, False)
+        self.assertEquals(String(immutable=True).immutable, True)
+
+
 class TestValidate(unittest.TestCase):
 
     def testString(self):
