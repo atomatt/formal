@@ -4,7 +4,6 @@ certain format.
 """
 
 import itertools
-import pkg_resources
 from nevow import inevow, loaders, tags as T, util, url, static, rend
 from nevow.i18n import _
 from forms import converters, iforms, validation
@@ -286,12 +285,16 @@ class SelectOtherChoice(object):
     noneOption = ('', '')
     otherOption = ('...', 'Other ...')
 
-    template = loaders.xmlfile(pkg_resources.resource_filename('forms', 'html/SelectOtherChoice.html'))
+    template = None
 
     def __init__(self, original, options=None):
         self.original = original
         if options is not None:
             self.options = options
+        if self.template is None:
+            self.template = loaders.xmlfile(util.resource_filename('forms',
+                'html/SelectOtherChoice.html'))
+
 
     def _valueFromRequestArgs(self, key, args):
         value = args.get(key, [''])[0]
