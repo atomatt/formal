@@ -17,7 +17,7 @@ class Type(object):
     # Instance cannot be changed
     immutable = False
     # List of validators to test the value against
-    validators = []
+    validators = ()
 
     def __init__(self, name=None, required=None, missing=None, immutable=None, validators=None):
         if name is not None:
@@ -27,9 +27,9 @@ class Type(object):
         if immutable is not None:
             self.immutable = immutable
         if validators is not None:
-            self.validators = validators[:]
+            self.validators = list(validators)
         else:
-            self.validators = self.validators[:]
+            self.validators = list(self.validators)
         if required is None:
             required = self.required
         if required:
