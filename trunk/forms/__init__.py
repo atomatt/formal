@@ -54,5 +54,6 @@ registerAdapter(converters.DateToStringConverter, Date, iforms.IStringConvertibl
 registerAdapter(converters.TimeToStringConverter, Time, iforms.IStringConvertible)
 registerAdapter(converters.NullConverter, File, iforms.IFileConvertible)
 registerAdapter(converters.NullConverter, Sequence, iforms.ISequenceConvertible)
+del util
 del registerAdapter
 
