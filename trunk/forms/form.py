@@ -68,7 +68,6 @@ class Form(object):
     implements( iforms.IForm )
 
     callback = None
-    items = None
     actions = None
     widgets = None
 
@@ -77,12 +76,11 @@ class Form(object):
             self.callback = callback
         self.resourceManager = ResourceManager()
         self.data = {}
+        self.items = []
 
     def addField(self, name, type, widgetFactory=None, label=None, description=None, cssClass=None):
         if not util.validIdentifier(name):
             raise ValueError('%r is an invalid field name'%name)
-        if self.items is None:
-            self.items = []
         type.name = name
         if label is None:
             label = util.titleFromName(name)
