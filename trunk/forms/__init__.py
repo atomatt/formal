@@ -3,7 +3,7 @@ HTML forms.
 """
 
 
-version_info = (0, 6, 2)
+version_info = (0, 7, 0)
 version = '.'.join([str(i) for i in version_info])
 
 
@@ -12,6 +12,7 @@ from forms.types import *
 from forms.validation import *
 from forms.widget import *
 from forms.widgets.restwidget import *
+from forms.widgets.multiselect import *
 from forms.form import Form, ResourceMixin, renderForm
 from forms import iforms
 

@@ -41,6 +41,7 @@ class SelectionFormPage(main.FormExamplePage):
         form.addField('differentNoneRadios', forms.String(), forms.widgetFactory(forms.RadioChoice, options=data_strings, noneOption=differentNone))
         form.addField('selectOther', forms.String(), forms.widgetFactory(forms.SelectOtherChoice, options=['Mr', 'Mrs']))
         form.addField('selectOtherRequired', forms.String(required=True), forms.widgetFactory(forms.SelectOtherChoice, options=['Mr', 'Mrs']))
+        form.addField('multiselect', forms.String(), forms.widgetFactory(forms.MultiselectChoice, options=strings))
         form.addAction(self.submitted)
         return form
     
