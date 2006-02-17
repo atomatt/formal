@@ -18,7 +18,7 @@ WIDGET_RESOURCE_KEY = 'widget_resource'
 
 def renderForm(name):
 
-    def _(ctx, data):
+    def render(ctx, data):
 
         def _processForm( form, ctx, name ):
             # Remember the form
@@ -47,7 +47,7 @@ def renderForm(name):
         d.addCallback( _processForm, ctx, name )
         return d
 
-    return _
+    return render
 
 
 class Action(object):
@@ -279,10 +279,10 @@ class FormsResourceBehaviour(object):
         ctx.remember(self.parent, iforms.IFormFactory)
 
     def render_form(self, name):
-        def _(ctx, data):
+        def render(ctx, data):
             self.remember(ctx)
             return renderForm(name)
-        return _
+        return render
 
     def _processForm(self, form, ctx):
         ctx.remember(form, iforms.IForm)
@@ -481,7 +481,7 @@ class FormRenderer(object):
 
     def _renderItem(self, ctx, data):
 
-        def _(ctx, data):
+        def render(ctx, data):
 
             name, type, label, description, cssClass = data
             form = self.original
@@ -528,11 +528,11 @@ class FormRenderer(object):
 
             return ctx.tag
 
-        return _
+        return render
 
     def _renderHiddenItem(self, ctx, data):
 
-        def _(ctx, data):
+        def render(ctx, data):
 
             name, type, label, description, cssClass = data
             form = self.original
@@ -546,7 +546,7 @@ class FormRenderer(object):
             ctx.tag.fillSlots('inputs', widget.render(ctx, name, formData, formErrors))
             return ctx.tag
 
-        return _
+        return render
 
     def _renderActions(self, ctx, data):
 

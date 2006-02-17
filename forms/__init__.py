@@ -17,9 +17,9 @@ from forms.form import Form, ResourceMixin, renderForm
 from forms import iforms
 
 def widgetFactory(widgetClass, *a, **k):
-    def _(original):
+    def factory(original):
         return widgetClass(original, *a, **k)
-    return _
+    return factory
 
 try:
     import pkg_resources
