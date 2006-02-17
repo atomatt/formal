@@ -9,7 +9,7 @@ _IDENTIFIER_REGEX = re.compile('^[a-zA-Z_][a-zA-Z0-9_]*$')
 
 def titleFromName(name):
 
-    def _():
+    def gen():
 
         it = iter(name)
         last = None
@@ -28,7 +28,7 @@ def titleFromName(name):
                 yield ch
             last = ch
 
-    return ''.join(_())
+    return ''.join(gen())
 
 
 def keytocssid(key):

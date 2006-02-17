@@ -458,9 +458,9 @@ class DatePartsInput(object):
             self.twoCharCutoffYear = twoCharCutoffYear
 
     def _namer(self, prefix):
-        def _(part):
+        def f(part):
             return '%s__%s' % (prefix,part)
-        return _
+        return f
 
     def _renderTag(self, ctx, year, month, day, namer, readonly):
         yearTag = T.input(type="text", name=namer('year'), value=year, size=4)
@@ -547,9 +547,9 @@ class MMYYDatePartsInput(object):
             self.cutoffYear = cutoffYear
 
     def _namer(self, prefix):
-        def _(part):
+        def f(part):
             return '%s__%s' % (prefix,part)
-        return _
+        return f
 
     def _renderTag(self, ctx, year, month, namer, readonly):
         yearTag = T.input(type="text", name=namer('year'), value=year, size=2)
@@ -712,9 +712,9 @@ class FileUpload(object):
         self.preview = preview
 
     def _namer(self, prefix):
-        def _(part):
+        def f(part):
             return '%s__%s' % (prefix,part)
-        return _
+        return f
 
     def _renderTag(self, ctx, key, value, namer, disabled):
 
@@ -785,9 +785,9 @@ class FileUploadWidget(object):
     convertibleFactory = converters.NullConverter
 
     def _namer(self, prefix):
-        def _(part):
+        def f(part):
             return '%s__%s' % (prefix,part)
-        return _
+        return f
 
     def __init__( self, original, convertibleFactory=None, originalKeyIsURL=False ):
         self.original = original
@@ -947,7 +947,7 @@ class FileUploadWidget(object):
             # The convertible can provide a file like object so create a
             # static.Data instance with the data from the convertible.
 
-            def _( result ):
+            def gotResult( result ):
 
                 mimetype, filelike, fileName = result
                 data = filelike.read()
@@ -955,7 +955,7 @@ class FileUploadWidget(object):
                 return static.Data( data, mimetype ), []
 
             d = defer.maybeDeferred( self.convertibleFactory(self.original).fromType, segments[1], context=ctx )
-            d.addCallback( _ )
+            d.addCallback(gotResult)
             return d
         else:
             return None
