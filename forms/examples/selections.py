@@ -19,7 +19,7 @@ dates = [
 def data_strings(ctx, data):
     # Let's defer it, just for fun.
     return defer.succeed(strings)
-    
+
 # A different "none" option tuple
 differentNone = ('none value', '- select -')
     
@@ -40,7 +40,8 @@ class SelectionFormPage(main.FormExamplePage):
         form.addField('oneDate', forms.Date(),
                 forms.widgetFactory(forms.SelectChoice, options=dates))
         form.addField('multipleStrings', forms.Sequence(forms.String()),
-                forms.widgetFactory(forms.CheckboxMultiChoice, options=strings))
+                forms.widgetFactory(forms.CheckboxMultiChoice,
+                    options=data_strings))
         form.addField('multipleDates', forms.Sequence(forms.Date()),
                 forms.widgetFactory(forms.CheckboxMultiChoice, options=dates))
         form.addField('differentNoneSelect', forms.String(),

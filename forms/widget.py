@@ -623,19 +623,21 @@ class CheckboxMultiChoice(object):
             self.options = options
 
     def _renderTag(self, ctx, key, values, converter, disabled):
-
-        # loops through checkbox options and renders
-        for n,item in enumerate(self.options):
-            optValue = iforms.IKey(item).key()
-            optLabel = iforms.ILabel(item).label()
-            optValue = converter.fromType(optValue)
-            optid = (keytocssid(ctx.key),'-',n)
-            checkbox = T.input(type='checkbox', name=key, value=optValue, id=optid )
-            if optValue in values:
-                checkbox = checkbox(checked='checked')
-            if disabled:
-                checkbox = checkbox(class_='disabled', disabled='disabled')
-            yield checkbox, T.label(for_=optid)[optLabel], T.br()
+        def renderer(ctx, options):
+            # loops through checkbox options and renders
+            for n,item in enumerate(options):
+                optValue = iforms.IKey(item).key()
+                optLabel = iforms.ILabel(item).label()
+                optValue = converter.fromType(optValue)
+                optid = (keytocssid(ctx.key),'-',n)
+                checkbox = T.input(type='checkbox', name=key, value=optValue, id=optid )
+                if optValue in values:
+                    checkbox = checkbox(checked='checked')
+                if disabled:
+                    checkbox = checkbox(class_='disabled', disabled='disabled')
+                yield checkbox, T.label(for_=optid)[optLabel], T.br()
+        # Let Nevow worry if self.options is not already a list.
+        return T.invisible(data=self.options)[renderer]
 
     def render(self, ctx, key, args, errors):
 
