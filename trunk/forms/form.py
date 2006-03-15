@@ -2,9 +2,10 @@
 Form implementation and high-level renderers.
 """
 
+from zope.interface import Interface
 from twisted.internet import defer
+from twisted.python.components import registerAdapter
 from nevow import appserver, context, loaders, inevow, tags as T, url
-from nevow.compy import registerAdapter, Interface
 from nevow.util import getPOSTCharset
 from forms import iforms, util, validation
 from resourcemanager import ResourceManager

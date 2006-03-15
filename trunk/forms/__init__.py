@@ -34,7 +34,7 @@ else:
     del LazyResource
 
 # Register standard adapters
-from nevow.compy import registerAdapter
+from twisted.python.components import registerAdapter
 from forms import converters
 from forms.util import SequenceKeyLabelAdapter
 registerAdapter(TextInput, String, iforms.IWidget)
