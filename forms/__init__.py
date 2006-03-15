@@ -3,7 +3,7 @@ HTML forms.
 """
 
 
-version_info = (0, 7, 1)
+version_info = (0, 7, 2)
 version = '.'.join([str(i) for i in version_info])
 
 
@@ -36,6 +36,7 @@ else:
 # Register standard adapters
 from nevow.compy import registerAdapter
 from forms import converters
+from forms.util import SequenceKeyLabelAdapter
 registerAdapter(TextInput, String, iforms.IWidget)
 registerAdapter(TextInput, Integer, iforms.IWidget)
 registerAdapter(TextInput, Float, iforms.IWidget)
@@ -43,9 +44,8 @@ registerAdapter(Checkbox, Boolean, iforms.IWidget)
 registerAdapter(DatePartsInput, Date, iforms.IWidget)
 registerAdapter(TextInput, Time, iforms.IWidget)
 registerAdapter(FileUploadRaw, File, iforms.IWidget)
-from forms import util
-registerAdapter(util.SequenceKeyLabelAdapter, tuple, iforms.IKey)
-registerAdapter(util.SequenceKeyLabelAdapter, tuple, iforms.ILabel)
+registerAdapter(SequenceKeyLabelAdapter, tuple, iforms.IKey)
+registerAdapter(SequenceKeyLabelAdapter, tuple, iforms.ILabel)
 registerAdapter(converters.NullConverter, String, iforms.IStringConvertible)
 registerAdapter(converters.DateToDateTupleConverter, Date, iforms.IDateTupleConvertible)
 registerAdapter(converters.BooleanToStringConverter, Boolean, iforms.IBooleanConvertible)
@@ -55,6 +55,5 @@ registerAdapter(converters.DateToStringConverter, Date, iforms.IStringConvertibl
 registerAdapter(converters.TimeToStringConverter, Time, iforms.IStringConvertible)
 registerAdapter(converters.NullConverter, File, iforms.IFileConvertible)
 registerAdapter(converters.NullConverter, Sequence, iforms.ISequenceConvertible)
-del util
+del SequenceKeyLabelAdapter
 del registerAdapter
-
