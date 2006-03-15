@@ -1,4 +1,4 @@
-from nevow.compy import Interface
+from zope.interface import Interface
 
 
 class IType(Interface):

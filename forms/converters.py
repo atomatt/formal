@@ -8,12 +8,16 @@ try:
     haveDecimal = True
 except ImportError:
     haveDecimal = False
-from nevow.compy import Adapter
 from forms import iforms, validation
 from zope.interface import implements
 
 
-class NullConverter(Adapter):
+class _Adapter(object):
+    def __init__(self, original):
+        self.original = original
+
+
+class NullConverter(_Adapter):
     implements( iforms.IStringConvertible )
     
     def fromType(self, value):
@@ -27,7 +31,7 @@ class NullConverter(Adapter):
         return value
 
 
-class NumberToStringConverter(Adapter):
+class NumberToStringConverter(_Adapter):
     implements( iforms.IStringConvertible )
     cast = None
     
@@ -64,7 +68,7 @@ if haveDecimal:
         cast = decimal.Decimal
 
 
-class BooleanToStringConverter(Adapter):
+class BooleanToStringConverter(_Adapter):
     implements( iforms.IStringConvertible )
     
     def fromType(self, value):
@@ -84,7 +88,7 @@ class BooleanToStringConverter(Adapter):
         return value == 'True'
     
     
-class DateToStringConverter(Adapter):
+class DateToStringConverter(_Adapter):
     implements( iforms.IStringConvertible )
     
     def fromType(self, value):
@@ -111,7 +115,7 @@ class DateToStringConverter(Adapter):
         return value
 
 
-class TimeToStringConverter(Adapter):
+class TimeToStringConverter(_Adapter):
     implements( iforms.IStringConvertible )
     
     def fromType(self, value):
@@ -154,7 +158,7 @@ class TimeToStringConverter(Adapter):
         return value
         
         
-class DateToDateTupleConverter(Adapter):
+class DateToDateTupleConverter(_Adapter):
     implements( iforms.IDateTupleConvertible )
     
     def fromType(self, value):
