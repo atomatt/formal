@@ -2,8 +2,14 @@
 Form types.
 """
 
-from forms import iforms, validation
+try:
+    import decimal
+    haveDecimal = True
+except ImportError:
+    haveDecimal = False
 from zope.interface import implements
+
+from forms import iforms, validation
 
 
 class Type(object):
@@ -97,6 +103,13 @@ class Time(Type):
     pass
 
 
+if haveDecimal:
+    class Decimal(Type):
+        """
+        Forms type for Python 2.4's decimal.Decimal type.
+        """
+
+
 class Sequence(Type):
 
     # Type of items in the sequence
@@ -122,3 +135,5 @@ __all__ = [
     'Boolean', 'Date', 'File', 'Float', 'Integer', 'Sequence', 'String', 'Time',
     ]
 
+if haveDecimal:
+    __all__.append('Decimal')

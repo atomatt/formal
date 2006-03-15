@@ -3,6 +3,11 @@ IConvertible protocol.
 """
 
 from datetime import date, time
+try:
+    import decimal
+    haveDecimal = True
+except ImportError:
+    haveDecimal = False
 from nevow.compy import Adapter
 from forms import iforms, validation
 from zope.interface import implements
@@ -36,9 +41,12 @@ class NumberToStringConverter(Adapter):
             value = value.strip()
         if not value:
             return None
+        # "Cast" the value to the correct type. For some strange reason,
+        # Python's decimal.Decimal type raises an ArithmeticError when it's
+        # given a dodgy value.
         try:
             value = self.cast(value)
-        except ValueError:
+        except (ValueError, ArithmeticError):
             raise validation.FieldValidationError("Not a valid number")
         return value
         
@@ -49,6 +57,11 @@ class IntegerToStringConverter(NumberToStringConverter):
 
 class FloatToStringConverter(NumberToStringConverter):
     cast = float
+
+
+if haveDecimal:
+    class DecimalToStringConverter(NumberToStringConverter):
+        cast = decimal.Decimal
 
 
 class BooleanToStringConverter(Adapter):
