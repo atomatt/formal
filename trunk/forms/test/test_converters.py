@@ -1,4 +1,9 @@
 from datetime import date, time
+try:
+    import decimal
+    haveDecimal = True
+except ImportError:
+    haveDecimal = False
 from twisted.trial import unittest
 from forms import converters, validation
 
@@ -38,6 +43,24 @@ class TestConverters(unittest.TestCase):
         self.assertEquals(c.toType('-1'), -1)
         self.assertEquals(c.toType('-1.5'), -1.5)
         self.assertRaises(validation.FieldValidationError, c.toType, 'foo')
+        
+    if haveDecimal:
+        def test_decimalToString(self):
+            from decimal import Decimal
+            c = converters.DecimalToStringConverter(None)
+            self.assertEquals(c.fromType(None), None)
+            self.assertEquals(c.fromType(Decimal("1")), '1')
+            self.assertEquals(c.fromType(Decimal("0")), '0')
+            self.assertEquals(c.fromType(Decimal("-1")), '-1')
+            self.assertEquals(c.fromType(Decimal("1.5")), '1.5')
+            self.assertEquals(c.toType(''), None)
+            self.assertEquals(c.toType(' '), None)
+            self.assertEquals(c.toType('1'), Decimal("1"))
+            self.assertEquals(c.toType('0'), Decimal("0"))
+            self.assertEquals(c.toType('-1'), Decimal("-1"))
+            self.assertEquals(c.toType('-1.5'), Decimal("-1.5"))
+            self.assertEquals(c.toType('-1.863496'), Decimal("-1.863496"))
+            self.assertRaises(validation.FieldValidationError, c.toType, 'foo')
         
     def test_booleanToString(self):
         c = converters.BooleanToStringConverter(None)

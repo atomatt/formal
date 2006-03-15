@@ -3,7 +3,7 @@ HTML forms.
 """
 
 
-version_info = (0, 7, 2)
+version_info = (0, 8, 0)
 version = '.'.join([str(i) for i in version_info])
 
 
@@ -55,5 +55,12 @@ registerAdapter(converters.DateToStringConverter, Date, iforms.IStringConvertibl
 registerAdapter(converters.TimeToStringConverter, Time, iforms.IStringConvertible)
 registerAdapter(converters.NullConverter, File, iforms.IFileConvertible)
 registerAdapter(converters.NullConverter, Sequence, iforms.ISequenceConvertible)
+try:
+    Decimal
+except NameError:
+    pass
+else:
+    registerAdapter(TextInput, Decimal, iforms.IWidget)
+    registerAdapter(converters.DecimalToStringConverter, Decimal, iforms.IStringConvertible)
 del SequenceKeyLabelAdapter
 del registerAdapter

@@ -1,4 +1,9 @@
 from datetime import date, time
+try:
+    import decimal
+    haveDecimal = True
+except ImportError:
+    haveDecimal = False
 from twisted.trial import unittest
 import forms
 from forms import validation
@@ -68,6 +73,23 @@ class TestValidate(unittest.TestCase):
         self.assertEquals(forms.Float(missing=1.0).validate(None), 1.0)
         self.assertEquals(forms.Float(missing=1.0).validate(2.0), 2.0)
         self.assertRaises(forms.FieldValidationError, forms.Float(required=True).validate, None)
+
+    if haveDecimal:
+        def testDecimal(self):
+            from decimal import Decimal
+            self.assertEquals(forms.Decimal().validate(None), None)
+            self.assertEquals(forms.Decimal().validate(Decimal('0')), Decimal('0'))
+            self.assertEquals(forms.Decimal().validate(Decimal('0.0')), Decimal('0.0'))
+            self.assertEquals(forms.Decimal().validate(Decimal('.1')), Decimal('0.1'))
+            self.assertEquals(forms.Decimal().validate(Decimal('1')), Decimal('1'))
+            self.assertEquals(forms.Decimal().validate(Decimal('-1')), Decimal('-1'))
+            self.assertEquals(forms.Decimal().validate(Decimal('-1.86')),
+                    Decimal('-1.86'))
+            self.assertEquals(forms.Decimal(missing=Decimal("1.0")).validate(None),
+                    Decimal("1.0"))
+            self.assertEquals(forms.Decimal(missing=Decimal("1.0")).validate(Decimal("2.0")),
+                    Decimal("2.0"))
+            self.assertRaises(forms.FieldValidationError, forms.Decimal(required=True).validate, None)
 
     def testBoolean(self):
         self.assertEquals(forms.Boolean().validate(None), None)

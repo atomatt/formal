@@ -71,7 +71,6 @@ class TestUnicode(unittest.TestCase):
             self.assert_(r == u'bar')
             r = processInput(type(forms.String()), 'foo', ['\xc2\xa3'])
             self.assert_(r == u'\xa3')
-        test.func_name = 'test_%s'%type.__name__
         return test
 
     test_TextInput = simpleTextWidgetTest(forms.TextInput)

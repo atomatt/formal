@@ -50,6 +50,10 @@
   width: auto;
 }
 
+.nevow-form .field.decimal .inputs input {
+  width: 8em;
+}
+
 .nevow-form .inputs textarea {
   width: 500px;
   height: 200px;
