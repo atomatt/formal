@@ -192,7 +192,7 @@ class Page(rend.Page, formal.ResourceMixin):
         if data.get('string') == 'formerror':
             raise formal.FormError('Failed the form!')
 
-setattr(Page, 'child_nevow-forms.css', formal.defaultCSS)
+setattr(Page, 'child_nevow-formal.css', formal.defaultCSS)
 setattr(Page, 'child_tiny_mce', static.File('tiny_mce'))
 setattr(Page, 'child_webassets', static.File('assets'))
 setattr(Page, 'child_images', static.File('images'))

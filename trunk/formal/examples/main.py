@@ -82,8 +82,8 @@ class FormExamplePage(formal.ResourceMixin, rend.Page):
                     CHARSET,
                     T.title(data=T.directive('title'), render=rend.data),
                     T.link(rel='stylesheet', type='text/css', href=url.root.child('examples.css')),
-                    T.link(rel='stylesheet', type='text/css', href=url.root.child('forms.css')),
-                    T.script(type='text/javascript', src='js/forms.js'),
+                    T.link(rel='stylesheet', type='text/css', href=url.root.child('formal.css')),
+                    T.script(type='text/javascript', src='js/formal.js'),
                     ],
                 T.body[
                     T.h1(data=T.directive('title'), render=rend.data),
@@ -104,5 +104,5 @@ class FormExamplePage(formal.ResourceMixin, rend.Page):
 # Add child_ attributes
 examples_css = pkg_resources.resource_filename('formal.examples', 'examples.css')
 setattr(RootPage, 'child_examples.css', static.File(examples_css))
-setattr(RootPage, 'child_forms.css', formal.defaultCSS)
+setattr(RootPage, 'child_formal.css', formal.defaultCSS)
 setattr(RootPage, 'child_js', formal.formsJS)
