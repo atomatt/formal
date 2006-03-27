@@ -25,11 +25,11 @@ try:
     import pkg_resources
 except ImportError:
     import os.path
-    defaultCSS = static.File(os.path.join(os.path.split(__file__)[0], 'forms.css'))
+    defaultCSS = static.File(os.path.join(os.path.split(__file__)[0], 'formal.css'))
     formsJS = static.File(os.path.join(os.path.split(__file__)[0], 'js'))
 else:
     from formal.util import LazyResource
-    defaultCSS = LazyResource(lambda: static.File(pkg_resources.resource_filename('formal', 'forms.css')))
+    defaultCSS = LazyResource(lambda: static.File(pkg_resources.resource_filename('formal', 'formal.css')))
     formsJS = LazyResource(lambda: static.File(pkg_resources.resource_filename('formal', 'js')))
     del LazyResource
 
