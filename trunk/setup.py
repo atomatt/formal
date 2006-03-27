@@ -1,16 +1,16 @@
 from setuptools import setup, find_packages
 
-import forms
+import formal
 
 setup(
-    name='forms',
-    version=forms.version,
+    name='formal',
+    version=formal.version,
     description='HTML forms framework for Nevow',
     author='Matt Goodall',
     author_email='matt@pollenation.net',
     packages=find_packages(),
     package_data={
-        'forms': ['forms.css', 'html/*', 'js/*'],
+        'formal': ['forms.css', 'html/*', 'js/*'],
         },
     zip_safe = True,
     )

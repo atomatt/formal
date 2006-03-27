@@ -1,6 +1,6 @@
 from datetime import datetime
-import forms
-from forms.examples import main
+import formal
+from formal.examples import main
 
 class PrepopulateFormPage(main.FormExamplePage):
 
@@ -8,9 +8,9 @@ class PrepopulateFormPage(main.FormExamplePage):
     description = 'Example of prepopulating form fields'
     
     def form_example(self, ctx):
-        form = forms.Form()
-        form.addField('aString', forms.String())
-        form.addField('aTime', forms.Time())
+        form = formal.Form()
+        form.addField('aString', formal.String())
+        form.addField('aTime', formal.Time())
         form.addAction(self.submitted)
         form.data = {
             'aTime': datetime.utcnow().time(),

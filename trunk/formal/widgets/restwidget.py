@@ -3,9 +3,9 @@ ReST text area widget.
 """
 
 from nevow import inevow, loaders, rend, tags as T
-from forms import iforms, widget
-from forms.util import keytocssid
-from forms.form import widgetResourceURLFromContext
+from formal import iformal, widget
+from formal.util import keytocssid
+from formal.form import widgetResourceURLFromContext
 
 
 class ReSTTextArea(widget.TextArea):
@@ -35,7 +35,7 @@ class ReSTTextArea(widget.TextArea):
             except ImportError:
                 raise
             else:
-                form = iforms.IForm( ctx )
+                form = iformal.IForm( ctx )
                 srcId = keytocssid(ctx.key)
                 previewDiv = srcId + '-preview-div'
                 frameId = srcId + '-preview-frame'
@@ -60,7 +60,7 @@ class ReSTPreview(rend.Page):
     def __init__(self, ctx, restWriter, key, srcId):
         self.restWriter = restWriter
 
-        form = iforms.IForm( ctx )
+        form = iformal.IForm( ctx )
         u = widgetResourceURLFromContext(ctx, form.name).child(key).child( srcId ).child('_submit')
         self.destId=srcId + '-dest'
         formId=srcId + '-form'

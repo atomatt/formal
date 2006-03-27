@@ -7,7 +7,7 @@ from twisted.internet import defer
 from twisted.python.components import registerAdapter
 from nevow import appserver, context, loaders, inevow, tags as T, url
 from nevow.util import getPOSTCharset
-from forms import iforms, util, validation
+from formal import iformal, util, validation
 from resourcemanager import ResourceManager
 from zope.interface import implements
 
@@ -23,7 +23,7 @@ def renderForm(name):
 
         def _processForm( form, ctx, name ):
             # Remember the form
-            ctx.remember(form, iforms.IForm)
+            ctx.remember(form, iformal.IForm)
 
             # Create a keyed tag that will render the form when flattened.
             tag = T.invisible(key=name)[inevow.IRenderer(form)]
@@ -34,12 +34,12 @@ def renderForm(name):
             ctx = context.WovenContext(parent=ctx, tag=tag)
 
             # Find errors for *this* form and remember things on the context
-            errors = iforms.IFormErrors(ctx, None)
+            errors = iformal.IFormErrors(ctx, None)
             if errors is not None and errors.formName == name:
-                ctx.remember(errors.data, iforms.IFormData)
+                ctx.remember(errors.data, iformal.IFormData)
             else:
-                ctx.remember(None, iforms.IFormErrors)
-                ctx.remember(form.data or {}, iforms.IFormData)
+                ctx.remember(None, iformal.IFormErrors)
+                ctx.remember(form.data or {}, iformal.IFormData)
 
             return ctx
 
@@ -66,7 +66,7 @@ class Action(object):
 
 class Form(object):
 
-    implements( iforms.IForm )
+    implements( iformal.IForm )
 
     callback = None
     actions = None
@@ -122,7 +122,7 @@ class Form(object):
             else:
                 return widgetFactory(type)
 
-        return iforms.IWidget(type)
+        return iformal.IWidget(type)
 
     def process(self, ctx):
 
@@ -160,7 +160,7 @@ class Form(object):
         # Store an errors object in the context
         errors = FormErrors(self.name)
         errors.data = args
-        ctx.remember(errors, iforms.IFormErrors)
+        ctx.remember(errors, iformal.IFormErrors)
 
         # Iterate the items and collect the form data and/or errors.
         data = {}
@@ -192,13 +192,13 @@ class Form(object):
     def _cbFormProcessingFailed(self, failure, ctx):
         e = failure.value
         failure.trap(validation.FormError, validation.FieldError)
-        errors = iforms.IFormErrors(ctx)
+        errors = iformal.IFormErrors(ctx)
         errors.add(failure.value)
         return errors
 
 
 class FormErrors(object):
-    implements( iforms.IFormErrors )
+    implements( iformal.IFormErrors )
 
     def __init__(self, formName):
         self.formName = formName
@@ -237,7 +237,7 @@ class FormResource(object):
         raise NotImplemented()
 
     def _fileFromWidget(self, form, ctx, segments):
-        ctx.remember(form, iforms.IForm)
+        ctx.remember(form, iformal.IForm)
         widget = form.widgetForItem(segments[0])
         return widget.getResource(ctx, segments[0], segments[1:])
 
@@ -277,7 +277,7 @@ class FormsResourceBehaviour(object):
         return d
 
     def remember(self, ctx):
-        ctx.remember(self.parent, iforms.IFormFactory)
+        ctx.remember(self.parent, iformal.IFormFactory)
 
     def render_form(self, name):
         def _(ctx, data):
@@ -286,7 +286,7 @@ class FormsResourceBehaviour(object):
         return _
 
     def _processForm(self, form, ctx):
-        ctx.remember(form, iforms.IForm)
+        ctx.remember(form, iformal.IForm)
         d = defer.maybeDeferred(form.process, ctx)
         d.addCallback(self._formProcessed, ctx)
         return d
@@ -302,7 +302,7 @@ class FormsResourceBehaviour(object):
 
 
 class ResourceMixin(object):
-    implements( iforms.IFormFactory )
+    implements( iformal.IFormFactory )
     
     __formsBehaviour = None
     
@@ -316,7 +316,7 @@ class ResourceMixin(object):
             if result is not appserver.NotFound:
                 return result
             return super(ResourceMixin, self).locateChild(ctx, segments)
-        self.remember(self, iforms.IFormFactory)
+        self.remember(self, iformal.IFormFactory)
         d = defer.maybeDeferred(self.__behaviour().locateChild, ctx, segments)
         d.addCallback(gotResult)
         return d
@@ -326,7 +326,7 @@ class ResourceMixin(object):
             if result is not None:
                 return result
             return super(ResourceMixin, self).renderHTTP(ctx)
-        self.remember(self, iforms.IFormFactory)
+        self.remember(self, iformal.IFormFactory)
         d = defer.maybeDeferred(self.__behaviour().renderHTTP, ctx)
         d.addCallback(gotResult)
         return d
@@ -376,7 +376,7 @@ def locateForm(ctx, name):
     if form is not None:
         return form
     # Not known yet, ask a form factory to create the form
-    factory = ctx.locate(iforms.IFormFactory)
+    factory = ctx.locate(iformal.IFormFactory)
 
     def cacheForm( form, name ):
         if form is None:
@@ -444,7 +444,7 @@ class FormRenderer(object):
         return tag
 
     def _renderErrors(self, ctx, data):
-        errors = iforms.IFormErrors(ctx, None)
+        errors = iformal.IFormErrors(ctx, None)
         if errors is not None:
             errors = errors.getFormErrors()
         if not errors:
@@ -486,8 +486,8 @@ class FormRenderer(object):
 
             name, type, label, description, cssClass = data
             form = self.original
-            formErrors = iforms.IFormErrors(ctx, None)
-            formData = iforms.IFormData(ctx)
+            formErrors = iformal.IFormErrors(ctx, None)
+            formData = iformal.IFormData(ctx)
 
             widget = form.widgetForItem(name)
             if formErrors is None:
@@ -537,8 +537,8 @@ class FormRenderer(object):
 
             name, type, label, description, cssClass = data
             form = self.original
-            formErrors = iforms.IFormErrors(ctx, None)
-            formData = iforms.IFormData(ctx)
+            formErrors = iformal.IFormErrors(ctx, None)
+            formData = iformal.IFormData(ctx)
 
             widget = form.widgetForItem(name)
 

@@ -8,13 +8,13 @@ version = '.'.join([str(i) for i in version_info])
 
 
 from nevow import static
-from forms.types import *
-from forms.validation import *
-from forms.widget import *
-from forms.widgets.restwidget import *
-from forms.widgets.multiselect import *
-from forms.form import Form, ResourceMixin, renderForm
-from forms import iforms
+from formal.types import *
+from formal.validation import *
+from formal.widget import *
+from formal.widgets.restwidget import *
+from formal.widgets.multiselect import *
+from formal.form import Form, ResourceMixin, renderForm
+from formal import iformal
 
 def widgetFactory(widgetClass, *a, **k):
     def _(original):
@@ -28,39 +28,39 @@ except ImportError:
     defaultCSS = static.File(os.path.join(os.path.split(__file__)[0], 'forms.css'))
     formsJS = static.File(os.path.join(os.path.split(__file__)[0], 'js'))
 else:
-    from forms.util import LazyResource
-    defaultCSS = LazyResource(lambda: static.File(pkg_resources.resource_filename('forms', 'forms.css')))
-    formsJS = LazyResource(lambda: static.File(pkg_resources.resource_filename('forms', 'js')))
+    from formal.util import LazyResource
+    defaultCSS = LazyResource(lambda: static.File(pkg_resources.resource_filename('formal', 'forms.css')))
+    formsJS = LazyResource(lambda: static.File(pkg_resources.resource_filename('formal', 'js')))
     del LazyResource
 
 # Register standard adapters
 from twisted.python.components import registerAdapter
-from forms import converters
-from forms.util import SequenceKeyLabelAdapter
-registerAdapter(TextInput, String, iforms.IWidget)
-registerAdapter(TextInput, Integer, iforms.IWidget)
-registerAdapter(TextInput, Float, iforms.IWidget)
-registerAdapter(Checkbox, Boolean, iforms.IWidget)
-registerAdapter(DatePartsInput, Date, iforms.IWidget)
-registerAdapter(TextInput, Time, iforms.IWidget)
-registerAdapter(FileUploadRaw, File, iforms.IWidget)
-registerAdapter(SequenceKeyLabelAdapter, tuple, iforms.IKey)
-registerAdapter(SequenceKeyLabelAdapter, tuple, iforms.ILabel)
-registerAdapter(converters.NullConverter, String, iforms.IStringConvertible)
-registerAdapter(converters.DateToDateTupleConverter, Date, iforms.IDateTupleConvertible)
-registerAdapter(converters.BooleanToStringConverter, Boolean, iforms.IBooleanConvertible)
-registerAdapter(converters.IntegerToStringConverter, Integer, iforms.IStringConvertible)
-registerAdapter(converters.FloatToStringConverter, Float, iforms.IStringConvertible)
-registerAdapter(converters.DateToStringConverter, Date, iforms.IStringConvertible)
-registerAdapter(converters.TimeToStringConverter, Time, iforms.IStringConvertible)
-registerAdapter(converters.NullConverter, File, iforms.IFileConvertible)
-registerAdapter(converters.NullConverter, Sequence, iforms.ISequenceConvertible)
+from formal import converters
+from formal.util import SequenceKeyLabelAdapter
+registerAdapter(TextInput, String, iformal.IWidget)
+registerAdapter(TextInput, Integer, iformal.IWidget)
+registerAdapter(TextInput, Float, iformal.IWidget)
+registerAdapter(Checkbox, Boolean, iformal.IWidget)
+registerAdapter(DatePartsInput, Date, iformal.IWidget)
+registerAdapter(TextInput, Time, iformal.IWidget)
+registerAdapter(FileUploadRaw, File, iformal.IWidget)
+registerAdapter(SequenceKeyLabelAdapter, tuple, iformal.IKey)
+registerAdapter(SequenceKeyLabelAdapter, tuple, iformal.ILabel)
+registerAdapter(converters.NullConverter, String, iformal.IStringConvertible)
+registerAdapter(converters.DateToDateTupleConverter, Date, iformal.IDateTupleConvertible)
+registerAdapter(converters.BooleanToStringConverter, Boolean, iformal.IBooleanConvertible)
+registerAdapter(converters.IntegerToStringConverter, Integer, iformal.IStringConvertible)
+registerAdapter(converters.FloatToStringConverter, Float, iformal.IStringConvertible)
+registerAdapter(converters.DateToStringConverter, Date, iformal.IStringConvertible)
+registerAdapter(converters.TimeToStringConverter, Time, iformal.IStringConvertible)
+registerAdapter(converters.NullConverter, File, iformal.IFileConvertible)
+registerAdapter(converters.NullConverter, Sequence, iformal.ISequenceConvertible)
 try:
     Decimal
 except NameError:
     pass
 else:
-    registerAdapter(TextInput, Decimal, iforms.IWidget)
-    registerAdapter(converters.DecimalToStringConverter, Decimal, iforms.IStringConvertible)
+    registerAdapter(TextInput, Decimal, iformal.IWidget)
+    registerAdapter(converters.DecimalToStringConverter, Decimal, iformal.IStringConvertible)
 del SequenceKeyLabelAdapter
 del registerAdapter

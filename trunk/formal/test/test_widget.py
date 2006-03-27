@@ -1,7 +1,7 @@
 from twisted.trial import unittest
 from nevow import context, flat, inevow
-import forms
-from forms import iforms
+import formal
+from formal import iformal
 from zope.interface import implements
 
 
@@ -23,7 +23,7 @@ class FakeRequest(object):
         
         
 class FakeForm(object):
-    implements( iforms.IForm )
+    implements( iformal.IForm )
     
     def __init__(self, data=None):
         if data is None:
@@ -32,7 +32,7 @@ class FakeForm(object):
 
 
 class FormFactory(object):
-    implements( iforms.IFormFactory )
+    implements( iformal.IFormFactory )
     
     def __init__(self, form, *a, **k):
         super(FormFactory,self).__init__(*a, **k)
@@ -45,7 +45,7 @@ class FormFactory(object):
 def renderWidget(widget, name, data=None):
     ctx = context.RequestContext(tag=FakeRequest())
     ctx.remember(None, inevow.IData)
-    return flat.flatten(iforms.IWidget(widget).render(ctx, name, {name:'bar'}, None), ctx)    
+    return flat.flatten(iformal.IWidget(widget).render(ctx, name, {name:'bar'}, None), ctx)    
         
 
 def processInput(widget, name, data=None):
@@ -56,7 +56,7 @@ def processInput(widget, name, data=None):
 class TestTextInput(unittest.TestCase):
     
     def test_render(self):
-        r = renderWidget(forms.TextInput(forms.String()), 'foo', 'bar')
+        r = renderWidget(formal.TextInput(formal.String()), 'foo', 'bar')
         self.assert_('<input' in r)
         self.assert_('type="text"' in r)
         self.assert_('name="foo"' in r)
@@ -67,13 +67,13 @@ class TestUnicode(unittest.TestCase):
     
     def simpleTextWidgetTest(type):
         def test(self):
-            r = processInput(type(forms.String()), 'foo', ['bar'])
+            r = processInput(type(formal.String()), 'foo', ['bar'])
             self.assert_(r == u'bar')
-            r = processInput(type(forms.String()), 'foo', ['\xc2\xa3'])
+            r = processInput(type(formal.String()), 'foo', ['\xc2\xa3'])
             self.assert_(r == u'\xa3')
         return test
 
-    test_TextInput = simpleTextWidgetTest(forms.TextInput)
-    test_Password = simpleTextWidgetTest(forms.Password)
-    test_TextArea = simpleTextWidgetTest(forms.TextArea)
+    test_TextInput = simpleTextWidgetTest(formal.TextInput)
+    test_Password = simpleTextWidgetTest(formal.Password)
+    test_TextArea = simpleTextWidgetTest(formal.TextArea)
     

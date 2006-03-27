@@ -1,7 +1,7 @@
 from twisted.internet import defer
 from datetime import date
-import forms
-from forms.examples import main
+import formal
+from formal.examples import main
 
 # A boring list of (value, label) pairs.
 strings = [
@@ -29,35 +29,35 @@ class SelectionFormPage(main.FormExamplePage):
     description = 'Example of the various selection widgets'
     
     def form_example(self, ctx):
-        form = forms.Form()
-        form.addField('required', forms.String(required=True))
-        form.addField('oneString', forms.String(),
-                forms.widgetFactory(forms.SelectChoice, options=strings))
-        form.addField('anotherString', forms.String(),
-                forms.widgetFactory(forms.SelectChoice, options=data_strings))
-        form.addField('oneMoreString', forms.String(required=True),
-                forms.widgetFactory(forms.RadioChoice, options=data_strings))
-        form.addField('oneDate', forms.Date(),
-                forms.widgetFactory(forms.SelectChoice, options=dates))
-        form.addField('multipleStrings', forms.Sequence(forms.String()),
-                forms.widgetFactory(forms.CheckboxMultiChoice,
+        form = formal.Form()
+        form.addField('required', formal.String(required=True))
+        form.addField('oneString', formal.String(),
+                formal.widgetFactory(formal.SelectChoice, options=strings))
+        form.addField('anotherString', formal.String(),
+                formal.widgetFactory(formal.SelectChoice, options=data_strings))
+        form.addField('oneMoreString', formal.String(required=True),
+                formal.widgetFactory(formal.RadioChoice, options=data_strings))
+        form.addField('oneDate', formal.Date(),
+                formal.widgetFactory(formal.SelectChoice, options=dates))
+        form.addField('multipleStrings', formal.Sequence(formal.String()),
+                formal.widgetFactory(formal.CheckboxMultiChoice,
                     options=data_strings))
-        form.addField('multipleDates', forms.Sequence(forms.Date()),
-                forms.widgetFactory(forms.CheckboxMultiChoice, options=dates))
-        form.addField('differentNoneSelect', forms.String(),
-                forms.widgetFactory(forms.SelectChoice, options=strings,
+        form.addField('multipleDates', formal.Sequence(formal.Date()),
+                formal.widgetFactory(formal.CheckboxMultiChoice, options=dates))
+        form.addField('differentNoneSelect', formal.String(),
+                formal.widgetFactory(formal.SelectChoice, options=strings,
                     noneOption=differentNone))
-        form.addField('differentNoneRadios', forms.String(),
-                forms.widgetFactory(forms.RadioChoice, options=data_strings,
+        form.addField('differentNoneRadios', formal.String(),
+                formal.widgetFactory(formal.RadioChoice, options=data_strings,
                     noneOption=differentNone))
-        form.addField('selectOther', forms.String(),
-                forms.widgetFactory(forms.SelectOtherChoice, options=['Mr',
+        form.addField('selectOther', formal.String(),
+                formal.widgetFactory(formal.SelectOtherChoice, options=['Mr',
                     'Mrs']))
-        form.addField('selectOtherRequired', forms.String(required=True),
-                forms.widgetFactory(forms.SelectOtherChoice, options=['Mr',
+        form.addField('selectOtherRequired', formal.String(required=True),
+                formal.widgetFactory(formal.SelectOtherChoice, options=['Mr',
                     'Mrs']))
-        form.addField('multiselect', forms.String(),
-                forms.widgetFactory(forms.MultiselectChoice, options=strings))
+        form.addField('multiselect', formal.String(),
+                formal.widgetFactory(formal.MultiselectChoice, options=strings))
         form.addAction(self.submitted)
         return form
     

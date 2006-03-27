@@ -1,7 +1,7 @@
 import re
 from zope.interface import implements
 from nevow import inevow
-from forms import iforms
+from formal import iformal
 
 
 _IDENTIFIER_REGEX = re.compile('^[a-zA-Z_][a-zA-Z0-9_]*$')
@@ -42,7 +42,7 @@ def validIdentifier(name):
     return _IDENTIFIER_REGEX.match(name) is not None
 
 class SequenceKeyLabelAdapter(object):
-    implements( iforms.IKey, iforms.ILabel )
+    implements( iformal.IKey, iformal.ILabel )
 
     def __init__(self, original):
         self.original = original

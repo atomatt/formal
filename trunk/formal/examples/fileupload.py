@@ -1,5 +1,5 @@
-import forms
-from forms.examples import main
+import formal
+from formal.examples import main
 
 class FileUploadFormPage(main.FormExamplePage):
 
@@ -7,8 +7,8 @@ class FileUploadFormPage(main.FormExamplePage):
     description = 'Uploading a file'
     
     def form_example(self, ctx):
-        form = forms.Form()
-        form.addField('file', forms.File())
+        form = formal.Form()
+        form.addField('file', formal.File())
         form.addAction(self.submitted)
         return form
     

@@ -1,7 +1,7 @@
 from zope.interface import implements
 from nevow import tags as T
-from forms import iforms
-from forms.util import keytocssid
+from formal import iformal
+from formal.util import keytocssid
 
 _UNSET = object()
 
@@ -35,7 +35,7 @@ class MultichoiceBase(object):
         values = args.get(key, [''])
         rv = []
         for value in values:
-            value = iforms.IStringConvertible(self.original).toType(value)
+            value = iformal.IStringConvertible(self.original).toType(value)
             if self.noneOption is not None and value == self.noneOption[0]:
                 value = None
             rv.append(self.original.validate(value))
@@ -50,7 +50,7 @@ class MultiselectChoice(MultichoiceBase):
     </select>
 
     """
-    implements( iforms.IWidget )
+    implements( iformal.IWidget )
 
     noneOption = ('', '')
 
@@ -58,12 +58,12 @@ class MultiselectChoice(MultichoiceBase):
 
         def renderOptions(ctx, data):
             if self.noneOption is not None:
-                yield T.option(value=iforms.IKey(self.noneOption).key())[iforms.ILabel(self.noneOption).label()]
+                yield T.option(value=iformal.IKey(self.noneOption).key())[iformal.ILabel(self.noneOption).label()]
             if data is None:
                 return
             for item in data:
-                optValue = iforms.IKey(item).key()
-                optLabel = iforms.ILabel(item).label()
+                optValue = iformal.IKey(item).key()
+                optLabel = iformal.ILabel(item).label()
                 optValue = converter.fromType(optValue)
                 option = T.option(value=optValue)[optLabel]
 
@@ -79,7 +79,7 @@ class MultiselectChoice(MultichoiceBase):
         return tag
 
     def render(self, ctx, key, args, errors):
-        converter = iforms.IStringConvertible(self.original)
+        converter = iformal.IStringConvertible(self.original)
         if errors:
             value = args.get(key, [''])
         else:
@@ -87,6 +87,6 @@ class MultiselectChoice(MultichoiceBase):
         return self._renderTag(ctx, key, value, converter, False)
 
     def renderImmutable(self, ctx, key, args, errors):
-        converter = iforms.IStringConvertible(self.original)
+        converter = iformal.IStringConvertible(self.original)
         value = converter.fromType(args.get(key))
         return self._renderTag(ctx, key, value, converter, True)

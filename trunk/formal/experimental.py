@@ -1,5 +1,5 @@
 from nevow import appserver, rend
-from forms.form import FormsResourceBehaviour
+from formal.form import FormsResourceBehaviour
 
 
 class FormPage(rend.Page):

@@ -1,5 +1,5 @@
-import forms
-from forms.examples import main
+import formal
+from formal.examples import main
 
 class RequiredFormPage(main.FormExamplePage):
 
@@ -7,9 +7,9 @@ class RequiredFormPage(main.FormExamplePage):
     description = 'Demonstration of required fields'
 
     def form_example(self, ctx):
-        form = forms.Form()
-        form.addField('name', forms.String(required=True))
-        form.addField('age', forms.Integer())
+        form = formal.Form()
+        form.addField('name', formal.String(required=True))
+        form.addField('age', formal.Integer())
         form.addAction(self.submitted)
         return form
     

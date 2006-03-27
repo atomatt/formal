@@ -1,5 +1,5 @@
-import forms
-from forms.examples import main
+import formal
+from formal.examples import main
 
 class NoFieldsFormPage(main.FormExamplePage):
     
@@ -8,7 +8,7 @@ class NoFieldsFormPage(main.FormExamplePage):
             'it works.)'
     
     def form_example(self, ctx):
-        form = forms.Form()
+        form = formal.Form()
         form.addAction(self.submitted)
         return form
 

@@ -5,7 +5,7 @@ try:
 except ImportError:
     haveDecimal = False
 from twisted.trial import unittest
-from forms import converters, validation
+from formal import converters, validation
 
 
 class TestConverters(unittest.TestCase):

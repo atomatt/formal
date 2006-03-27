@@ -2,25 +2,25 @@ import pkg_resources
 from zope.interface import implements
 from twisted.python import reflect
 from nevow import appserver, inevow, loaders, rend, static, tags as T, url
-import forms
+import formal
 
 DOCTYPE = T.xml('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">')
 CHARSET = T.xml('<meta http-equiv="content-type" content="text/html; charset=utf-8" />')
 
 examples = [
-    'forms.examples.simple.SimpleFormPage',
-    'forms.examples.types.TypesFormPage',
-    'forms.examples.required.RequiredFormPage',
-    'forms.examples.missing.MissingFormPage',
-    'forms.examples.prepopulate.PrepopulateFormPage',
-    'forms.examples.fileupload.FileUploadFormPage',
-    'forms.examples.smartupload.SmartUploadFormPage',
-    'forms.examples.selections.SelectionFormPage',
-    'forms.examples.datestimes.DatesTimesFormPage',
-    'forms.examples.actionbuttons.ActionButtonsPage',
-    'forms.examples.validator.ValidatorFormPage',
-    'forms.examples.restwidget.ReSTWidgetFormPage',
-    'forms.examples.nofields.NoFieldsFormPage',
+    'formal.examples.simple.SimpleFormPage',
+    'formal.examples.types.TypesFormPage',
+    'formal.examples.required.RequiredFormPage',
+    'formal.examples.missing.MissingFormPage',
+    'formal.examples.prepopulate.PrepopulateFormPage',
+    'formal.examples.fileupload.FileUploadFormPage',
+    'formal.examples.smartupload.SmartUploadFormPage',
+    'formal.examples.selections.SelectionFormPage',
+    'formal.examples.datestimes.DatesTimesFormPage',
+    'formal.examples.actionbuttons.ActionButtonsPage',
+    'formal.examples.validator.ValidatorFormPage',
+    'formal.examples.restwidget.ReSTWidgetFormPage',
+    'formal.examples.nofields.NoFieldsFormPage',
     ]
 
 def makeSite(application):
@@ -64,7 +64,7 @@ class RootPage(rend.Page):
             return cls()
 
 
-class FormExamplePage(forms.ResourceMixin, rend.Page):
+class FormExamplePage(formal.ResourceMixin, rend.Page):
     """
     A base page for the actual examples. The page renders something sensible,
     including the title example and description. It also include the "example"
@@ -72,7 +72,7 @@ class FormExamplePage(forms.ResourceMixin, rend.Page):
     
     Each example page is expected to provide the title and description
     attributes as well as a form_example method that builds and returns a
-    forms.Form instance.
+    formal.Form instance.
     """
     docFactory = loaders.stan(
         T.invisible[
@@ -102,7 +102,7 @@ class FormExamplePage(forms.ResourceMixin, rend.Page):
 
 
 # Add child_ attributes
-examples_css = pkg_resources.resource_filename('forms.examples', 'examples.css')
+examples_css = pkg_resources.resource_filename('formal.examples', 'examples.css')
 setattr(RootPage, 'child_examples.css', static.File(examples_css))
-setattr(RootPage, 'child_forms.css', forms.defaultCSS)
-setattr(RootPage, 'child_js', forms.formsJS)
+setattr(RootPage, 'child_forms.css', formal.defaultCSS)
+setattr(RootPage, 'child_js', formal.formsJS)

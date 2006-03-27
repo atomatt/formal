@@ -1,5 +1,5 @@
-import forms
-from forms.examples import main
+import formal
+from formal.examples import main
 
 # Let the examples run if docutils is not installed
 try:
@@ -44,14 +44,14 @@ class ReSTWidgetFormPage(main.FormExamplePage):
     description = 'The ReST widget captures ReST and previews as HTML.'
     
     def form_example(self, ctx):
-        form = forms.Form()
-        form.addField('restString', forms.String(required=True),
-                widgetFactory=forms.ReSTTextArea)
+        form = formal.Form()
+        form.addField('restString', formal.String(required=True),
+                widgetFactory=formal.ReSTTextArea)
         if docutilsAvailable:
             w = Writer()
             w.translator_class = CustomisedHTMLTranslator
-            form.addField('customRestString', forms.String(required=True),
-                    forms.widgetFactory(forms.ReSTTextArea, restWriter=w))
+            form.addField('customRestString', formal.String(required=True),
+                    formal.widgetFactory(formal.ReSTTextArea, restWriter=w))
         form.addAction(self.submitted)
         return form
 
