@@ -1,5 +1,5 @@
-import forms
-from forms.examples import main
+import formal
+from formal.examples import main
 
 class DatesTimesFormPage(main.FormExamplePage):
 
@@ -7,13 +7,13 @@ class DatesTimesFormPage(main.FormExamplePage):
     description = 'Date entry examples'
     
     def form_example(self, ctx):
-        form = forms.Form()
-        form.addField('isoFormatDate', forms.Date(), forms.TextInput)
-        form.addField('monthFirstDate', forms.Date(), forms.DatePartsInput)
-        form.addField('dayFirstDate', forms.Date(), forms.widgetFactory(forms.DatePartsInput, dayFirst=True))
-        form.addField('monthYearDate', forms.Date(), forms.MMYYDatePartsInput)
-        form.addField('twoCharYearDate', forms.Date(), forms.widgetFactory(forms.DatePartsInput, twoCharCutoffYear=70))
-        form.addField('time', forms.Time())
+        form = formal.Form()
+        form.addField('isoFormatDate', formal.Date(), formal.TextInput)
+        form.addField('monthFirstDate', formal.Date(), formal.DatePartsInput)
+        form.addField('dayFirstDate', formal.Date(), formal.widgetFactory(formal.DatePartsInput, dayFirst=True))
+        form.addField('monthYearDate', formal.Date(), formal.MMYYDatePartsInput)
+        form.addField('twoCharYearDate', formal.Date(), formal.widgetFactory(formal.DatePartsInput, twoCharCutoffYear=70))
+        form.addField('time', formal.Time())
         form.addAction(self.submitted)
         return form
     

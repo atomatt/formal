@@ -1,5 +1,5 @@
-import forms
-from forms.examples import main
+import formal
+from formal.examples import main
 
 class SimpleFormPage(main.FormExamplePage):
     
@@ -7,8 +7,8 @@ class SimpleFormPage(main.FormExamplePage):
     description = 'Probably the simplest form possible.'
     
     def form_example(self, ctx):
-        form = forms.Form()
-        form.addField('aString', forms.String())
+        form = formal.Form()
+        form.addField('aString', formal.String())
         form.addAction(self.submitted)
         return form
 

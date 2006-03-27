@@ -1,6 +1,6 @@
 from nevow import url
-import forms
-from forms.examples import main
+import formal
+from formal.examples import main
 
 class ActionButtonsPage(main.FormExamplePage):
 
@@ -8,8 +8,8 @@ class ActionButtonsPage(main.FormExamplePage):
     description = 'Example of non-validating button, buttons with non-default labels, etc'
     
     def form_example(self, ctx):
-        form = forms.Form()
-        form.addField('aString', forms.String(required=True))
+        form = formal.Form()
+        form.addField('aString', formal.String(required=True))
         form.addAction(self.submitted, label="Click, click, clickety-click!")
         form.addAction(self.redirect, 'back', validate=False)
         return form

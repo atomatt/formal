@@ -1,5 +1,5 @@
-import forms
-from forms.examples import main
+import formal
+from formal.examples import main
 
 class SmartUploadFormPage(main.FormExamplePage):
 
@@ -7,9 +7,9 @@ class SmartUploadFormPage(main.FormExamplePage):
     description = 'Smart uploading of files where the file is "carried across" when the validation fails'
     
     def form_example(self, ctx):
-        form = forms.Form()
-        form.addField('required', forms.String(required=True))
-        form.addField('file', forms.File(), forms.FileUploadWidget)
+        form = formal.Form()
+        form.addField('required', formal.String(required=True))
+        form.addField('file', formal.File(), formal.FileUploadWidget)
         form.addAction(self.submitted)
         return form
     

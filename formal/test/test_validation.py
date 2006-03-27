@@ -1,6 +1,6 @@
 import re
 from twisted.trial import unittest
-from forms import types, validation
+from formal import types, validation
 
 
 class TestRequired(unittest.TestCase):

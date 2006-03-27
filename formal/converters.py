@@ -8,7 +8,7 @@ try:
     haveDecimal = True
 except ImportError:
     haveDecimal = False
-from forms import iforms, validation
+from formal import iformal, validation
 from zope.interface import implements
 
 
@@ -18,7 +18,7 @@ class _Adapter(object):
 
 
 class NullConverter(_Adapter):
-    implements( iforms.IStringConvertible )
+    implements( iformal.IStringConvertible )
     
     def fromType(self, value):
         if value is None:
@@ -32,7 +32,7 @@ class NullConverter(_Adapter):
 
 
 class NumberToStringConverter(_Adapter):
-    implements( iforms.IStringConvertible )
+    implements( iformal.IStringConvertible )
     cast = None
     
     def fromType(self, value):
@@ -69,7 +69,7 @@ if haveDecimal:
 
 
 class BooleanToStringConverter(_Adapter):
-    implements( iforms.IStringConvertible )
+    implements( iformal.IStringConvertible )
     
     def fromType(self, value):
         if value is None:
@@ -89,7 +89,7 @@ class BooleanToStringConverter(_Adapter):
     
     
 class DateToStringConverter(_Adapter):
-    implements( iforms.IStringConvertible )
+    implements( iformal.IStringConvertible )
     
     def fromType(self, value):
         if value is None:
@@ -116,7 +116,7 @@ class DateToStringConverter(_Adapter):
 
 
 class TimeToStringConverter(_Adapter):
-    implements( iforms.IStringConvertible )
+    implements( iformal.IStringConvertible )
     
     def fromType(self, value):
         if value is None:
@@ -159,7 +159,7 @@ class TimeToStringConverter(_Adapter):
         
         
 class DateToDateTupleConverter(_Adapter):
-    implements( iforms.IDateTupleConvertible )
+    implements( iformal.IDateTupleConvertible )
     
     def fromType(self, value):
         if value is None:

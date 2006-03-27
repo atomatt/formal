@@ -1,5 +1,5 @@
 from nevow import tags as T, util
-from forms import iforms
+from formal import iformal
 from zope.interface import implements
 
 
@@ -19,7 +19,7 @@ tinyMCEGlue = T.xml("""
     
 
 class TinyMCE(object):
-    implements( iforms.IWidget )
+    implements( iformal.IWidget )
     
     def __init__(self, original):
         self.original = original
@@ -28,11 +28,11 @@ class TinyMCE(object):
         if errors:
             value = args.get(key, [''])[0]
         else:
-            value = iforms.IStringConvertible(self.original).fromType(args.get(key))
+            value = iformal.IStringConvertible(self.original).fromType(args.get(key))
         return T.textarea(name=key, id=key, mce_editable='true')[value or '']
 
     def renderImmutable(self, ctx, key, args, errors):
-        value = iforms.IStringConvertible(self.original).fromType(args.get(key))
+        value = iformal.IStringConvertible(self.original).fromType(args.get(key))
         if value:
             value=T.xml(value)
         else:
@@ -43,6 +43,6 @@ class TinyMCE(object):
         
     def processInput(self, ctx, key, args):
         value = args.get(key, [''])[0].decode(util.getPOSTCharset(ctx))
-        value = iforms.IStringConvertible(self.original).toType(value)
+        value = iformal.IStringConvertible(self.original).toType(value)
         return self.original.validate(value)
 

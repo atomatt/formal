@@ -3,8 +3,8 @@ try:
     haveDecimal = True
 except ImportError:
     haveDecimal = False
-import forms
-from forms.examples import main
+import formal
+from formal.examples import main
 
 class TypesFormPage(main.FormExamplePage):
 
@@ -12,15 +12,15 @@ class TypesFormPage(main.FormExamplePage):
     description = 'Example of using different typed fields.'
 
     def form_example(self, ctx):
-        form = forms.Form()
-        form.addField('aString', forms.String())
-        form.addField('aInteger', forms.Integer())
-        form.addField('aFloat', forms.Float())
+        form = formal.Form()
+        form.addField('aString', formal.String())
+        form.addField('aInteger', formal.Integer())
+        form.addField('aFloat', formal.Float())
         if haveDecimal:
-            form.addField('aDecimal', forms.Decimal())
-        form.addField('aBoolean', forms.Boolean())
-        form.addField('aDate', forms.Date())
-        form.addField('aTime', forms.Time())
+            form.addField('aDecimal', formal.Decimal())
+        form.addField('aBoolean', formal.Boolean())
+        form.addField('aDate', formal.Date())
+        form.addField('aTime', formal.Time())
         form.addAction(self.submitted)
         return form
     

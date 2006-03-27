@@ -1,6 +1,6 @@
 import re
 from zope.interface import implements
-from forms import iforms
+from formal import iformal
 
 
 class FormsError(Exception):
@@ -50,7 +50,7 @@ class FieldRequiredError(FieldValidationError):
     
     
 class RequiredValidator(object):
-    implements(iforms.IValidator)
+    implements(iformal.IValidator)
     
     def validate(self, field, value):
         if value is None:
@@ -60,7 +60,7 @@ class RequiredValidator(object):
 class LengthValidator(object):
     """Validate the length of the value is within a given range. 
     """
-    implements(iforms.IValidator)
+    implements(iformal.IValidator)
     
     def __init__(self, min=None, max=None):
         self.min = min
@@ -87,7 +87,7 @@ class LengthValidator(object):
 class RangeValidator(object):
     """Validate the size of the value is within is given range.
     """
-    implements(iforms.IValidator)
+    implements(iformal.IValidator)
     
     def __init__(self, min=None, max=None):
         self.min = min
@@ -116,7 +116,7 @@ class PatternValidator(object):
     The required pattern is defined as a regular expression. The regex will be
     compiled automatically if necessary.
     """
-    implements(iforms.IValidator)
+    implements(iformal.IValidator)
     
     def __init__(self, regex):
         self.regex = regex

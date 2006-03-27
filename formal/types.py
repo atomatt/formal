@@ -9,12 +9,12 @@ except ImportError:
     haveDecimal = False
 from zope.interface import implements
 
-from forms import iforms, validation
+from formal import iformal, validation
 
 
 class Type(object):
 
-    implements( iforms.IType )
+    implements( iformal.IType )
 
     # Name of the instance
     name = None

@@ -1,5 +1,5 @@
 from twisted.trial import unittest
-from forms import form, validation
+from formal import form, validation
 
 class TestFormErrors(unittest.TestCase):
     

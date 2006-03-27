@@ -6,9 +6,9 @@ certain format.
 import itertools
 from nevow import inevow, loaders, tags as T, util, url, static, rend
 from nevow.i18n import _
-from forms import converters, iforms, validation
-from forms.util import keytocssid
-from forms.form import widgetResourceURL, widgetResourceURLFromContext
+from formal import converters, iformal, validation
+from formal.util import keytocssid
+from formal.form import widgetResourceURL, widgetResourceURLFromContext
 from zope.interface import implements
 from twisted.internet import defer
 
@@ -23,7 +23,7 @@ class TextInput(object):
 
     <input type="text" ... />
     """
-    implements( iforms.IWidget )
+    implements( iformal.IWidget )
 
     inputType = 'text'
     showValueOnFailure = True
@@ -41,18 +41,18 @@ class TextInput(object):
         if errors:
             value = args.get(key, [''])[0]
         else:
-            value = iforms.IStringConvertible(self.original).fromType(args.get(key))
+            value = iformal.IStringConvertible(self.original).fromType(args.get(key))
         if not self.showValueOnFailure:
             value = None
         return self._renderTag(ctx, key, value, False)
 
     def renderImmutable(self, ctx, key, args, errors):
-        value = iforms.IStringConvertible(self.original).fromType(args.get(key))
+        value = iformal.IStringConvertible(self.original).fromType(args.get(key))
         return self._renderTag(ctx, key, value, True)
 
     def processInput(self, ctx, key, args):
         value = args.get(key, [''])[0].decode(util.getPOSTCharset(ctx))
-        value = iforms.IStringConvertible(self.original).toType(value)
+        value = iformal.IStringConvertible(self.original).toType(value)
         return self.original.validate(value)
 
 
@@ -62,7 +62,7 @@ class Checkbox(object):
 
     <input type="checkbox" ... />
     """
-    implements( iforms.IWidget )
+    implements( iformal.IWidget )
 
     def __init__(self, original):
         self.original = original
@@ -79,18 +79,18 @@ class Checkbox(object):
         if errors:
             value = args.get(key, [''])[0]
         else:
-            value = iforms.IBooleanConvertible(self.original).fromType(args.get(key))
+            value = iformal.IBooleanConvertible(self.original).fromType(args.get(key))
         return self._renderTag(ctx, key, value, False)
 
     def renderImmutable(self, ctx, key, args, errors):
-        value = iforms.IBooleanConvertible(self.original).fromType(args.get(key))
+        value = iformal.IBooleanConvertible(self.original).fromType(args.get(key))
         return self._renderTag(ctx, key, value, True)
 
     def processInput(self, ctx, key, args):
         value = args.get(key, [None])[0]
         if not value:
             value = 'False'
-        value = iforms.IBooleanConvertible(self.original).toType(value)
+        value = iformal.IBooleanConvertible(self.original).toType(value)
         return self.original.validate(value)
 
 
@@ -110,7 +110,7 @@ class TextArea(object):
 
     <textarea>...</textarea>
     """
-    implements( iforms.IWidget )
+    implements( iformal.IWidget )
 
     cols = 48
     rows = 6
@@ -132,16 +132,16 @@ class TextArea(object):
         if errors:
             value = args.get(key, [''])[0]
         else:
-            value = iforms.IStringConvertible(self.original).fromType(args.get(key))
+            value = iformal.IStringConvertible(self.original).fromType(args.get(key))
         return self._renderTag(ctx, key, value, False)
 
     def renderImmutable(self, ctx, key, args, errors):
-        value = iforms.IStringConvertible(self.original).fromType(args.get(key))
+        value = iformal.IStringConvertible(self.original).fromType(args.get(key))
         return self._renderTag(ctx, key, value, True)
 
     def processInput(self, ctx, key, args):
         value = args.get(key, [''])[0].decode(util.getPOSTCharset(ctx))
-        value = iforms.IStringConvertible(self.original).fromType(value)
+        value = iformal.IStringConvertible(self.original).fromType(value)
         return self.original.validate(value)
 
 
@@ -149,7 +149,7 @@ class CheckedPassword(object):
     """
     Two password entry fields that must contain the same value to validate.
     """
-    implements( iforms.IWidget )
+    implements( iformal.IWidget )
 
     def __init__(self, original):
         self.original = original
@@ -213,7 +213,7 @@ class ChoiceBase(object):
 
     def processInput(self, ctx, key, args):
         value = args.get(key, [''])[0]
-        value = iforms.IStringConvertible(self.original).toType(value)
+        value = iformal.IStringConvertible(self.original).toType(value)
         if self.noneOption is not None and value == self.noneOption[0]:
             value = None
         return self.original.validate(value)
@@ -228,7 +228,7 @@ class SelectChoice(ChoiceBase):
     </select>
 
     """
-    implements( iforms.IWidget )
+    implements( iformal.IWidget )
 
     noneOption = ('', '')
 
@@ -236,12 +236,12 @@ class SelectChoice(ChoiceBase):
 
         def renderOptions(ctx, data):
             if self.noneOption is not None:
-                yield T.option(value=iforms.IKey(self.noneOption).key())[iforms.ILabel(self.noneOption).label()]
+                yield T.option(value=iformal.IKey(self.noneOption).key())[iformal.ILabel(self.noneOption).label()]
             if data is None:
                 return
             for item in data:
-                optValue = iforms.IKey(item).key()
-                optLabel = iforms.ILabel(item).label()
+                optValue = iformal.IKey(item).key()
+                optLabel = iformal.ILabel(item).label()
                 optValue = converter.fromType(optValue)
                 option = T.option(value=optValue)[optLabel]
                 if optValue == value:
@@ -254,7 +254,7 @@ class SelectChoice(ChoiceBase):
         return tag
 
     def render(self, ctx, key, args, errors):
-        converter = iforms.IStringConvertible(self.original)
+        converter = iformal.IStringConvertible(self.original)
         if errors:
             value = args.get(key, [''])[0]
         else:
@@ -262,7 +262,7 @@ class SelectChoice(ChoiceBase):
         return self._renderTag(ctx, key, value, converter, False)
 
     def renderImmutable(self, ctx, key, args, errors):
-        converter = iforms.IStringConvertible(self.original)
+        converter = iformal.IStringConvertible(self.original)
         value = converter.fromType(args.get(key))
         return self._renderTag(ctx, key, value, converter, True)
 
@@ -279,7 +279,7 @@ class SelectOtherChoice(object):
       * Make the Other option configurable in the JS
       * Refactor, refactor, refactor
     """
-    implements(iforms.IWidget)
+    implements(iformal.IWidget)
 
     options = None
     noneOption = ('', '')
@@ -292,7 +292,7 @@ class SelectOtherChoice(object):
         if options is not None:
             self.options = options
         if self.template is None:
-            self.template = loaders.xmlfile(util.resource_filename('forms',
+            self.template = loaders.xmlfile(util.resource_filename('formal',
                 'html/SelectOtherChoice.html'))
 
 
@@ -304,14 +304,14 @@ class SelectOtherChoice(object):
 
     def render(self, ctx, key, args, errors):
 
-        converter = iforms.IStringConvertible(self.original)
+        converter = iformal.IStringConvertible(self.original)
         if errors:
             value = self._valueFromRequestArgs(key, args)
         else:
             value = converter.fromType(args.get(key))
 
         if value is None:
-            value = iforms.IKey(self.noneOption).key()
+            value = iformal.IKey(self.noneOption).key()
 
         optionGen = inevow.IQ(self.template).patternGenerator('option')
         selectedOptionGen = inevow.IQ(self.template).patternGenerator('selectedOption')
@@ -319,14 +319,14 @@ class SelectOtherChoice(object):
         selectOther = True
 
         if self.noneOption is not None:
-            noneValue = iforms.IKey(self.noneOption).key()
+            noneValue = iformal.IKey(self.noneOption).key()
             if value == noneValue:
                 tag = selectedOptionGen()
                 selectOther = False
             else:
                 tag = optionGen()
             tag.fillSlots('value', noneValue)
-            tag.fillSlots('label', iforms.ILabel(self.noneOption).label())
+            tag.fillSlots('label', iformal.ILabel(self.noneOption).label())
             optionTags.append(tag)
 
         if self.options is not None:
@@ -362,7 +362,7 @@ class SelectOtherChoice(object):
 
     def processInput(self, ctx, key, args):
         value = self._valueFromRequestArgs(key, args)
-        value = iforms.IStringConvertible(self.original).toType(value)
+        value = iformal.IStringConvertible(self.original).toType(value)
         if self.noneOption is not None and value == self.noneOption[0]:
             value = None
         return self.original.validate(value)
@@ -375,7 +375,7 @@ class RadioChoice(ChoiceBase):
     <input type="radio" ... value="..."/><label>...</label><br />
     <input type="radio" ... value="..."/><label>...</label><br />
     """
-    implements( iforms.IWidget )
+    implements( iformal.IWidget )
 
     def _renderTag(self, ctx, key, value, converter, disabled):
 
@@ -390,21 +390,21 @@ class RadioChoice(ChoiceBase):
             # A counter to assign unique ids to each input
             idCounter = itertools.count()
             if self.noneOption is not None:
-                itemKey = iforms.IKey(self.noneOption).key()
-                itemLabel = iforms.ILabel(self.noneOption).label()
+                itemKey = iformal.IKey(self.noneOption).key()
+                itemLabel = iformal.ILabel(self.noneOption).label()
                 yield renderOption(ctx, itemKey, itemLabel, idCounter.next(), itemKey==value)
             if not data:
                 return
             for item in data:
-                itemKey = iforms.IKey(item).key()
-                itemLabel = iforms.ILabel(item).label()
+                itemKey = iformal.IKey(item).key()
+                itemLabel = iformal.ILabel(item).label()
                 itemKey = converter.fromType(itemKey)
                 yield renderOption(ctx, itemKey, itemLabel, idCounter.next(), itemKey==value)
 
         return T.invisible(data=self.options)[renderOptions]
 
     def render(self, ctx, key, args, errors):
-        converter = iforms.IStringConvertible(self.original)
+        converter = iformal.IStringConvertible(self.original)
         if errors:
             value = args.get(key, [''])[0]
         else:
@@ -412,7 +412,7 @@ class RadioChoice(ChoiceBase):
         return self._renderTag(ctx, key, value, converter, False)
 
     def renderImmutable(self, ctx, key, args, errors):
-        converter = iforms.IStringConvertible(self.original)
+        converter = iformal.IStringConvertible(self.original)
         value = converter.fromType(args.get(key))
         return self._renderTag(ctx, key, value, converter, True)
 
@@ -445,7 +445,7 @@ class DatePartsInput(object):
         Allow 2 char years and set the year where the century flips between
         20th and 21st century.
     """
-    implements( iforms.IWidget )
+    implements( iformal.IWidget )
 
     dayFirst = False
     twoCharCutoffYear = None
@@ -477,7 +477,7 @@ class DatePartsInput(object):
             return monthTag, ' / ', dayTag, ' / ', yearTag, ' ', _('(month/day/year)')
 
     def render(self, ctx, key, args, errors):
-        converter = iforms.IDateTupleConvertible(self.original)
+        converter = iformal.IDateTupleConvertible(self.original)
         namer = self._namer(key)
         if errors:
             year = args.get(namer('year'), [''])[0]
@@ -489,7 +489,7 @@ class DatePartsInput(object):
         return self._renderTag(ctx, year, month, day, namer, False)
 
     def renderImmutable(self, ctx, key, args, errors):
-        converter = iforms.IDateTupleConvertible(self.original)
+        converter = iformal.IDateTupleConvertible(self.original)
         namer = self._namer(key)
         year, month, day = converter.fromType(args.get(key))
         return self._renderTag(ctx, year, month, day, namer, True)
@@ -529,7 +529,7 @@ class DatePartsInput(object):
                 ymd = [int(p) for p in ymd]
             except ValueError, e:
                 raise validation.FieldValidationError("Invalid date")
-        ymd = iforms.IDateTupleConvertible(self.original).toType(ymd)
+        ymd = iformal.IDateTupleConvertible(self.original).toType(ymd)
         return self.original.validate(ymd)
 
 
@@ -537,7 +537,7 @@ class MMYYDatePartsInput(object):
     """
     Two input fields for entering the month and year.
     """
-    implements( iforms.IWidget )
+    implements( iformal.IWidget )
 
     cutoffYear = 70
 
@@ -561,7 +561,7 @@ class MMYYDatePartsInput(object):
         return monthTag, ' / ', yearTag, ' (mm/yy)'
 
     def render(self, ctx, key, args, errors):
-        converter = iforms.IDateTupleConvertible(self.original)
+        converter = iformal.IDateTupleConvertible(self.original)
         namer = self._namer(key)
         if errors:
             year = args.get(namer('year'), [''])[0]
@@ -577,7 +577,7 @@ class MMYYDatePartsInput(object):
         return self._renderTag(ctx, year, month, namer, False)
 
     def renderImmutable(self, ctx, key, args, errors):
-        converter = iforms.IDateTupleConvertible(self.original)
+        converter = iformal.IDateTupleConvertible(self.original)
         year, month, day = converter.fromType(args.get(key))
         namer = self._namer(key)
         # if we have a year as default data, stringify it and only use last two digits
@@ -605,7 +605,7 @@ class MMYYDatePartsInput(object):
             else:
                 value[0] = 2000 + value[0]
             value.append(1)
-        value = iforms.IDateTupleConvertible(self.original).toType( value )
+        value = iformal.IDateTupleConvertible(self.original).toType( value )
         return self.original.validate(value)
 
 
@@ -613,7 +613,7 @@ class CheckboxMultiChoice(object):
     """
     Multiple choice list, rendered as a list of checkbox fields.
     """
-    implements( iforms.IWidget )
+    implements( iformal.IWidget )
 
     options = None
 
@@ -626,8 +626,8 @@ class CheckboxMultiChoice(object):
         def renderer(ctx, options):
             # loops through checkbox options and renders
             for n,item in enumerate(options):
-                optValue = iforms.IKey(item).key()
-                optLabel = iforms.ILabel(item).label()
+                optValue = iformal.IKey(item).key()
+                optLabel = iformal.ILabel(item).label()
                 optValue = converter.fromType(optValue)
                 optid = (keytocssid(ctx.key),'-',n)
                 checkbox = T.input(type='checkbox', name=key, value=optValue, id=optid )
@@ -641,7 +641,7 @@ class CheckboxMultiChoice(object):
 
     def render(self, ctx, key, args, errors):
 
-        converter = iforms.IStringConvertible(self.original.type)
+        converter = iformal.IStringConvertible(self.original.type)
 
         if errors:
             values = args.get(key, [])
@@ -656,7 +656,7 @@ class CheckboxMultiChoice(object):
 
     def renderImmutable(self, ctx, key, args, errors):
 
-        converter = iforms.IStringConvertible(self.original.type)
+        converter = iformal.IStringConvertible(self.original.type)
 
         values = args.get(key)
         if values is not None:
@@ -668,13 +668,13 @@ class CheckboxMultiChoice(object):
 
     def processInput(self, ctx, key, args):
         values = args.get(key, [])
-        converter = iforms.IStringConvertible(self.original.type)
+        converter = iformal.IStringConvertible(self.original.type)
         values = [converter.toType(v) for v in values]
         return self.original.validate(values)
 
 
 class FileUploadRaw(object):
-    implements( iforms.IWidget )
+    implements( iformal.IWidget )
 
     def __init__(self, original):
         self.original = original
@@ -689,11 +689,11 @@ class FileUploadRaw(object):
         if errors:
             value = args.get(key, [''])[0]
         else:
-            value = iforms.IFileConvertible(self.original).fromType(args.get(key))
+            value = iformal.IFileConvertible(self.original).fromType(args.get(key))
         return self._renderTag(ctx, key, False)
 
     def renderImmutable(self, ctx, key, args, errors):
-        value = iforms.IFileConvertible(self.original).fromType(args.get(key))
+        value = iformal.IFileConvertible(self.original).fromType(args.get(key))
         return self._renderTag(ctx, key, True)
 
     def processInput(self, ctx, key, args):
@@ -701,12 +701,12 @@ class FileUploadRaw(object):
         name = fileitem.filename.decode(util.getPOSTCharset(ctx))
         value = (name, fileitem.file)
 
-        value = iforms.IFileConvertible(self.original).fromType(value)
+        value = iformal.IFileConvertible(self.original).fromType(value)
         return self.original.validate(value)
 
 
 class FileUpload(object):
-    implements( iforms.IWidget )
+    implements( iformal.IWidget )
 
     def __init__(self, original, fileHandler, preview=None):
         self.original = original
@@ -746,13 +746,13 @@ class FileUpload(object):
                namer = self._namer(key)
                value = args.get(namer('value'))[0]
         else:
-            value = iforms.IStringConvertible(self.original).fromType(args.get(key))
+            value = iformal.IStringConvertible(self.original).fromType(args.get(key))
 
         return self._renderTag(ctx, key, value, namer, False)
 
     def renderImmutable(self, ctx, key, args, errors):
         namer = self._namer(key)
-        value = iforms.IStringConvertible(self.original).fromType(args.get(key))
+        value = iformal.IStringConvertible(self.original).fromType(args.get(key))
         return self._renderTag(ctx, key, value, namer, True)
 
     def processInput(self, ctx, key, args):
@@ -765,7 +765,7 @@ class FileUpload(object):
            namer = self._namer(key)
            value = args.get(namer('value'))[0]
 
-        value = iforms.IStringConvertible(self.original).fromType(value)
+        value = iformal.IStringConvertible(self.original).fromType(value)
         return self.original.validate(value)
 
 
@@ -779,7 +779,7 @@ class FileUploadWidget(object):
     other widgets, i.e. the value is kept when a form is redisplayed due to
     validation errors.
     """
-    implements( iforms.IWidget )
+    implements( iformal.IWidget )
 
     FROM_RESOURCE_MANAGER = 'rm'
     FROM_CONVERTIBLE = 'cf'
@@ -824,7 +824,7 @@ class FileUploadWidget(object):
             The request to get the data should be routed to the getResouce
             method.
         """
-        form = iforms.IForm( ctx )
+        form = iformal.IForm( ctx )
 
         namer = self._namer( key )
         resourceIdName = namer( 'resource_id' )
@@ -869,7 +869,7 @@ class FileUploadWidget(object):
             yield T.input(name=originalIdName,value=originalKey,type='hidden')
 
     def renderImmutable(self, ctx, key, args, errors):
-        form = iforms.IForm(ctx)
+        form = iformal.IForm(ctx)
 
         namer = self._namer(key)
         originalIdName = namer('original_id')
@@ -903,7 +903,7 @@ class FileUploadWidget(object):
             resource manager.
         """
 
-        resourceManager = iforms.IForm( ctx ).resourceManager
+        resourceManager = iformal.IForm( ctx ).resourceManager
 
         # Ping the resource manager with any resource ids that I know
         self._registerWithResourceManager( key, args, resourceManager )
@@ -942,7 +942,7 @@ class FileUploadWidget(object):
         if segments[0] == self.FROM_RESOURCE_MANAGER:
             # Resource manager can provide a path so return a static.File
             # instance that points to the file
-            rm = iforms.IForm( ctx ).resourceManager
+            rm = iformal.IForm( ctx ).resourceManager
             (mimetype, path, fileName) = rm.getResourcePath( segments[1] )
             return static.File( path, mimetype ), []
         elif segments[0] == self.FROM_CONVERTIBLE:
@@ -966,7 +966,7 @@ class Hidden(object):
     """
     A hidden form field.
     """
-    __implements__ = iforms.IWidget,
+    __implements__ = iformal.IWidget,
 
     inputType = 'hidden'
 
@@ -979,7 +979,7 @@ class Hidden(object):
             if isinstance(value, list):
                 value = value[0]
         else:
-            value = iforms.IStringConvertible(self.original).fromType(args.get(key))
+            value = iformal.IStringConvertible(self.original).fromType(args.get(key))
         return T.input(type=self.inputType, name=key, id=keytocssid(ctx.key), value=value)
 
     def renderImmutable(self, ctx, key, args, errors):
@@ -987,7 +987,7 @@ class Hidden(object):
 
     def processInput(self, ctx, key, args):
         value = args.get(key, [''])[0].decode(util.getPOSTCharset(ctx))
-        value = iforms.IStringConvertible(self.original).toType(value)
+        value = iformal.IStringConvertible(self.original).toType(value)
         return self.original.validate(value)
 
 
