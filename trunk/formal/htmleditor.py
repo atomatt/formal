@@ -1,3 +1,12 @@
+import warnings
+
+warnings.warn(
+        "The htmleditor module is deprecated. To use an HTML editor with " \
+        "formal, render your field as a formal.TextArea and use JavaScript " \
+        "to turn the textarea into a HTML editor.",
+        DeprecationWarning,
+        stacklevel=2)
+
 from nevow import tags as T, util
 from formal import iformal
 from zope.interface import implements
