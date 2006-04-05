@@ -181,7 +181,8 @@ class Form(object):
             return errors
 
         def _clearUpResources( r ):
-            self.resourceManager.clearUpResources()
+            if not errors:
+                self.resourceManager.clearUpResources()
             return r
 
         d = defer.maybeDeferred(callback, ctx, self, data)
