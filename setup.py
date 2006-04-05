@@ -1,10 +1,8 @@
 from setuptools import setup, find_packages
 
-import formal
-
 setup(
     name='formal',
-    version=formal.version,
+    version='0.8.1',
     description='HTML forms framework for Nevow',
     author='Matt Goodall',
     author_email='matt@pollenation.net',
