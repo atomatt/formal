@@ -1,9 +1,24 @@
+import base64
 import tempfile
 import mimetypes
 import re
 import os
 from shutil import copyfileobj
 from exceptions import IOError, OSError
+
+
+# Use Python 2.4 base64 API if possible. Simulate on Python 2.3.
+try:
+    base64.b64encode
+except AttributeError:
+    # Python 2.3
+    def base64encode(s):
+        return base64.encodestring(s).replace('\n', '')
+    base64decode = base64.decodestring
+else:
+    # Python 2.4
+    base64encode = base64.b64encode
+    base64decode = base64.b64decode
 
 
 class ResourceManagerException( Exception ):
@@ -93,17 +108,15 @@ class ResourceManager( object ):
         embedded in them. the base64.b64encode() does not appear to suffer this
         problem.
         """
-        import base64
         rv = filename.encode('utf-8')
-        rv = base64.b64encode(rv)
+        rv = base64encode(rv)
         return rv
         
     def _decodeFilename(self, filename):
         """
         Undo what _encodeFilename did.
         """
-        import base64
-        rv = base64.b64decode(filename)
+        rv = base64decode(filename)
         rv = rv.decode('utf-8')
         return rv
         
