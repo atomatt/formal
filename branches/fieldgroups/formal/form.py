@@ -407,7 +407,7 @@ class FormRenderer(object):
 
     loader = loaders.stan(
         T.form(id=T.slot('id'), action=T.slot('action'), class_='nevow-form', method='post', enctype='multipart/form-data', **{'accept-charset':'utf-8'})[
-            T.fieldset[
+            T.div[
                 T.input(type='hidden', name='_charset_'),
                 T.input(type='hidden', name=FORMS_KEY, value=T.slot('name')),
                 T.slot('errors'),
