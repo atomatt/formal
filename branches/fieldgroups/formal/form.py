@@ -103,8 +103,17 @@ class FieldFragment(rend.Fragment):
             ])
 
 
+    hiddenDocFactory = loaders.stan(
+            T.invisible(render=T.directive('field'))[T.slot('inputs')])
+
+
     def __init__(self, field):
         self.field = field
+        # Nasty hack to work out if this is a hidden field. Keep the widget
+        # for later anyway.
+        self.widget = field.makeWidget()
+        if getattr(self.widget, 'inputType', None) == 'hidden':
+            self.docFactory = self.hiddenDocFactory
 
 
     def render_field(self, ctx, data):
@@ -128,8 +137,8 @@ class FieldFragment(rend.Fragment):
         else:
             message = T.div(class_='message')[error.message]
 
-        # Create the widget
-        widget = self.field.makeWidget()
+        # Create the widget (it's created in __init__ as a hack)
+        widget = self.widget
 
         # Build the list of CSS classes
         classes = [
@@ -491,10 +500,6 @@ class FormRenderer(object):
                 T.input(type='hidden', name=FORMS_KEY, value=T.slot('formName')),
                 T.slot('formErrors'),
                 T.slot('formItems'),
-                T.div(class_='hiddenitems')[
-                    T.slot('formHiddenitems'),
-                    T.invisible(pattern="hiddenitem")[T.slot('inputs')]
-                    ],
                 T.div(class_='actions')[
                     T.slot('formActions'),
                     ],
@@ -513,7 +518,6 @@ class FormRenderer(object):
         tag.fillSlots('formAction', url.here)
         tag.fillSlots('formErrors', self._renderErrors)
         tag.fillSlots('formItems', self._renderItems)
-        tag.fillSlots('formHiddenitems', self._renderHiddenItems)
         tag.fillSlots('formActions', self._renderActions)
         return tag
 
@@ -540,34 +544,6 @@ class FormRenderer(object):
             return
         for item in self.original.items:
             yield inevow.IRenderer(item)
-
-    def _renderHiddenItems(self, ctx, data):
-        if self.original.items is None:
-            yield ''
-            return
-        hiddenItemPattern = inevow.IQ(ctx).patternGenerator('hiddenitem')
-        for item in self.original.items:
-            widget = item.makeWidget()
-            if getattr(widget,'inputType','') == 'hidden':
-                yield hiddenItemPattern(key=item[0], data=item, render=self._renderHiddenItem)
-
-    def _renderHiddenItem(self, ctx, data):
-
-        def _(ctx, data):
-
-            name, type, label, description, cssClass = data
-            form = self.original
-            formErrors = iformal.IFormErrors(ctx, None)
-            formData = iformal.IFormData(ctx)
-
-            widget = form.widgetForItem(name)
-
-            ctx.tag.fillSlots('fieldId', '%s-field'%util.keytocssid(ctx.key))
-            ctx.tag.fillSlots('id', util.keytocssid(ctx.key))
-            ctx.tag.fillSlots('inputs', widget.render(ctx, name, formData, formErrors))
-            return ctx.tag
-
-        return _
 
     def _renderActions(self, ctx, data):
 

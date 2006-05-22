@@ -21,6 +21,7 @@ examples = [
     'formal.examples.validator.ValidatorFormPage',
     'formal.examples.restwidget.ReSTWidgetFormPage',
     'formal.examples.nofields.NoFieldsFormPage',
+    'formal.examples.hidden.HiddenFieldsFormPage',
     ]
 
 def makeSite(application):
