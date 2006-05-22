@@ -4,9 +4,7 @@
 }
 
 .nevow-form fieldset {
-  margin: 0;
-  border: 0;
-  padding: 0;
+  margin-bottom: 1em;
 }
 
 .nevow-form div.field {
