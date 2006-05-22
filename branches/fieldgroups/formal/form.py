@@ -234,6 +234,11 @@ class Group(object):
         self.itemParent = itemParent
 
 
+    def process(self, ctx, form, args, errors):
+        for item in self.items:
+            item.process(ctx, form, args, errors)
+
+
     def add(self, item):
         self.items.append(item)
         item.setItemParent(self)
