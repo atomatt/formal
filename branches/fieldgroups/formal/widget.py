@@ -7,7 +7,7 @@ import itertools
 from nevow import inevow, loaders, tags as T, util, url, static, rend
 from nevow.i18n import _
 from formal import converters, iformal, validation
-from formal.util import keytocssid
+from formal.util import render_cssid
 from formal.form import widgetResourceURL, widgetResourceURLFromContext
 from zope.interface import implements
 from twisted.internet import defer
@@ -32,7 +32,7 @@ class TextInput(object):
         self.original = original
 
     def _renderTag(self, ctx, key, value, readonly):
-        tag=T.input(type=self.inputType, name=key, id=keytocssid(ctx.key), value=value)
+        tag=T.input(type=self.inputType, name=key, id=render_cssid(key), value=value)
         if readonly:
             tag(class_='readonly', readonly='readonly')
         return tag
@@ -68,7 +68,7 @@ class Checkbox(object):
         self.original = original
 
     def _renderTag(self, ctx, key, value, disabled):
-        tag = T.input(type='checkbox', name=key, id=keytocssid(ctx.key), value='True')
+        tag = T.input(type='checkbox', name=key, id=render_cssid(key), value='True')
         if value == 'True':
             tag(checked='checked')
         if disabled:
@@ -123,7 +123,7 @@ class TextArea(object):
             self.rows = rows
 
     def _renderTag(self, ctx, key, value, readonly):
-        tag=T.textarea(name=key, id=keytocssid(ctx.key), cols=self.cols, rows=self.rows)[value or '']
+        tag=T.textarea(name=key, id=render_cssid(key), cols=self.cols, rows=self.rows)[value or '']
         if readonly:
             tag(class_='readonly', readonly='readonly')
         return tag
@@ -160,19 +160,20 @@ class CheckedPassword(object):
         else:
             values = ('', '')
         return [
-            T.input(type='password', name=key, id=keytocssid(ctx.key), value=values[0]),
+            T.input(type='password', name=key, id=render_cssid(key), value=values[0]),
             T.br,
-            T.label(for_='%s__confirm'%keytocssid(ctx.key))[' Confirm '],
-            T.input(type='password', name=key, id='%s__confirm'%keytocssid(ctx.key), value=values[1]),
+            T.label(for_=render_cssid(ctx.key, 'confirm'))[' Confirm '],
+            T.input(type='password', name=key, id=render_cssid(key, 'confirm'), value=values[1]),
             ]
 
     def renderImmutable(self, ctx, key, args, errors):
         values = ('', '')
         return [
-            T.input(type='password', name=key, id=keytocssid(ctx.key), value=values[0], class_='readonly', readonly='readonly'),
+            T.input(type='password', name=key, id=render_cssid(key), value=values[0], class_='readonly', readonly='readonly'),
             T.br,
-            T.label(for_='%s__confirm'%keytocssid(ctx.key))[' Confirm '],
-            T.input(type='password', name=key, id='%s__confirm'%keytocssid(ctx.key), value=values[1], class_='readonly', readonly='readonly')
+            T.label(for_=render_cssid(key, 'confirm'))[' Confirm '],
+            T.input(type='password', name=key, id=render_cssid(key, 'confirm'),
+                    value=values[1], class_='readonly', readonly='readonly')
         ]
 
     def processInput(self, ctx, key, args):
@@ -248,7 +249,7 @@ class SelectChoice(ChoiceBase):
                     option = option(selected='selected')
                 yield option
 
-        tag=T.select(name=key, id=keytocssid(ctx.key), data=self.options)[renderOptions]
+        tag=T.select(name=key, id=render_cssid(key), data=self.options)[renderOptions]
         if disabled:
             tag(class_='disabled', disabled='disabled')
         return tag
@@ -352,7 +353,7 @@ class SelectOtherChoice(object):
 
         tag = T.invisible[self.template.load(ctx)]
         tag.fillSlots('key', key)
-        tag.fillSlots('id', keytocssid(ctx.key))
+        tag.fillSlots('id', render_cssid(key))
         tag.fillSlots('options', optionTags)
         tag.fillSlots('otherValue', otherValue)
         return tag
@@ -380,7 +381,7 @@ class RadioChoice(ChoiceBase):
     def _renderTag(self, ctx, key, value, converter, disabled):
 
         def renderOption(ctx, itemKey, itemLabel, num, selected):
-            cssid = (keytocssid(ctx.key),'-',num)
+            cssid = render_cssid(key, num)
             tag = T.input(name=key, type='radio', id=cssid, value=itemKey)
             if selected:
                 tag = tag(checked='checked')
@@ -629,8 +630,9 @@ class CheckboxMultiChoice(object):
                 optValue = iformal.IKey(item).key()
                 optLabel = iformal.ILabel(item).label()
                 optValue = converter.fromType(optValue)
-                optid = (keytocssid(ctx.key),'-',n)
-                checkbox = T.input(type='checkbox', name=key, value=optValue, id=optid )
+                optid = render_cssid(key, n)
+                checkbox = T.input(type='checkbox', name=key, value=optValue,
+                        id=optid)
                 if optValue in values:
                     checkbox = checkbox(checked='checked')
                 if disabled:
@@ -680,7 +682,7 @@ class FileUploadRaw(object):
         self.original = original
 
     def _renderTag(self, ctx, key, disabled):
-        tag=T.input(name=key, id=keytocssid(ctx.key),type='file')
+        tag=T.input(name=key, id=render_cssid(key),type='file')
         if disabled:
             tag(class_='disabled', disabled='disabled')
         return tag
@@ -730,7 +732,7 @@ class FileUpload(object):
             yield T.p[T.strong['nothing uploaded']]
 
         yield T.input(name=namer('value'),value=value,type='hidden')
-        tag=T.input(name=key, id=keytocssid(ctx.key),type='file')
+        tag=T.input(name=key, id=render_cssid(key),type='file')
         if disabled:
             tag(class_='disabled', disabled='disabled')
         yield tag
@@ -860,7 +862,7 @@ class FileUploadWidget(object):
             # No uploaded file, no original
             yield T.p[T.strong['Nothing uploaded']]
 
-        yield T.input(name=key, id=keytocssid(ctx.key),type='file')
+        yield T.input(name=key, id=render_cssid(key),type='file')
 
         # Id of uploaded file in the resource manager
         yield T.input(name=resourceIdName,value=resourceId,type='hidden')
@@ -980,7 +982,7 @@ class Hidden(object):
                 value = value[0]
         else:
             value = iformal.IStringConvertible(self.original).fromType(args.get(key))
-        return T.input(type=self.inputType, name=key, id=keytocssid(ctx.key), value=value)
+        return T.input(type=self.inputType, name=key, id=render_cssid(key), value=value)
 
     def renderImmutable(self, ctx, key, args, errors):
         return self.render(ctx, key, args, errors)
