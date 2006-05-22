@@ -68,6 +68,9 @@ class Action(object):
 class Field(object):
 
 
+    itemParent = None
+
+
     def __init__(self, name, type, widgetFactory=None, label=None,
             description=None, cssClass=None):
         if not util.validIdentifier(name):
@@ -84,8 +87,42 @@ class Field(object):
         self.cssClass = cssClass
 
 
+    def setItemParent(self, itemParent):
+        self.itemParent = itemParent
+
+
+    def _getKey(self):
+        parts = [self.name]
+        parent = self.itemParent
+        while parent is not None:
+            parts.append(parent.name)
+            parent = parent.itemParent
+        parts.reverse()
+        return '.'.join(parts)
+
+
+    key = property(_getKey)
+
+
     def makeWidget(self):
         return self.widgetFactory(self.type)
+
+
+    def process(self, ctx, form, args, errors):
+
+        # If the type is immutable then copy the original value to args in case
+        # another validation error causes this field to be re-rendered.
+        if self.type.immutable:
+            args[self.key] = form.data.get(self.key)
+            return
+
+        # Process the input using the widget, storing the data back on the form.
+        try:
+            form.data[self.key] = self.makeWidget().processInput(ctx, self.key, args)
+        except validation.FieldError, e:
+            if e.fieldName is None:
+                e.fieldName = self.key
+            errors.add(e)
 
 
 
@@ -160,11 +197,11 @@ class FieldFragment(rend.Fragment):
             render = widget.render
 
         # Fill the slots
-        ctx.tag.fillSlots('id', util.render_cssid(field.name))
-        ctx.tag.fillSlots('fieldId', [util.render_cssid(field.name), '-field'])
+        ctx.tag.fillSlots('id', util.render_cssid(field.key))
+        ctx.tag.fillSlots('fieldId', [util.render_cssid(field.key), '-field'])
         ctx.tag.fillSlots('class', ' '.join(classes))
         ctx.tag.fillSlots('label', field.label)
-        ctx.tag.fillSlots('inputs', render(ctx, field.name, formData,
+        ctx.tag.fillSlots('inputs', render(ctx, field.key, formData,
             formErrors))
         ctx.tag.fillSlots('message', message)
         ctx.tag.fillSlots('description',
@@ -175,6 +212,63 @@ class FieldFragment(rend.Fragment):
 
 
 registerAdapter(FieldFragment, Field, inevow.IRenderer)
+
+
+
+class Group(object):
+
+
+    itemParent = None
+
+
+    def __init__(self, name, label=None, description=None):
+        if label is None:
+            label = util.titleFromName(name)
+        self.name = name
+        self.label = label
+        self.description = description
+        self.items = []
+
+
+    def setItemParent(self, itemParent):
+        self.itemParent = itemParent
+
+
+    def add(self, item):
+        self.items.append(item)
+        item.setItemParent(self)
+
+
+
+class GroupFragment(rend.Fragment):
+
+
+    docFactory = loaders.stan(
+            T.fieldset(id=T.slot('id'), render=T.directive('group'))[
+                T.legend[T.slot('label')],
+                T.div(class_='description')[T.slot('description')],
+                T.slot('items'),
+                ]
+            )
+
+
+    def __init__(self, group):
+        super(GroupFragment, self).__init__()
+        self.group = group
+
+
+    def render_group(self, ctx, data):
+        group = self.group
+        ctx.tag.fillSlots('id', util.render_cssid(group.name))
+        ctx.tag.fillSlots('label', group.label)
+        ctx.tag.fillSlots('description', group.description or '')
+        ctx.tag.fillSlots('items', [inevow.IRenderer(item) for item in
+                group.items])
+        return ctx.tag
+
+
+
+registerAdapter(GroupFragment, Group, inevow.IRenderer)
 
 
 
@@ -192,10 +286,12 @@ class Form(object):
         self.data = {}
         self.items = []
 
+    def add(self, item):
+        self.items.append(item)
+
     def addField(self, name, type, widgetFactory=None, label=None,
             description=None, cssClass=None):
-        self.items.append(Field(name, type, widgetFactory, label, description,
-            cssClass))
+        self.add(Field(name, type, widgetFactory, label, description, cssClass))
 
     def getItemByName(self, name):
         for item in self.items:
@@ -217,17 +313,7 @@ class Form(object):
 
         # Decode the request arg names
         charset = getPOSTCharset(ctx)
-        requestArgs = dict([(k.decode(charset),v) for k,v in requestArgs.iteritems()])
-
-        # Unflatten the request into nested dicts.
-        args = {}
-        for name, value in requestArgs.iteritems():
-            name = name.split('.')
-            group, name = name[:-1], name[-1]
-            d = args
-            for g in group:
-                d = args.setdefault(g,{})
-            d[name] = value
+        args = dict([(k.decode(charset),v) for k,v in requestArgs.iteritems()])
 
         # Find the callback to use, defaulting to the form default
         callback, validate = self.callback, True
@@ -249,21 +335,10 @@ class Form(object):
         ctx.remember(errors, iformal.IFormErrors)
 
         # Iterate the items and collect the form data and/or errors.
-        data = {}
         for item in self.items:
-            try:
-                if not item.type.immutable:
-                    data[item.name] = item.makeWidget().processInput(ctx, item.name, args)
-                else:
-                    data[item.name] = self.data.get(item.name)
-                    errors.data[item.name] = self.data.get(item.name)
-            except validation.FieldError, e:
-                if validate:
-                    if e.fieldName is None:
-                        e.fieldName = item.name
-                    errors.add(e)
+            item.process(ctx, self, args, errors)
 
-        if errors:
+        if errors and validate:
             return errors
 
         def _clearUpResources( r ):
@@ -271,7 +346,7 @@ class Form(object):
                 self.resourceManager.clearUpResources()
             return r
 
-        d = defer.maybeDeferred(callback, ctx, self, data)
+        d = defer.maybeDeferred(callback, ctx, self, self.data)
         d.addCallback( _clearUpResources )
         d.addErrback(self._cbFormProcessingFailed, ctx)
         return d

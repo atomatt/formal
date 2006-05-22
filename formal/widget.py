@@ -162,7 +162,7 @@ class CheckedPassword(object):
         return [
             T.input(type='password', name=key, id=render_cssid(key), value=values[0]),
             T.br,
-            T.label(for_=render_cssid(ctx.key, 'confirm'))[' Confirm '],
+            T.label(for_=render_cssid(key, 'confirm'))[' Confirm '],
             T.input(type='password', name=key, id=render_cssid(key, 'confirm'), value=values[1]),
             ]
 

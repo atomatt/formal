@@ -13,7 +13,7 @@ from formal.validation import *
 from formal.widget import *
 from formal.widgets.restwidget import *
 from formal.widgets.multiselect import *
-from formal.form import Form, ResourceMixin, renderForm
+from formal.form import Form, Field, Group, ResourceMixin, renderForm
 from formal import iformal
 
 def widgetFactory(widgetClass, *a, **k):
