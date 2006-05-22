@@ -4,7 +4,7 @@ ReST text area widget.
 
 from nevow import inevow, loaders, rend, tags as T
 from formal import iformal, widget
-from formal.util import keytocssid
+from formal.util import render_cssid
 from formal.form import widgetResourceURLFromContext
 
 
@@ -24,7 +24,7 @@ class ReSTTextArea(widget.TextArea):
 
     def _renderTag(self, ctx, key, value, readonly):
         tag=T.invisible()
-        ta=T.textarea(name=key, id=keytocssid(ctx.key), cols=self.cols, rows=self.rows)[value or '']
+        ta=T.textarea(name=key, id=render_cssid(key), cols=self.cols, rows=self.rows)[value or '']
         if readonly:
             ta(class_='readonly', readonly='readonly')
         tag[ta]
@@ -36,16 +36,18 @@ class ReSTTextArea(widget.TextArea):
                 raise
             else:
                 form = iformal.IForm( ctx )
-                srcId = keytocssid(ctx.key)
-                previewDiv = srcId + '-preview-div'
-                frameId = srcId + '-preview-frame'
+                srcId = render_cssid(key)
+                previewDiv = render_cssid(key, 'preview-div')
+                frameId = render_cssid(key, 'preview-frame')
                 targetURL = widgetResourceURLFromContext(ctx, form.name).child(key).child( srcId )
                 tag[T.br()]
-                tag[T.button(onClick="return Forms.Util.previewShow('%s', '%s', '%s');"%(previewDiv, frameId, targetURL))['Preview ...']]
+                onclick = ["return Forms.Util.previewShow('",previewDiv, "', '",
+                        frameId, "', '", targetURL, "');"]
+                tag[T.button(onclick=onclick)['Preview ...']]
                 tag[T.div(id=previewDiv, class_="preview-hidden")[
                         T.iframe(class_="preview-frame", name=frameId, id=frameId),
                         T.br(),
-                        T.button(onClick="return Forms.Util.previewHide('%s');"%(previewDiv))['Close']
+                        T.button(onclick=["return Forms.Util.previewHide('", previewDiv, "');"])['Close']
                     ]
                 ]
 
