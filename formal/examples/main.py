@@ -8,6 +8,7 @@ DOCTYPE = T.xml('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http:
 CHARSET = T.xml('<meta http-equiv="content-type" content="text/html; charset=utf-8" />')
 
 examples = [
+    'formal.examples.group.GroupFormPage',
     'formal.examples.simple.SimpleFormPage',
     'formal.examples.types.TypesFormPage',
     'formal.examples.required.RequiredFormPage',
