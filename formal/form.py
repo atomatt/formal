@@ -373,6 +373,11 @@ class FormItems(object):
 
 
     def add(self, item):
+        # Check the item name is unique
+        if item.name in [i.name for i in self.items]:
+            raise ValueError('Item named %r already added to %r' %
+                    (item.name, self))
+        # Add to child items and set self the parent
         self.items.append(item)
         item.setItemParent(self.itemParent)
 
