@@ -8,23 +8,27 @@ class GroupFormPage(main.FormExamplePage):
     
     def form_example(self, ctx):
 
-        group = formal.Group('group')
-        group.add(formal.Field('one', formal.String()))
-        group.add(formal.Field('two', formal.Integer()))
-        group.add(formal.Field('pass', formal.String(),
-            widgetFactory=formal.CheckedPassword))
+        def makeAddressGroup(name):
+            address = formal.Group(name)
+            address.add(formal.Field('address', formal.String()))
+            address.add(formal.Field('city', formal.String()))
+            address.add(formal.Field('postalCode', formal.String()))
+            return address
+
+        def makePersonGroup(name):
+            person = formal.Group(name)
+            person.add(formal.Field('name', formal.String(required=True)))
+            person.add(formal.Field('dateOfBirth', formal.Date(required=True)))
+            person.add(makeAddressGroup('address'))
+            return person
 
         form = formal.Form()
         form.addField('before', formal.String())
-        form.add(group)
+        form.add(makePersonGroup('me'))
+        form.add(makePersonGroup('you'))
         form.addField('after', formal.String())
         form.addAction(self.submitted)
-        form.data = {
-            'before': 'before',
-            'group.one': 'one',
-            'group.two': 2,
-            'after': 'after'
-        }
+
         return form
 
     def submitted(self, ctx, form, data):
