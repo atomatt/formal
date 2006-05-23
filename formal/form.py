@@ -227,7 +227,10 @@ class Group(object):
         self.name = name
         self.label = label
         self.description = description
-        self.items = []
+        self.items = FormItems(self)
+        # Forward to FormItems methods
+        self.add = self.items.add
+        self.getItemByName = self.items.getItemByName
 
 
     def setItemParent(self, itemParent):
@@ -237,11 +240,6 @@ class Group(object):
     def process(self, ctx, form, args, errors):
         for item in self.items:
             item.process(ctx, form, args, errors)
-
-
-    def add(self, item):
-        self.items.append(item)
-        item.setItemParent(self)
 
 
 
@@ -289,20 +287,14 @@ class Form(object):
             self.callback = callback
         self.resourceManager = ResourceManager()
         self.data = {}
-        self.items = []
-
-    def add(self, item):
-        self.items.append(item)
+        self.items = FormItems(None)
+        # Forward to FormItems methods
+        self.add = self.items.add
+        self.getItemByName = self.items.getItemByName
 
     def addField(self, name, type, widgetFactory=None, label=None,
             description=None, cssClass=None):
         self.add(Field(name, type, widgetFactory, label, description, cssClass))
-
-    def getItemByName(self, name):
-        for item in self.items:
-            if item.name == name:
-                return item
-        raise KeyError("No item called %r" % name)
 
     def addAction(self, callback, name="submit", validate=True, label=None):
         if self.actions is None:
@@ -362,6 +354,42 @@ class Form(object):
         errors = iformal.IFormErrors(ctx)
         errors.add(failure.value)
         return errors
+
+
+
+class FormItems(object):
+    """
+    A managed collection of form items.
+    """
+
+
+    def __init__(self, itemParent):
+        self.items = []
+        self.itemParent = itemParent
+
+
+    def __iter__(self):
+        return iter(self.items)
+
+
+    def add(self, item):
+        self.items.append(item)
+        item.setItemParent(self.itemParent)
+
+
+    def getItemByName(self, name):
+        name = name.split('.', 1)
+        if len(name) == 1:
+            name, rest = name[0], None
+        else:
+            name, rest = name[0], name[1]
+        for item in self.items:
+            if item.name == name:
+                if rest is None:
+                    return item
+                return item.getItemByName(rest)
+        raise KeyError("No item called %r" % name)
+
 
 
 class FormErrors(object):
