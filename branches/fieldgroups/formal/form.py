@@ -166,7 +166,7 @@ class FieldFragment(rend.Fragment):
         if formErrors is None:
             error = None
         else:
-            error = formErrors.getFieldError(field.name)
+            error = formErrors.getFieldError(field.key)
 
         # Build the error message
         if error is None:
