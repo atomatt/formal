@@ -53,6 +53,9 @@ class SelectionFormPage(main.FormExamplePage):
         form.addField('selectOther', formal.String(),
                 formal.widgetFactory(formal.SelectOtherChoice, options=['Mr',
                     'Mrs']))
+        form.addField('selectOtherCustomOther', formal.String(),
+                formal.widgetFactory(formal.SelectOtherChoice, options=['Mr',
+                    'Mrs'], otherOption=('...','Other (Please Enter)')))
         form.addField('selectOtherRequired', formal.String(required=True),
                 formal.widgetFactory(formal.SelectOtherChoice, options=['Mr',
                     'Mrs']))
