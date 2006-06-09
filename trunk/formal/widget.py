@@ -287,10 +287,12 @@ class SelectOtherChoice(object):
 
     template = None
 
-    def __init__(self, original, options=None):
+    def __init__(self, original, options=None, otherOption=None):
         self.original = original
         if options is not None:
             self.options = options
+        if otherOption is not None:
+            self.otherOption = otherOption
         if self.template is None:
             self.template = loaders.xmlfile(util.resource_filename('formal',
                 'html/SelectOtherChoice.html'))
