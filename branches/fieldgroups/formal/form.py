@@ -55,6 +55,12 @@ class Action(object):
     """Tracks an action that has been added to a form.
     """
     def __init__(self, callback, name, validate, label):
+
+        if not util.validIdentifier(name):
+            import warnings
+            warnings.warn('[0.9] Invalid action name %r. This will become an error in the future.' %
+                    name, FutureWarning, stacklevel=3)
+
         self.callback = callback
         self.name = name
         self.validate = validate
