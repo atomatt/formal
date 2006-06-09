@@ -4,7 +4,9 @@
 }
 
 .nevow-form fieldset {
-  margin-bottom: 1em;
+  margin: 0;
+  border: 0;
+  padding: 0;
 }
 
 .nevow-form div.field {
@@ -131,3 +133,16 @@
   height: 500px;
   width: 80%;
 }
+
+/*--- CLEARFIX  ----------------------------------------------------------*/
+.nevow-form div.field:after {
+  content:".";
+  display:block;
+  height:0;
+  clear:both;
+  visibility:hidden;
+}
+.nevow-form div.field {display:inline-block;}
+/* Hide from IE Mac \*/
+.nevow-form div.field {display:block;}
+/* End hide from IE Mac */
