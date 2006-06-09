@@ -56,6 +56,11 @@ class Action(object):
     """
     def __init__(self, callback, name, validate, label):
         self.callback = callback
+        if not util.validIdentifier(name):
+            import warnings
+            warnings.warn('[0.8.3] Invalid identifier %r. This will become an error in future versions' %
+                    name,PendingDeprecationWarning,stacklevel=2)
+
         self.name = name
         self.validate = validate
         if label is None:
