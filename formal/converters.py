@@ -84,7 +84,7 @@ class BooleanToStringConverter(_Adapter):
         if not value:
             return None
         if value not in ('True', 'False'):
-            raise validation.FieldValidationError('%r should be either True or False')
+            raise validation.FieldValidationError('%r should be either True or False'%value)
         return value == 'True'
     
     
