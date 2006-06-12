@@ -1,0 +1,66 @@
+"""A package (for Nevow) for defining the schema, validation and rendering of
+HTML forms.
+"""
+
+
+version_info = (0, 8, 0)
+version = '.'.join([str(i) for i in version_info])
+
+
+from nevow import static
+from forms.types import *
+from forms.validation import *
+from forms.widget import *
+from forms.widgets.restwidget import *
+from forms.widgets.multiselect import *
+from forms.form import Form, ResourceMixin, renderForm
+from forms import iforms
+
+def widgetFactory(widgetClass, *a, **k):
+    def _(original):
+        return widgetClass(original, *a, **k)
+    return _
+
+try:
+    import pkg_resources
+except ImportError:
+    import os.path
+    defaultCSS = static.File(os.path.join(os.path.split(__file__)[0], 'forms.css'))
+    formsJS = static.File(os.path.join(os.path.split(__file__)[0], 'js'))
+else:
+    from forms.util import LazyResource
+    defaultCSS = LazyResource(lambda: static.File(pkg_resources.resource_filename('forms', 'forms.css')))
+    formsJS = LazyResource(lambda: static.File(pkg_resources.resource_filename('forms', 'js')))
+    del LazyResource
+
+# Register standard adapters
+from twisted.python.components import registerAdapter
+from forms import converters
+from forms.util import SequenceKeyLabelAdapter
+registerAdapter(TextInput, String, iforms.IWidget)
+registerAdapter(TextInput, Integer, iforms.IWidget)
+registerAdapter(TextInput, Float, iforms.IWidget)
+registerAdapter(Checkbox, Boolean, iforms.IWidget)
+registerAdapter(DatePartsInput, Date, iforms.IWidget)
+registerAdapter(TextInput, Time, iforms.IWidget)
+registerAdapter(FileUploadRaw, File, iforms.IWidget)
+registerAdapter(SequenceKeyLabelAdapter, tuple, iforms.IKey)
+registerAdapter(SequenceKeyLabelAdapter, tuple, iforms.ILabel)
+registerAdapter(converters.NullConverter, String, iforms.IStringConvertible)
+registerAdapter(converters.DateToDateTupleConverter, Date, iforms.IDateTupleConvertible)
+registerAdapter(converters.BooleanToStringConverter, Boolean, iforms.IBooleanConvertible)
+registerAdapter(converters.IntegerToStringConverter, Integer, iforms.IStringConvertible)
+registerAdapter(converters.FloatToStringConverter, Float, iforms.IStringConvertible)
+registerAdapter(converters.DateToStringConverter, Date, iforms.IStringConvertible)
+registerAdapter(converters.TimeToStringConverter, Time, iforms.IStringConvertible)
+registerAdapter(converters.NullConverter, File, iforms.IFileConvertible)
+registerAdapter(converters.NullConverter, Sequence, iforms.ISequenceConvertible)
+try:
+    Decimal
+except NameError:
+    pass
+else:
+    registerAdapter(TextInput, Decimal, iforms.IWidget)
+    registerAdapter(converters.DecimalToStringConverter, Decimal, iforms.IStringConvertible)
+del SequenceKeyLabelAdapter
+del registerAdapter
