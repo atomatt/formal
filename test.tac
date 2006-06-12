@@ -1,16 +1,16 @@
 from datetime import date, time
 from twisted.application import internet, service
 from nevow import appserver, compy, loaders, rend, static, tags as T
-import formal
+import forms
 import os
 from shutil import copyfileobj
 import mimetypes, datetime
 
-from formal import iformal, htmleditor, converters
+from forms import iforms, htmleditor, converters
 from fileresource import fileResource
 
 class KeyToFileConverter( object ):
-    __implements__ = iformal.IFileConvertible,
+    __implements__ = iforms.IFileConvertible,
 
     def fromType( self, value, context=None ):
         """
@@ -61,7 +61,7 @@ class Person(object):
         
         
 class PersonKeyLabelAdapter(object):
-    __implements__ = iformal.IKey, iformal.ILabel
+    __implements__ = iforms.IKey, iforms.ILabel
     
     def __init__(self, original):
         self.original = original
@@ -73,8 +73,8 @@ class PersonKeyLabelAdapter(object):
         return '%s, %s' % (self.original.lastName, self.original.firstName)
         
         
-compy.registerAdapter(PersonKeyLabelAdapter, Person, iformal.IKey)
-compy.registerAdapter(PersonKeyLabelAdapter, Person, iformal.ILabel)
+compy.registerAdapter(PersonKeyLabelAdapter, Person, iforms.IKey)
+compy.registerAdapter(PersonKeyLabelAdapter, Person, iforms.ILabel)
     
     
 people = [
@@ -82,69 +82,69 @@ people = [
     Person(2, 'Tim', 'Parkin'),
     ]
 
-class Page(rend.Page, formal.ResourceMixin):
+class Page(rend.Page, forms.ResourceMixin):
     
     addSlash = True
     docFactory = loaders.xmlfile('test.html')
         
     def __init__(self, *a, **k):
         rend.Page.__init__(self, *a, **k)
-        formal.ResourceMixin.__init__(self)
+        forms.ResourceMixin.__init__(self)
         
     def child_self(self, ctx):
         return self
 
     def form_oneOfEach(self, ctx):
-        form = formal.Form(self._submit)
-        form.addField('hidden_string', formal.Integer(), formal.Hidden)
-        form.addField('string', formal.String(required=True))
-        form.addField('password', formal.String(), formal.CheckedPassword)
-        form.addField('integer', formal.Integer())
-        form.addField('float', formal.Float())
-        form.addField('boolean', formal.Boolean())
-        form.addField('date', formal.Date(), formal.widgetFactory(formal.MMYYDatePartsInput, cutoffYear=38))
-        form.addField('time', formal.Time())
+        form = forms.Form(self._submit)
+        form.addField('hidden_string', forms.Integer(), forms.Hidden)
+        form.addField('string', forms.String(required=True))
+        form.addField('password', forms.String(), forms.CheckedPassword)
+        form.addField('integer', forms.Integer())
+        form.addField('float', forms.Float())
+        form.addField('boolean', forms.Boolean())
+        form.addField('date', forms.Date(), forms.widgetFactory(forms.MMYYDatePartsInput, cutoffYear=38))
+        form.addField('time', forms.Time())
         form.addAction(self._submit)
         form.data = {'hidden_string': 101}
         return form
 
     def form_readonlyOneOfEach(self, ctx):
-        form = formal.Form(self._submit)
+        form = forms.Form(self._submit)
         immutable=True
-        form.addField('string', formal.String(immutable=immutable), formal.TextInput)
-        form.addField('textarea', formal.String(immutable=immutable), formal.TextArea)
-        form.addField('password', formal.String(immutable=immutable), formal.CheckedPassword)
-        form.addField('integer', formal.Integer(immutable=immutable))
-        form.addField('float', formal.Float(immutable=immutable))
-        form.addField('boolean', formal.Boolean(immutable=immutable), formal.Checkbox)
-        form.addField('date', formal.Date(immutable=immutable), formal.widgetFactory(formal.MMYYDatePartsInput, cutoffYear=38))
-        form.addField('date2', formal.Date(immutable=immutable), formal.widgetFactory(formal.DatePartsInput, dayFirst=True))
-        form.addField('time', formal.Time(immutable=immutable))
-        form.addField('author', formal.Integer(immutable=immutable), lambda original: formal.SelectChoice(original, people))
-        form.addField('bar', formal.Sequence(formal.String(),immutable=immutable), formal.widgetFactory(formal.CheckboxMultiChoice, zip('abc','abc')),description='store your bar here')
-        form.addField('file', formal.File(immutable=immutable), formal.widgetFactory(formal.FileUploadWidget, convertibleFactory=KeyToFileConverter))
+        form.addField('string', forms.String(immutable=immutable), forms.TextInput)
+        form.addField('textarea', forms.String(immutable=immutable), forms.TextArea)
+        form.addField('password', forms.String(immutable=immutable), forms.CheckedPassword)
+        form.addField('integer', forms.Integer(immutable=immutable))
+        form.addField('float', forms.Float(immutable=immutable))
+        form.addField('boolean', forms.Boolean(immutable=immutable), forms.Checkbox)
+        form.addField('date', forms.Date(immutable=immutable), forms.widgetFactory(forms.MMYYDatePartsInput, cutoffYear=38))
+        form.addField('date2', forms.Date(immutable=immutable), forms.widgetFactory(forms.DatePartsInput, dayFirst=True))
+        form.addField('time', forms.Time(immutable=immutable))
+        form.addField('author', forms.Integer(immutable=immutable), lambda original: forms.SelectChoice(original, people))
+        form.addField('bar', forms.Sequence(forms.String(),immutable=immutable), forms.widgetFactory(forms.CheckboxMultiChoice, zip('abc','abc')),description='store your bar here')
+        form.addField('file', forms.File(immutable=immutable), forms.widgetFactory(forms.FileUploadWidget, convertibleFactory=KeyToFileConverter))
         form.addAction(self._submit)
         form.data = {'string':'hello', 'textarea':'some long text', 'password': ['one','one'], 'integer':10, 'float':22.22, 'boolean':True, 'author': 2, 'file':'dm.gif', 'date': datetime.date(2005, 10, 1), 'bar': ['a'], 'time': datetime.time(12, 51, 30)}
 
         return form
 
     def form_test(self, ctx):
-        form = formal.Form(self._submit)
-        form.addField('lastName', formal.String(required=True), label='Surname', description='This should be used to store your surname.. no really!!')
-        form.addField('date', formal.Date(), formal.widgetFactory(formal.SelectChoice, dates))
-        form.addField('time', formal.Time(), lambda original: formal.SelectChoice(original, times))
-        form.addField('author', formal.Integer(), lambda original: formal.SelectChoice(original, people))
-        form.addField('notes', formal.String(), htmleditor.TinyMCE)
-        form.addField('foo', formal.Sequence(formal.Time()), formal.widgetFactory(formal.CheckboxMultiChoice, times))
-        form.addField('bar', formal.Sequence(formal.String(),required=True), formal.widgetFactory(formal.CheckboxMultiChoice, zip('abc','abc')),description='store your bar here')
+        form = forms.Form(self._submit)
+        form.addField('lastName', forms.String(required=True), label='Surname', description='This should be used to store your surname.. no really!!')
+        form.addField('date', forms.Date(), forms.widgetFactory(forms.SelectChoice, dates))
+        form.addField('time', forms.Time(), lambda original: forms.SelectChoice(original, times))
+        form.addField('author', forms.Integer(), lambda original: forms.SelectChoice(original, people))
+        form.addField('notes', forms.String(), htmleditor.TinyMCE)
+        form.addField('foo', forms.Sequence(forms.Time()), forms.widgetFactory(forms.CheckboxMultiChoice, times))
+        form.addField('bar', forms.Sequence(forms.String(),required=True), forms.widgetFactory(forms.CheckboxMultiChoice, zip('abc','abc')),description='store your bar here')
         form.data = {'foo': [time(10,0)]}
         form.addAction(self._submit)
         form.addAction(self._submit, 'another')
         return form
         
     def form_1(self, ctx):
-        form = formal.Form(self._submit)
-        form.addField('name', formal.String(required=True))
+        form = forms.Form(self._submit)
+        form.addField('name', forms.String(required=True))
         form.addAction(self._submit)
         form.data = {
             'name': 'Me!'
@@ -152,8 +152,8 @@ class Page(rend.Page, formal.ResourceMixin):
         return form
         
     def form_2(self, ctx):
-        form = formal.Form(self._submit)
-        form.addField('name', formal.String(required=True))
+        form = forms.Form(self._submit)
+        form.addField('name', forms.String(required=True))
         form.addAction(self._submit)
         form.data = {
             'name': 'Me!'
@@ -165,9 +165,9 @@ class Page(rend.Page, formal.ResourceMixin):
             is used to get a preview url and to save the upload results. commit/rollback type hooks will need
             to be added to forms to allow 'clean' operation. -- tp
         '''
-        form = formal.Form(self._submit)
-        form.addField('name', formal.String(required=True))
-        form.addField('file', formal.String(required=True), formal.widgetFactory(formal.FileUpload,fileResource(),preview='image'))
+        form = forms.Form(self._submit)
+        form.addField('name', forms.String(required=True))
+        form.addField('file', forms.String(required=True), forms.widgetFactory(forms.FileUpload,fileResource(),preview='image'))
         form.addAction(self._submit)
         #form.data = {
         #    'file': 'product.jpg'
@@ -175,9 +175,9 @@ class Page(rend.Page, formal.ResourceMixin):
         return form        
 
     def form_4(self, ctx):
-        form = formal.Form(self._submit)
-        form.addField('name', formal.String(required=True))
-        form.addField('file', formal.File(required=True), formal.widgetFactory(formal.FileUploadWidget, convertibleFactory=KeyToFileConverter))
+        form = forms.Form(self._submit)
+        form.addField('name', forms.String(required=True))
+        form.addField('file', forms.File(required=True), forms.widgetFactory(forms.FileUploadWidget, convertibleFactory=KeyToFileConverter))
         form.addAction(self._submit)
 #        form.data = {
 #            'file': 'dm.gif'
@@ -188,11 +188,11 @@ class Page(rend.Page, formal.ResourceMixin):
         print form
         print data
         if data.get('string') == 'error':
-            raise formal.FieldError('Failed the field!', 'string')
+            raise forms.FieldError('Failed the field!', 'string')
         if data.get('string') == 'formerror':
-            raise formal.FormError('Failed the form!')
+            raise forms.FormError('Failed the form!')
 
-setattr(Page, 'child_nevow-formal.css', formal.defaultCSS)
+setattr(Page, 'child_nevow-forms.css', forms.defaultCSS)
 setattr(Page, 'child_tiny_mce', static.File('tiny_mce'))
 setattr(Page, 'child_webassets', static.File('assets'))
 setattr(Page, 'child_images', static.File('images'))
