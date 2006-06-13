@@ -192,7 +192,7 @@ class FieldFragment(rend.Fragment):
         if field.type.required:
             classes.append('required')
         if field.cssClass:
-            classes.append(cssClass)
+            classes.append(field.cssClass)
         if error:
             classes.append('error')
 
