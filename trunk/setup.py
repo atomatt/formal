@@ -8,7 +8,7 @@ setup(
     author_email='matt@pollenation.net',
     packages=find_packages(),
     package_data={
-        'formal': ['formal.css', 'html/*', 'js/*'],
+        '': ['*.css', '*.html', '*.js'],
         },
     zip_safe = True,
     )
