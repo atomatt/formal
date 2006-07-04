@@ -27,6 +27,12 @@ class Composite(formal.types.Type):
 
     def validate(self, value):
 
+        # Check we have the correct number of values, otherwise the final value
+        # could be completely wrong because we're relying on zip to build the
+        # dict.
+        if len(value) != len(self.composition):
+            raise ValueError("Incorrect number of values to validate")
+
         # If nothing has been entered then we'll have a sequence of None
         # instances, in which case my value if None (not a sequence). If there
         # is anything other than None in the sequence then pass validation on to
