@@ -5,7 +5,7 @@ Form implementation and high-level renderers.
 from zope.interface import Interface
 from twisted.internet import defer
 from twisted.python.components import registerAdapter
-from nevow import appserver, context, loaders, inevow, tags as T, url
+from nevow import appserver, context, loaders, inevow, rend, tags as T, url
 from nevow.util import getPOSTCharset
 from formal import iformal, util, validation
 from resourcemanager import ResourceManager
@@ -70,32 +70,237 @@ class Action(object):
             self.label = label
 
 
+
+class Field(object):
+
+
+    itemParent = None
+
+
+    def __init__(self, name, type, widgetFactory=None, label=None,
+            description=None, cssClass=None):
+        if not util.validIdentifier(name):
+            raise ValueError('%r is an invalid field name'%name)
+        if label is None:
+            label = util.titleFromName(name)
+        if widgetFactory is None:
+            widgetFactory = iformal.IWidget
+        self.name = name
+        self.type = type
+        self.widgetFactory = widgetFactory
+        self.label = label
+        self.description = description
+        self.cssClass = cssClass
+
+
+    def setItemParent(self, itemParent):
+        self.itemParent = itemParent
+
+
+    def _getKey(self):
+        parts = [self.name]
+        parent = self.itemParent
+        while parent is not None:
+            parts.append(parent.name)
+            parent = parent.itemParent
+        parts.reverse()
+        return '.'.join(parts)
+
+
+    key = property(_getKey)
+
+
+    def makeWidget(self):
+        return self.widgetFactory(self.type)
+
+
+    def process(self, ctx, form, args, errors):
+
+        # If the type is immutable then copy the original value to args in case
+        # another validation error causes this field to be re-rendered.
+        if self.type.immutable:
+            args[self.key] = form.data.get(self.key)
+            return
+
+        # Process the input using the widget, storing the data back on the form.
+        try:
+            form.data[self.key] = self.makeWidget().processInput(ctx, self.key, args)
+        except validation.FieldError, e:
+            if e.fieldName is None:
+                e.fieldName = self.key
+            errors.add(e)
+
+
+
+class FieldFragment(rend.Fragment):
+    implements(inevow.IRenderer)
+
+
+    docFactory = loaders.stan(
+        T.div(id=T.slot('fieldId'), _class=T.slot('class'),
+                render=T.directive('field'))[
+            T.label(_class='label', _for=T.slot('id'))[T.slot('label')],
+            T.div(_class='inputs')[T.slot('inputs')],
+            T.slot('description'),
+            T.slot('message'),
+            ])
+
+
+    hiddenDocFactory = loaders.stan(
+            T.invisible(render=T.directive('field'))[T.slot('inputs')])
+
+
+    def __init__(self, field):
+        self.field = field
+        # Nasty hack to work out if this is a hidden field. Keep the widget
+        # for later anyway.
+        self.widget = field.makeWidget()
+        if getattr(self.widget, 'inputType', None) == 'hidden':
+            self.docFactory = self.hiddenDocFactory
+
+
+    def render_field(self, ctx, data):
+
+        # The field we're rendering
+        field = self.field
+
+        # Get stuff from the context
+        formData = iformal.IFormData(ctx)
+        formErrors = iformal.IFormErrors(ctx, None)
+
+        # Find any error
+        if formErrors is None:
+            error = None
+        else:
+            error = formErrors.getFieldError(field.key)
+
+        # Build the error message
+        if error is None:
+            message = ''
+        else:
+            message = T.div(class_='message')[error.message]
+
+        # Create the widget (it's created in __init__ as a hack)
+        widget = self.widget
+
+        # Build the list of CSS classes
+        classes = [
+            'field',
+            field.type.__class__.__name__.lower(),
+            widget.__class__.__name__.lower(),
+            ]
+        if field.type.required:
+            classes.append('required')
+        if field.cssClass:
+            classes.append(field.cssClass)
+        if error:
+            classes.append('error')
+
+        # Create the widget and decide the method that should be called
+        if field.type.immutable:
+            render = widget.renderImmutable
+        else:
+            render = widget.render
+
+        # Fill the slots
+        ctx.tag.fillSlots('id', util.render_cssid(field.key))
+        ctx.tag.fillSlots('fieldId', [util.render_cssid(field.key), '-field'])
+        ctx.tag.fillSlots('class', ' '.join(classes))
+        ctx.tag.fillSlots('label', field.label)
+        ctx.tag.fillSlots('inputs', render(ctx, field.key, formData,
+            formErrors))
+        ctx.tag.fillSlots('message', message)
+        ctx.tag.fillSlots('description',
+                T.div(class_='description')[field.description or ''])
+
+        return ctx.tag
+
+
+
+registerAdapter(FieldFragment, Field, inevow.IRenderer)
+
+
+
+class Group(object):
+
+
+    itemParent = None
+
+
+    def __init__(self, name, label=None, description=None):
+        if label is None:
+            label = util.titleFromName(name)
+        self.name = name
+        self.label = label
+        self.description = description
+        self.items = FormItems(self)
+        # Forward to FormItems methods
+        self.add = self.items.add
+        self.getItemByName = self.items.getItemByName
+
+
+    def setItemParent(self, itemParent):
+        self.itemParent = itemParent
+
+
+    def process(self, ctx, form, args, errors):
+        for item in self.items:
+            item.process(ctx, form, args, errors)
+
+
+
+class GroupFragment(rend.Fragment):
+
+
+    docFactory = loaders.stan(
+            T.fieldset(id=T.slot('id'), render=T.directive('group'))[
+                T.legend[T.slot('label')],
+                T.div(class_='description')[T.slot('description')],
+                T.slot('items'),
+                ]
+            )
+
+
+    def __init__(self, group):
+        super(GroupFragment, self).__init__()
+        self.group = group
+
+
+    def render_group(self, ctx, data):
+        group = self.group
+        ctx.tag.fillSlots('id', util.render_cssid(group.name))
+        ctx.tag.fillSlots('label', group.label)
+        ctx.tag.fillSlots('description', group.description or '')
+        ctx.tag.fillSlots('items', [inevow.IRenderer(item) for item in
+                group.items])
+        return ctx.tag
+
+
+
+registerAdapter(GroupFragment, Group, inevow.IRenderer)
+
+
+
 class Form(object):
 
     implements( iformal.IForm )
 
     callback = None
     actions = None
-    widgets = None
 
     def __init__(self, callback=None):
         if callback is not None:
             self.callback = callback
         self.resourceManager = ResourceManager()
         self.data = {}
-        self.items = []
+        self.items = FormItems(None)
+        # Forward to FormItems methods
+        self.add = self.items.add
+        self.getItemByName = self.items.getItemByName
 
-    def addField(self, name, type, widgetFactory=None, label=None, description=None, cssClass=None):
-        if not util.validIdentifier(name):
-            raise ValueError('%r is an invalid field name'%name)
-        type.name = name
-        if label is None:
-            label = util.titleFromName(name)
-        self.items.append( (name,type,label,description,cssClass) )
-        if widgetFactory is not None:
-            if self.widgets is None:
-                self.widgets = {}
-            self.widgets[name] = widgetFactory
+    def addField(self, name, type, widgetFactory=None, label=None,
+            description=None, cssClass=None):
+        self.add(Field(name, type, widgetFactory, label, description, cssClass))
 
     def addAction(self, callback, name="submit", validate=True, label=None):
         if self.actions is None:
@@ -104,32 +309,6 @@ class Form(object):
             raise ValueError('Action with name %r already exists.' % name)
         self.actions.append( Action(callback, name, validate, label) )
 
-    def getField(self,fieldName):
-        for name, type, label, description, cssClass in self.items:
-            if name == fieldName:
-                return (name, type, label, description, cssClass)
-        else:
-            return None
-            
-
-    def widgetForItem(self, itemName):
-
-        for name, type, label, description, cssClass in self.items:
-            if name == itemName:
-                break
-        else:
-            raise KeyError()
-
-        if self.widgets is not None:
-            try:
-                widgetFactory = self.widgets[name]
-            except KeyError:
-                pass
-            else:
-                return widgetFactory(type)
-
-        return iformal.IWidget(type)
-
     def process(self, ctx):
 
         # Get the request args
@@ -137,17 +316,7 @@ class Form(object):
 
         # Decode the request arg names
         charset = getPOSTCharset(ctx)
-        requestArgs = dict([(k.decode(charset),v) for k,v in requestArgs.iteritems()])
-
-        # Unflatten the request into nested dicts.
-        args = {}
-        for name, value in requestArgs.iteritems():
-            name = name.split('.')
-            group, name = name[:-1], name[-1]
-            d = args
-            for g in group:
-                d = args.setdefault(g,{})
-            d[name] = value
+        args = dict([(k.decode(charset),v) for k,v in requestArgs.iteritems()])
 
         # Find the callback to use, defaulting to the form default
         callback, validate = self.callback, True
@@ -169,21 +338,10 @@ class Form(object):
         ctx.remember(errors, iformal.IFormErrors)
 
         # Iterate the items and collect the form data and/or errors.
-        data = {}
-        for name, type, label, description, cssClass in self.items:
-            try:
-                if not type.immutable:
-                    data[name] = self.widgetForItem(name).processInput(ctx, name, args)
-                else:
-                    data[name] = self.data.get(name)
-                    errors.data[name] = self.data.get(name)
-            except validation.FieldError, e:
-                if validate:
-                    if e.fieldName is None:
-                        e.fieldName = name
-                    errors.add(e)
+        for item in self.items:
+            item.process(ctx, self, args, errors)
 
-        if errors:
+        if errors and validate:
             return errors
 
         def _clearUpResources( r ):
@@ -191,7 +349,7 @@ class Form(object):
                 self.resourceManager.clearUpResources()
             return r
 
-        d = defer.maybeDeferred(callback, ctx, self, data)
+        d = defer.maybeDeferred(callback, ctx, self, self.data)
         d.addCallback( _clearUpResources )
         d.addErrback(self._cbFormProcessingFailed, ctx)
         return d
@@ -202,6 +360,47 @@ class Form(object):
         errors = iformal.IFormErrors(ctx)
         errors.add(failure.value)
         return errors
+
+
+
+class FormItems(object):
+    """
+    A managed collection of form items.
+    """
+
+
+    def __init__(self, itemParent):
+        self.items = []
+        self.itemParent = itemParent
+
+
+    def __iter__(self):
+        return iter(self.items)
+
+
+    def add(self, item):
+        # Check the item name is unique
+        if item.name in [i.name for i in self.items]:
+            raise ValueError('Item named %r already added to %r' %
+                    (item.name, self))
+        # Add to child items and set self the parent
+        self.items.append(item)
+        item.setItemParent(self.itemParent)
+
+
+    def getItemByName(self, name):
+        name = name.split('.', 1)
+        if len(name) == 1:
+            name, rest = name[0], None
+        else:
+            name, rest = name[0], name[1]
+        for item in self.items:
+            if item.name == name:
+                if rest is None:
+                    return item
+                return item.getItemByName(rest)
+        raise KeyError("No item called %r" % name)
+
 
 
 class FormErrors(object):
@@ -245,7 +444,7 @@ class FormResource(object):
 
     def _fileFromWidget(self, form, ctx, segments):
         ctx.remember(form, iformal.IForm)
-        widget = form.widgetForItem(segments[0])
+        widget = form.getItemByName(segments[0]).makeWidget()
         return widget.getResource(ctx, segments[0], segments[1:])
 
 
@@ -412,24 +611,16 @@ class FormRenderer(object):
     implements( inevow.IRenderer )
 
     loader = loaders.stan(
-        T.form(id=T.slot('id'), action=T.slot('action'), class_='nevow-form', method='post', enctype='multipart/form-data', **{'accept-charset':'utf-8'})[
-            T.fieldset[
+            T.form(**{'id': T.slot('formId'), 'action': T.slot('formAction'),
+                'class': 'nevow-form', 'method': 'post', 'enctype':
+                'multipart/form-data', 'accept-charset': 'utf-8'})[
+            T.div[
                 T.input(type='hidden', name='_charset_'),
-                T.input(type='hidden', name=FORMS_KEY, value=T.slot('name')),
-                T.slot('errors'),
-                T.slot('items'),
-                T.div(id=T.slot('fieldId'), pattern='item', _class=T.slot('class'))[
-                    T.label(_class='label', _for=T.slot('id'))[T.slot('label')],
-                    T.div(_class='inputs')[T.slot('inputs')],
-                    T.slot('description'),
-                    T.slot('message'),
-                    ],
-                T.div(class_='hiddenitems')[
-                    T.slot('hiddenitems'),
-                    T.invisible(pattern="hiddenitem")[T.slot('inputs')]
-                    ],
+                T.input(type='hidden', name=FORMS_KEY, value=T.slot('formName')),
+                T.slot('formErrors'),
+                T.slot('formItems'),
                 T.div(class_='actions')[
-                    T.slot('actions'),
+                    T.slot('formActions'),
                     ],
                 ],
             ]
@@ -441,13 +632,12 @@ class FormRenderer(object):
 
     def rend(self, ctx, data):
         tag = T.invisible[self.loader.load()]
-        tag.fillSlots('name', self.original.name)
-        tag.fillSlots('id', util.keytocssid(ctx.key))
-        tag.fillSlots('action', url.here)
-        tag.fillSlots('errors', self._renderErrors)
-        tag.fillSlots('items', self._renderItems)
-        tag.fillSlots('hiddenitems', self._renderHiddenItems)
-        tag.fillSlots('actions', self._renderActions)
+        tag.fillSlots('formName', self.original.name)
+        tag.fillSlots('formId', util.keytocssid(ctx.key))
+        tag.fillSlots('formAction', url.here)
+        tag.fillSlots('formErrors', self._renderErrors)
+        tag.fillSlots('formItems', self._renderItems)
+        tag.fillSlots('formActions', self._renderActions)
         return tag
 
     def _renderErrors(self, ctx, data):
@@ -463,98 +653,16 @@ class FormRenderer(object):
                 errorList[ T.li[ error.message ] ]
         for error in errors:
             if isinstance(error, validation.FieldError):
-                name, type, label, description, cssClass = self.original.getField(error.fieldName)
-                errorList[ T.li[ T.strong[ label, ' : ' ], error.message ] ]
+                item = self.original.getItemByName(error.fieldName)
+                errorList[ T.li[ T.strong[ item.label, ' : ' ], error.message ] ]
         return T.div(class_='errors')[ T.p['Please correct the following errors:'], errorList ]
 
     def _renderItems(self, ctx, data):
         if self.original.items is None:
             yield ''
             return
-        itemPattern = inevow.IQ(ctx).patternGenerator('item')
         for item in self.original.items:
-            widget = self.original.widgetForItem(item[0])
-            if getattr(widget,'inputType','') != 'hidden':
-                yield itemPattern(key=item[0], data=item, render=self._renderItem)
-
-    def _renderHiddenItems(self, ctx, data):
-        if self.original.items is None:
-            yield ''
-            return
-        hiddenItemPattern = inevow.IQ(ctx).patternGenerator('hiddenitem')
-        for item in self.original.items:
-            widget = self.original.widgetForItem(item[0])
-            if getattr(widget,'inputType','') == 'hidden':
-                yield hiddenItemPattern(key=item[0], data=item, render=self._renderHiddenItem)
-
-    def _renderItem(self, ctx, data):
-
-        def _(ctx, data):
-
-            name, type, label, description, cssClass = data
-            form = self.original
-            formErrors = iformal.IFormErrors(ctx, None)
-            formData = iformal.IFormData(ctx)
-
-            widget = form.widgetForItem(name)
-            if formErrors is None:
-                error = None
-            else:
-                error = formErrors.getFieldError(name)
-
-            # Basic classes are 'field', the type's class name and the widget's
-            # class name.
-            classes = [
-                'field',
-                type.__class__.__name__.lower(),
-                widget.__class__.__name__.lower(),
-                ]
-            # Add a required class
-            if type.required:
-                classes.append('required')
-            # Add a user-specified class
-            if cssClass:
-                classes.append(cssClass)
-
-            if error is None:
-                message = ''
-            else:
-                classes.append('error')
-                message = T.div(class_='message')[error.message]
-
-            ctx.tag.fillSlots('class', ' '.join(classes))
-            ctx.tag.fillSlots('fieldId', '%s-field'%util.keytocssid(ctx.key))
-            ctx.tag.fillSlots('id', util.keytocssid(ctx.key))
-            ctx.tag.fillSlots('label', label)
-            if type.immutable:
-                render = widget.renderImmutable
-            else:
-                render = widget.render
-            ctx.tag.fillSlots('inputs', render(ctx, name, formData, formErrors))
-            ctx.tag.fillSlots('message', message)
-            ctx.tag.fillSlots('description', T.div(class_='description')[description or ''])
-
-            return ctx.tag
-
-        return _
-
-    def _renderHiddenItem(self, ctx, data):
-
-        def _(ctx, data):
-
-            name, type, label, description, cssClass = data
-            form = self.original
-            formErrors = iformal.IFormErrors(ctx, None)
-            formData = iformal.IFormData(ctx)
-
-            widget = form.widgetForItem(name)
-
-            ctx.tag.fillSlots('fieldId', '%s-field'%util.keytocssid(ctx.key))
-            ctx.tag.fillSlots('id', util.keytocssid(ctx.key))
-            ctx.tag.fillSlots('inputs', widget.render(ctx, name, formData, formErrors))
-            return ctx.tag
-
-        return _
+            yield inevow.IRenderer(item)
 
     def _renderActions(self, ctx, data):
 

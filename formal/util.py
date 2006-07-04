@@ -1,6 +1,6 @@
 import re
 from zope.interface import implements
-from nevow import inevow
+from nevow import inevow, tags
 from formal import iformal
 
 
@@ -29,6 +29,17 @@ def titleFromName(name):
             last = ch
 
     return ''.join(_())
+
+
+def render_cssid(fieldKey, *extras):
+    """
+    Render the CSS id for the form field's key.
+    """
+    l = [tags.slot('formName'), '-', '-'.join(fieldKey.split('.'))]
+    for extra in extras:
+        l.append('-')
+        l.append(extra)
+    return l
 
 
 def keytocssid(key):

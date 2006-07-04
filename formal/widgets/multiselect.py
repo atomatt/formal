@@ -1,7 +1,7 @@
 from zope.interface import implements
 from nevow import tags as T
 from formal import iformal
-from formal.util import keytocssid
+from formal.util import render_cssid
 
 _UNSET = object()
 
@@ -72,7 +72,7 @@ class MultiselectChoice(MultichoiceBase):
 
                 yield option
 
-        tag=T.select(name=key, id=keytocssid(ctx.key), data=self.options, multiple="multiple")[renderOptions]
+        tag=T.select(name=key, id=render_cssid(key), data=self.options, multiple="multiple")[renderOptions]
 
         if disabled:
             tag(class_='disabled', disabled='disabled')
