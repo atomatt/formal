@@ -34,7 +34,9 @@ class Composite(formal.types.Type):
         if not filter(None, value):
             value = None
         else:
-            value = [component[1].validate(value) for component, value in zip(self.composition, value)]
+            value = dict([
+                    (name, type.validate(value))
+                    for (name, type), value in zip(self.composition, value)])
 
         # Allow normal validation to run on the new value
         return super(Composite, self).validate(value)
