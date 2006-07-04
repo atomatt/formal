@@ -52,8 +52,7 @@ class TextInput(object):
 
     def processInput(self, ctx, key, args):
         value = args.get(key, [''])[0].decode(util.getPOSTCharset(ctx))
-        value = iformal.IStringConvertible(self.original).toType(value)
-        return self.original.validate(value)
+        return iformal.IStringConvertible(self.original).toType(value)
 
 
 class Checkbox(object):
@@ -90,8 +89,7 @@ class Checkbox(object):
         value = args.get(key, [None])[0]
         if not value:
             value = 'False'
-        value = iformal.IBooleanConvertible(self.original).toType(value)
-        return self.original.validate(value)
+        return iformal.IBooleanConvertible(self.original).toType(value)
 
 
 class Password(TextInput):
@@ -141,8 +139,7 @@ class TextArea(object):
 
     def processInput(self, ctx, key, args):
         value = args.get(key, [''])[0].decode(util.getPOSTCharset(ctx))
-        value = iformal.IStringConvertible(self.original).fromType(value)
-        return self.original.validate(value)
+        return iformal.IStringConvertible(self.original).fromType(value)
 
 
 class CheckedPassword(object):
@@ -185,7 +182,7 @@ class CheckedPassword(object):
         else:
             if pwds[0] != pwds[1]:
                 raise validation.FieldValidationError('Passwords do not match.')
-        return self.original.validate(pwds[0])
+        return pwds[0]
 
 
 class ChoiceBase(object):
@@ -217,7 +214,7 @@ class ChoiceBase(object):
         value = iformal.IStringConvertible(self.original).toType(value)
         if self.noneOption is not None and value == self.noneOption[0]:
             value = None
-        return self.original.validate(value)
+        return value
 
 
 class SelectChoice(ChoiceBase):
@@ -368,7 +365,7 @@ class SelectOtherChoice(object):
         value = iformal.IStringConvertible(self.original).toType(value)
         if self.noneOption is not None and value == self.noneOption[0]:
             value = None
-        return self.original.validate(value)
+        return value
 
 
 class RadioChoice(ChoiceBase):
@@ -532,8 +529,7 @@ class DatePartsInput(object):
                 ymd = [int(p) for p in ymd]
             except ValueError, e:
                 raise validation.FieldValidationError("Invalid date")
-        ymd = iformal.IDateTupleConvertible(self.original).toType(ymd)
-        return self.original.validate(ymd)
+        return iformal.IDateTupleConvertible(self.original).toType(ymd)
 
 
 class MMYYDatePartsInput(object):
@@ -608,8 +604,7 @@ class MMYYDatePartsInput(object):
             else:
                 value[0] = 2000 + value[0]
             value.append(1)
-        value = iformal.IDateTupleConvertible(self.original).toType( value )
-        return self.original.validate(value)
+        return iformal.IDateTupleConvertible(self.original).toType( value )
 
 
 class CheckboxMultiChoice(object):
@@ -673,8 +668,7 @@ class CheckboxMultiChoice(object):
     def processInput(self, ctx, key, args):
         values = args.get(key, [])
         converter = iformal.IStringConvertible(self.original.type)
-        values = [converter.toType(v) for v in values]
-        return self.original.validate(values)
+        return [converter.toType(v) for v in values]
 
 
 class FileUploadRaw(object):
@@ -705,8 +699,7 @@ class FileUploadRaw(object):
         name = fileitem.filename.decode(util.getPOSTCharset(ctx))
         value = (name, fileitem.file)
 
-        value = iformal.IFileConvertible(self.original).fromType(value)
-        return self.original.validate(value)
+        return iformal.IFileConvertible(self.original).fromType(value)
 
 
 class FileUpload(object):
@@ -769,8 +762,7 @@ class FileUpload(object):
            namer = self._namer(key)
            value = args.get(namer('value'))[0]
 
-        value = iformal.IStringConvertible(self.original).fromType(value)
-        return self.original.validate(value)
+        return iformal.IStringConvertible(self.original).fromType(value)
 
 
 class FileUploadWidget(object):
@@ -921,8 +913,7 @@ class FileUploadWidget(object):
         # Validating against an uploaded file. Should the fact that there is
         # original file meet a required field validation?
         value = resourceManager.getResourceForWidget( key )
-        value = self.convertibleFactory(self.original).toType( value )
-        return self.original.validate( value )
+        return self.convertibleFactory(self.original).toType( value )
 
     def _registerWithResourceManager( self, key, args, resourceManager ):
         """
@@ -991,8 +982,7 @@ class Hidden(object):
 
     def processInput(self, ctx, key, args):
         value = args.get(key, [''])[0].decode(util.getPOSTCharset(ctx))
-        value = iformal.IStringConvertible(self.original).toType(value)
-        return self.original.validate(value)
+        return iformal.IStringConvertible(self.original).toType(value)
 
 
 __all__ = [
