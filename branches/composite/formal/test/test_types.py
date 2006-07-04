@@ -133,29 +133,30 @@ class TestComposite(unittest.TestCase):
     def test_one(self):
         self.assertEquals(Composite([
             ('foo', formal.String())
-            ]).validate([u'bar']), [u'bar'])
-        self.assertEquals(Composite([('foo',
-            formal.Integer())]).validate([123]), [123])
+            ]).validate([u'bar']), {'foo': u'bar'})
+        self.assertEquals(Composite([
+            ('foo', formal.Integer())
+            ]).validate([123]), {'foo': 123})
 
     def test_multisame(self):
         self.assertEquals(Composite([
             ('foo', formal.String()),
             ('bar', formal.String())
-            ]).validate([u'foo', u'bar']), [u'foo', u'bar'])
+            ]).validate([u'foo', u'bar']), {'foo': u'foo', 'bar': u'bar'})
         self.assertEquals(Composite([
             ('foo', formal.Integer()),
             ('bar', formal.Integer()),
-            ]).validate([123, 456]), [123, 456])
+            ]).validate([123, 456]), {'foo': 123, 'bar': 456})
 
     def test_multidiff(self):
         self.assertEquals(Composite([
             ('foo', formal.String()),
             ('bar', formal.Integer())
-            ]).validate([u'foo', 123]), [u'foo', 123])
+            ]).validate([u'foo', 123]), {'foo': u'foo', 'bar': 123})
         self.assertEquals(Composite([
             ('foo', formal.String()),
             ('bar', formal.Integer())
-            ]).validate([u'foo', None]), [u'foo', None])
+            ]).validate([u'foo', None]), {'foo': u'foo', 'bar': None})
 
     def test_none(self):
         self.assertEquals(Composite([('foo',
@@ -164,6 +165,8 @@ class TestComposite(unittest.TestCase):
             ('foo', formal.String()),
             ('bar', formal.Integer())
             ]).validate([None, None]), None)
+
+    def test_missing(self):
         missing = object()
         self.assertEquals(Composite([('foo',
             formal.String())], missing=missing).validate([None]), missing)
@@ -171,11 +174,11 @@ class TestComposite(unittest.TestCase):
     def test_notrequired_required(self):
         self.assertEquals(Composite([
             ('foo', formal.String(required=True))
-            ]).validate([u'foo']), [u'foo'])
+            ]).validate([u'foo']), {'foo': u'foo'})
         self.assertEquals(Composite([
             ('foo', formal.String(required=True)),
             ('bar', formal.Integer(required=True))
-            ]).validate([u'foo', 123]), [u'foo', 123])
+            ]).validate([u'foo', 123]), {'foo': u'foo', 'bar': 123})
         self.assertEquals(Composite([
             ('foo', formal.String(required=True))
             ]).validate([None]), None)
@@ -188,7 +191,7 @@ class TestComposite(unittest.TestCase):
         self.assertEquals(Composite([
             ('foo', formal.String(required=True)),
             ('bar', formal.Integer())
-            ]).validate([u'foo', None]), [u'foo', None])
+            ]).validate([u'foo', None]), {'foo': u'foo', 'bar': None})
         self.assertEquals(Composite([
             ('foo', formal.String(required=True)),
             ('bar', formal.Integer())
@@ -201,15 +204,15 @@ class TestComposite(unittest.TestCase):
     def test_required(self):
         self.assertEquals(Composite([
             ('foo', formal.String())
-            ], required=True).validate([u'foo']), [u'foo'])
+            ], required=True).validate([u'foo']), {'foo': u'foo'})
         self.assertEquals(Composite([
             ('foo', formal.String()),
             ('bar', formal.Integer())
-            ], required=True).validate([u'foo', None]), [u'foo', None])
+            ], required=True).validate([u'foo', None]), {'foo': u'foo', 'bar': None})
         self.assertEquals(Composite([
             ('foo', formal.String()),
             ('bar', formal.Integer())
-            ], required=True).validate([None, 123]), [None, 123])
+            ], required=True).validate([None, 123]), {'foo': None, 'bar': 123})
         self.assertRaises(formal.FieldRequiredError, Composite([
             ('foo', formal.String())
             ], required=True).validate, [None])
@@ -222,11 +225,11 @@ class TestComposite(unittest.TestCase):
         self.assertEquals(Composite([
             ('foo', formal.String(required=True)),
             ('bar', formal.Integer())
-            ], required=True).validate([u'foo', None]), [u'foo', None])
+            ], required=True).validate([u'foo', None]), {'foo': u'foo', 'bar': None})
         self.assertEquals(Composite([
             ('foo', formal.String(required=True)),
             ('bar', formal.Integer())
-            ], required=True).validate([u'foo', 123]), [u'foo', 123])
+            ], required=True).validate([u'foo', 123]), {'foo': u'foo', 'bar': 123})
         self.assertRaises(formal.FieldRequiredError, Composite([
             ('foo', formal.String(required=True)),
             ('bar', formal.Integer())
