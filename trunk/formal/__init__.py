@@ -3,7 +3,7 @@ HTML forms.
 """
 
 
-version_info = (0, 8, 2)
+version_info = (0, 9, 0)
 version = '.'.join([str(i) for i in version_info])
 
 
@@ -13,7 +13,7 @@ from formal.validation import *
 from formal.widget import *
 from formal.widgets.restwidget import *
 from formal.widgets.multiselect import *
-from formal.form import Form, ResourceMixin, renderForm
+from formal.form import Form, Field, Group, ResourceMixin, renderForm
 from formal import iformal
 
 def widgetFactory(widgetClass, *a, **k):

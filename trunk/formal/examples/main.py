@@ -13,6 +13,7 @@ examples = [
     'formal.examples.required.RequiredFormPage',
     'formal.examples.missing.MissingFormPage',
     'formal.examples.prepopulate.PrepopulateFormPage',
+    'formal.examples.group.GroupFormPage',
     'formal.examples.fileupload.FileUploadFormPage',
     'formal.examples.smartupload.SmartUploadFormPage',
     'formal.examples.selections.SelectionFormPage',
@@ -21,6 +22,7 @@ examples = [
     'formal.examples.validator.ValidatorFormPage',
     'formal.examples.restwidget.ReSTWidgetFormPage',
     'formal.examples.nofields.NoFieldsFormPage',
+    'formal.examples.hidden.HiddenFieldsFormPage',
     ]
 
 def makeSite(application):

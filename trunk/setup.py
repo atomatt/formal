@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='formal',
-    version='0.8.2',
+    version='0.9',
     description='HTML forms framework for Nevow',
     author='Matt Goodall',
     author_email='matt@pollenation.net',

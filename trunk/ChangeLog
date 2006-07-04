@@ -1,3 +1,31 @@
+2006-07-04  Matt Goodall <matt@pollenation.net>
+
+	Added groups of fields. A Group of Fields can now be added to a Form using
+	the Form.add() method. Fields are added to the Group using the Group.add()
+	method. A Group can also be added to another Group using Group.add()
+	
+	A Group is reresented by a <fieldset> element and it completely contains
+	its Fields. A Group currently performs to validation of its own.
+
+	Each Group is named, just like a Field, and the name must be unique within
+	the context of the object it is added to (i.e. a Group of Form). The
+	effect of the Group's name is that an extra "segment" is added to the Form
+	data's dict keys to provide the namespace for Fields in a Group.
+	
+	For instance, if a Field, 'bar', is added to a Group, 'foo', and that
+	Group is then added to a Form the field's data key is 'foo.bar'.
+
+	This change introduces a new Form.add() method. It is intended to replace
+	Form.addField() although that method still exists. All Form.addField(...)
+	now does is forward the call to Form.add(formal.Field(...)).
+	Form.addField() will probably be deprecated sometime.
+
+	I may have slighty broken the default (and your) stylesheet with this
+	change because I had been using a <fieldset> immediately inside the <form>
+	element. That turns out to be unnecessary (any block element will do) so I
+	decided to use a <fieldset> only for Groups to keep the <fieldset> nesting
+	as shallow as possible.
+
 2005-12-21  Damian Staniforth <damian@pollenation.net>
 
 	Added a ReSTTextArea widget. The widget accepts ReST-format input and
