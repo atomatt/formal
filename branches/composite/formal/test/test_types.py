@@ -251,3 +251,10 @@ class TestComposite(unittest.TestCase):
             ('foo', formal.String(required=True)),
             ('bar', formal.Integer(required=True))
             ], required=True).validate, [u'foo', None])
+
+    def test_wrongNumberOfValues(self):
+        self.assertRaises(ValueError, Composite([
+            ('foo', formal.Integer()),
+            ('bar', formal.String()),
+            ]).validate, [123])
+
