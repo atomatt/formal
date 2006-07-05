@@ -126,134 +126,132 @@ class TestValidate(unittest.TestCase):
 
 
 
-from formal.examples.composite import Composite
-
 class TestComposite(unittest.TestCase):
 
     def test_one(self):
-        self.assertEquals(Composite([
+        self.assertEquals(formal.Composite([
             ('foo', formal.String())
             ]).validate([u'bar']), {'foo': u'bar'})
-        self.assertEquals(Composite([
+        self.assertEquals(formal.Composite([
             ('foo', formal.Integer())
             ]).validate([123]), {'foo': 123})
 
     def test_multisame(self):
-        self.assertEquals(Composite([
+        self.assertEquals(formal.Composite([
             ('foo', formal.String()),
             ('bar', formal.String())
             ]).validate([u'foo', u'bar']), {'foo': u'foo', 'bar': u'bar'})
-        self.assertEquals(Composite([
+        self.assertEquals(formal.Composite([
             ('foo', formal.Integer()),
             ('bar', formal.Integer()),
             ]).validate([123, 456]), {'foo': 123, 'bar': 456})
 
     def test_multidiff(self):
-        self.assertEquals(Composite([
+        self.assertEquals(formal.Composite([
             ('foo', formal.String()),
             ('bar', formal.Integer())
             ]).validate([u'foo', 123]), {'foo': u'foo', 'bar': 123})
-        self.assertEquals(Composite([
+        self.assertEquals(formal.Composite([
             ('foo', formal.String()),
             ('bar', formal.Integer())
             ]).validate([u'foo', None]), {'foo': u'foo', 'bar': None})
 
     def test_none(self):
-        self.assertEquals(Composite([('foo',
+        self.assertEquals(formal.Composite([('foo',
             formal.String())]).validate([None]), None)
-        self.assertEquals(Composite([
+        self.assertEquals(formal.Composite([
             ('foo', formal.String()),
             ('bar', formal.Integer())
             ]).validate([None, None]), None)
 
     def test_missing(self):
         missing = object()
-        self.assertEquals(Composite([('foo',
+        self.assertEquals(formal.Composite([('foo',
             formal.String())], missing=missing).validate([None]), missing)
 
     def test_notrequired_required(self):
-        self.assertEquals(Composite([
+        self.assertEquals(formal.Composite([
             ('foo', formal.String(required=True))
             ]).validate([u'foo']), {'foo': u'foo'})
-        self.assertEquals(Composite([
+        self.assertEquals(formal.Composite([
             ('foo', formal.String(required=True)),
             ('bar', formal.Integer(required=True))
             ]).validate([u'foo', 123]), {'foo': u'foo', 'bar': 123})
-        self.assertEquals(Composite([
+        self.assertEquals(formal.Composite([
             ('foo', formal.String(required=True))
             ]).validate([None]), None)
-        self.assertEquals(Composite([
+        self.assertEquals(formal.Composite([
             ('foo', formal.String(required=True)),
             ('bar', formal.Integer(required=True))
             ]).validate([None, None]), None)
 
     def test_notrequired_onerequired(self):
-        self.assertEquals(Composite([
+        self.assertEquals(formal.Composite([
             ('foo', formal.String(required=True)),
             ('bar', formal.Integer())
             ]).validate([u'foo', None]), {'foo': u'foo', 'bar': None})
-        self.assertEquals(Composite([
+        self.assertEquals(formal.Composite([
             ('foo', formal.String(required=True)),
             ('bar', formal.Integer())
             ]).validate([None, None]), None)
-        self.assertRaises(formal.FieldValidationError, Composite([
+        self.assertRaises(formal.FieldValidationError, formal.Composite([
             ('foo', formal.String(required=True)),
             ('bar', formal.Integer())
             ]).validate, [None, 123])
 
     def test_required(self):
-        self.assertEquals(Composite([
+        self.assertEquals(formal.Composite([
             ('foo', formal.String())
             ], required=True).validate([u'foo']), {'foo': u'foo'})
-        self.assertEquals(Composite([
+        self.assertEquals(formal.Composite([
             ('foo', formal.String()),
             ('bar', formal.Integer())
             ], required=True).validate([u'foo', None]), {'foo': u'foo', 'bar': None})
-        self.assertEquals(Composite([
+        self.assertEquals(formal.Composite([
             ('foo', formal.String()),
             ('bar', formal.Integer())
             ], required=True).validate([None, 123]), {'foo': None, 'bar': 123})
-        self.assertRaises(formal.FieldRequiredError, Composite([
+        self.assertRaises(formal.FieldRequiredError, formal.Composite([
             ('foo', formal.String())
             ], required=True).validate, [None])
-        self.assertRaises(formal.FieldRequiredError, Composite([
+        self.assertRaises(formal.FieldRequiredError, formal.Composite([
             ('foo', formal.String()),
             ('bar', formal.Integer())
             ], required=True).validate, [None, None])
 
     def test_required_onerequired(self):
-        self.assertEquals(Composite([
+        self.assertEquals(formal.Composite([
             ('foo', formal.String(required=True)),
             ('bar', formal.Integer())
             ], required=True).validate([u'foo', None]), {'foo': u'foo', 'bar': None})
-        self.assertEquals(Composite([
+        self.assertEquals(formal.Composite([
             ('foo', formal.String(required=True)),
             ('bar', formal.Integer())
             ], required=True).validate([u'foo', 123]), {'foo': u'foo', 'bar': 123})
-        self.assertRaises(formal.FieldRequiredError, Composite([
+        self.assertRaises(formal.FieldRequiredError, formal.Composite([
             ('foo', formal.String(required=True)),
             ('bar', formal.Integer())
             ], required=True).validate, [None, None])
-        self.assertRaises(formal.FieldRequiredError, Composite([
+        self.assertRaises(formal.FieldRequiredError, formal.Composite([
             ('foo', formal.String(required=True)),
             ('bar', formal.Integer())
             ], required=True).validate, [None, 123])
 
     def test_required_allrequired(self):
-        self.assertRaises(formal.FieldRequiredError, Composite([
+        self.assertRaises(formal.FieldRequiredError, formal.Composite([
             ('foo', formal.String(required=True))
             ], required=True).validate, [None])
-        self.assertRaises(formal.FieldRequiredError, Composite([
+        self.assertRaises(formal.FieldRequiredError, formal.Composite([
             ('foo', formal.String(required=True)),
             ('bar', formal.Integer(required=True))
             ], required=True).validate, [None, None])
-        self.assertRaises(formal.FieldRequiredError, Composite([
+        self.assertRaises(formal.FieldRequiredError, formal.Composite([
             ('foo', formal.String(required=True)),
             ('bar', formal.Integer(required=True))
             ], required=True).validate, [u'foo', None])
 
     def test_wrongNumberOfValues(self):
-        self.assertRaises(ValueError, Composite([
+        self.assertRaises(ValueError, formal.Composite([
             ('foo', formal.Integer()),
             ('bar', formal.String()),
             ]).validate, [123])
