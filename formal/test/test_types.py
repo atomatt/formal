@@ -164,6 +164,12 @@ class TestComposite(unittest.TestCase):
             ('bar', formal.Integer())
             ]).validate([None, None]), None)
 
+    def test_falseButNotNoneValues(self):
+        self.assertEquals(formal.Composite([
+            ('foo', formal.Integer()),
+            ('bar', formal.Integer())
+            ]).validate([0, 0]), {'foo': 0, 'bar': 0})
+
     def test_missing(self):
         missing = object()
         self.assertEquals(formal.Composite([('foo',
