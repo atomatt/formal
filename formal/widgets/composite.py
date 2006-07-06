@@ -26,8 +26,16 @@ class CompositeWidget(object):
 
 
     def render(self, ctx, key, args, errors):
+
+        if not errors:
+            value = args.get(key) or {}
+        else:
+            value = None
+
         for name, type in self.composite.composition:
             childKey = '.'.join([key, name])
+            if value is not None:
+                args = {childKey: value.get(name)}
             yield T.div(class_=('composite-component', ' ', name))[
                 T.label(for_=formal.util.render_cssid(childKey))[
                     formal.util.titleFromName(name)

@@ -35,6 +35,10 @@ class CompositeFormPage(main.FormExamplePage):
         # Add the submit action
         form.addAction(self.submitted)
 
+        form.data = {
+            'temperature': {'temperature': 28, 'units': 'oC'},
+        }
+
         return form
 
     def submitted(self, ctx, form, data):
