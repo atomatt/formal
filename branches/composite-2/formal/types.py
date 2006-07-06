@@ -152,7 +152,7 @@ class Composite(Type):
         # instances, in which case my value if None (not a sequence). If there
         # is anything other than None in the sequence then pass validation on to
         # the composite types.
-        if not filter(None, value):
+        if not len([i for i in value if i is not None]):
             value = None
         else:
             value = dict([
