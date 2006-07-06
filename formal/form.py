@@ -71,6 +71,21 @@ class Action(object):
 
 
 
+def itemKey(item):
+    """
+    Build the form item's key from the the item's name and the name of all
+    ancestors.
+    """
+    parts = [item.name]
+    parent = item.itemParent
+    while parent is not None:
+        parts.append(parent.name)
+        parent = parent.itemParent
+    parts.reverse()
+    return '.'.join(parts)
+
+
+
 class Field(object):
 
 
@@ -97,17 +112,7 @@ class Field(object):
         self.itemParent = itemParent
 
 
-    def _getKey(self):
-        parts = [self.name]
-        parent = self.itemParent
-        while parent is not None:
-            parts.append(parent.name)
-            parent = parent.itemParent
-        parts.reverse()
-        return '.'.join(parts)
-
-
-    key = property(_getKey)
+    key = property(lambda self: itemKey(self))
 
 
     def makeWidget(self):
@@ -239,6 +244,9 @@ class Group(object):
         self.getItemByName = self.items.getItemByName
 
 
+    key = property(lambda self: itemKey(self))
+
+
     def setItemParent(self, itemParent):
         self.itemParent = itemParent
 
@@ -268,7 +276,7 @@ class GroupFragment(rend.Fragment):
 
     def render_group(self, ctx, data):
         group = self.group
-        ctx.tag.fillSlots('id', util.render_cssid(group.name))
+        ctx.tag.fillSlots('id', util.render_cssid(group.key))
         ctx.tag.fillSlots('label', group.label)
         ctx.tag.fillSlots('description', group.description or '')
         ctx.tag.fillSlots('items', [inevow.IRenderer(item) for item in
