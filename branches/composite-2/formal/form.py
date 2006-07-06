@@ -127,9 +127,11 @@ class Field(object):
             args[self.key] = form.data.get(self.key)
             return
 
-        # Process the input using the widget, storing the data back on the form.
+        # Process and the input using the widget, validate the value, and store
+        # the data back on the form. Either of these can raise a FieldError.
         try:
-            form.data[self.key] = self.makeWidget().processInput(ctx, self.key, args)
+            processed = self.makeWidget().processInput(ctx, self.key, args)
+            form.data[self.key] = self.type.validate(processed)
         except validation.FieldError, e:
             if e.fieldName is None:
                 e.fieldName = self.key

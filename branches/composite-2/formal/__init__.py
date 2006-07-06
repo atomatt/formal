@@ -11,6 +11,7 @@ from nevow import static
 from formal.types import *
 from formal.validation import *
 from formal.widget import *
+from formal.widgets.composite import *
 from formal.widgets.restwidget import *
 from formal.widgets.multiselect import *
 from formal.form import Form, Field, Group, ResourceMixin, renderForm
@@ -44,6 +45,7 @@ registerAdapter(Checkbox, Boolean, iformal.IWidget)
 registerAdapter(DatePartsInput, Date, iformal.IWidget)
 registerAdapter(TextInput, Time, iformal.IWidget)
 registerAdapter(FileUploadRaw, File, iformal.IWidget)
+registerAdapter(CompositeWidget, Composite, iformal.IWidget)
 registerAdapter(SequenceKeyLabelAdapter, tuple, iformal.IKey)
 registerAdapter(SequenceKeyLabelAdapter, tuple, iformal.ILabel)
 registerAdapter(converters.NullConverter, String, iformal.IStringConvertible)

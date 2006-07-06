@@ -23,6 +23,7 @@ examples = [
     'formal.examples.restwidget.ReSTWidgetFormPage',
     'formal.examples.nofields.NoFieldsFormPage',
     'formal.examples.hidden.HiddenFieldsFormPage',
+    'formal.examples.composite.CompositeFormPage',
     ]
 
 def makeSite(application):
