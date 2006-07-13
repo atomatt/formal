@@ -234,12 +234,13 @@ class Group(object):
     itemParent = None
 
 
-    def __init__(self, name, label=None, description=None):
+    def __init__(self, name, label=None, description=None, cssClass=None):
         if label is None:
             label = util.titleFromName(name)
         self.name = name
         self.label = label
         self.description = description
+        self.cssClass = cssClass
         self.items = FormItems(self)
         # Forward to FormItems methods
         self.add = self.items.add
@@ -263,7 +264,8 @@ class GroupFragment(rend.Fragment):
 
 
     docFactory = loaders.stan(
-            T.fieldset(id=T.slot('id'), render=T.directive('group'))[
+            T.fieldset(id=T.slot('id'), class_=T.slot('cssClass'),
+                    render=T.directive('group'))[
                 T.legend[T.slot('label')],
                 T.div(class_='description')[T.slot('description')],
                 T.slot('items'),
@@ -277,8 +279,19 @@ class GroupFragment(rend.Fragment):
 
 
     def render_group(self, ctx, data):
+
+        # Get a reference to the group, for simpler code.
         group = self.group
+
+        # Build the CSS class string
+        cssClass = ['group']
+        if group.cssClass is not None:
+            cssClass.append(group.cssClass)
+        cssClass = ' '.join(cssClass)
+
+        # Fill the slots
         ctx.tag.fillSlots('id', util.render_cssid(group.key))
+        ctx.tag.fillSlots('cssClass', cssClass)
         ctx.tag.fillSlots('label', group.label)
         ctx.tag.fillSlots('description', group.description or '')
         ctx.tag.fillSlots('items', [inevow.IRenderer(item) for item in
