@@ -1,3 +1,8 @@
+2006-07-13  Matt Goodall <matt@pollenation.net>
+
+	Allow an application-specific CSS class to be assigned to a Group. The
+	class is included on the root element of the group.
+
 2006-07-04  Matt Goodall <matt@pollenation.net>
 
 	Added groups of fields. A Group of Fields can now be added to a Form using

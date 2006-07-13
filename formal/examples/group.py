@@ -16,7 +16,7 @@ class GroupFormPage(main.FormExamplePage):
             return address
 
         def makePersonGroup(name):
-            person = formal.Group(name)
+            person = formal.Group(name, cssClass=name)
             person.add(formal.Field('name', formal.String(required=True)))
             person.add(formal.Field('dateOfBirth', formal.Date(required=True)))
             person.add(makeAddressGroup('address'))
