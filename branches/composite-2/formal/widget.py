@@ -384,6 +384,8 @@ class RadioChoice(ChoiceBase):
             tag = T.input(name=key, type='radio', id=cssid, value=itemKey)
             if selected:
                 tag = tag(checked='checked')
+            if disabled:
+                tag = tag(disabled='disabled')
             return tag, ' ', T.label(for_=cssid)[itemLabel], T.br
 
         def renderOptions(ctx, data):
