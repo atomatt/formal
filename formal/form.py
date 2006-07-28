@@ -350,8 +350,21 @@ class Form(object):
                     callback, validate = action.callback, action.validate
                     break
 
+        # IE does not send a button name in the POST args for forms containing
+        # a single field when the user presses <enter> to submit the form. If
+        # we only have one possible action then we can safely assume that's the
+        # action to take.
+        #
+        # If there are 0 or 2+ actions then we can't assume anything because we
+        # have no idea what order the buttons are on the page (someone might
+        # have altered the DOM using JavaScript for instance). In that case
+        # throw an error and make it a problem for the developer.
         if callback is None:
-            raise Exception('The form has no callback and no action was found.')
+            if self.actions is None or len(self.actions) != 1:
+                raise Exception('The form has no callback and no action was found.')
+            else:
+                callback, validate = self.actions[0].callback, \
+                        self.actions[0].validate
 
         # Store an errors object in the context
         errors = FormErrors(self.name)
