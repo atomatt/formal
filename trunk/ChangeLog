@@ -1,3 +1,9 @@
+2006-07-28  Matt Goodall <matt@pollenation.net>
+
+	Added a workaround for the case where an IE user submits a form with a
+	single field by pressing <enter>. Formal now automatically chooses which
+	action to take when it can safely do so.
+
 2006-07-13  Matt Goodall <matt@pollenation.net>
 
 	Allow an application-specific CSS class to be assigned to a Group. The
