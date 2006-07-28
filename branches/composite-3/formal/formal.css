@@ -18,6 +18,10 @@
   width: 100px;
 }
 
+.nevow-form .composite .inputs div {
+  margin-bottom: 0.25em;
+}
+
 .nevow-form .inputs {
   margin-left: 110px;
 }
@@ -26,6 +30,12 @@
   font-style: italic;
   font-weight: bold;
   color: #555;
+}
+
+.nevow-form .composite .inputs label {
+  font-style: normal;
+  font-weight: normal;
+  color: #222;
 }
 
 .nevow-form .error label {
