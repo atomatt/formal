@@ -7,8 +7,6 @@ setup(
     author='Matt Goodall',
     author_email='matt@pollenation.net',
     packages=find_packages(),
-    package_data={
-        '': ['*.css', '*.html', '*.js'],
-        },
+    include_package_data=True,
     zip_safe = True,
     )
