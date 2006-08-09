@@ -26,32 +26,11 @@ class CompositeWidget(object):
 
 
     def render(self, ctx, key, args, errors):
-
-        if not errors:
-            value = args.get(key) or {}
-        else:
-            value = None
-
-        for name, type in self.composite.composition:
-            childKey = '.'.join([key, name])
-            if value is not None:
-                args = {childKey: value.get(name)}
-            yield T.div(class_=('composite-component', ' ', name))[
-                T.label(for_=formal.util.render_cssid(childKey))[
-                    formal.util.titleFromName(name)
-                    ],
-                formal.iformal.IWidget(type).render(ctx, childKey, args, errors)
-                ]
+        return self._render(ctx, key, args, errors, False)
 
 
     def renderImmutable(self, ctx, key, args, errors):
-        for name, type in self.composite.composition:
-            childKey = '.'.join([key, name])
-            yield T.div(class_=name)[
-                T.label[formal.util.titleFromName(name)],
-                formal.iformal.IWidget(type).renderImmutable(ctx, childKey,
-                        args, errors)
-                ]
+        return self._render(ctx, key, args, errors, True)
 
 
     def processInput(self, ctx, key, args):
@@ -61,3 +40,30 @@ class CompositeWidget(object):
             value.append(formal.iformal.IWidget(type).processInput(ctx,
                 childKey, args))
         return tuple(value)
+
+
+    def _render(self, ctx, key, args, errors, immutable):
+
+        if not errors:
+            value = args.get(key) or {}
+        else:
+            value = None
+
+        for name, type in self.composite.composition:
+
+            childKey = '.'.join([key, name])
+            if value is not None:
+                args = {childKey: value.get(name)}
+
+            widget = formal.iformal.IWidget(type)
+            if immutable:
+                widgetRenderer = widget.renderImmutable
+            else:
+                widgetRenderer = widget.render
+
+            yield T.div(class_=('composite-component', ' ', name))[
+                T.label(for_=formal.util.render_cssid(childKey))[
+                    formal.util.titleFromName(name)
+                    ],
+                widgetRenderer(ctx, childKey, args, errors)
+                ]
