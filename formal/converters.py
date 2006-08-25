@@ -175,3 +175,32 @@ class DateToDateTupleConverter(_Adapter):
             raise validation.FieldValidationError('Invalid date: '+str(e))
         return value
         
+
+
+class SequenceToStringConverter(_Adapter):
+    implements( iformal.IStringConvertible)
+    
+    def fromType(self, value):
+        if value is None:
+            return None
+        import cStringIO as StringIO
+        import csv
+
+        sf = StringIO.StringIO()
+        writer = csv.writer(sf)
+        writer.writerow(value)
+        sf.seek(0,0)
+        return sf.read().strip()
+        
+    
+    def toType(self, value):
+        if not value:
+            return None
+        import cStringIO as StringIO
+        import csv
+    
+        sf = StringIO.StringIO()
+        csvReader = csv.reader(sf)
+        sf.write(value)
+        sf.seek(0,0)
+        return csvReader.next()    
