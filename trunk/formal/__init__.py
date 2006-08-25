@@ -55,7 +55,7 @@ registerAdapter(converters.FloatToStringConverter, Float, iformal.IStringConvert
 registerAdapter(converters.DateToStringConverter, Date, iformal.IStringConvertible)
 registerAdapter(converters.TimeToStringConverter, Time, iformal.IStringConvertible)
 registerAdapter(converters.NullConverter, File, iformal.IFileConvertible)
-registerAdapter(converters.NullConverter, Sequence, iformal.ISequenceConvertible)
+registerAdapter(converters.SequenceToStringConverter, Sequence, iformal.IStringConvertible)
 try:
     Decimal
 except NameError:

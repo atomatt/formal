@@ -16,6 +16,12 @@ dates = [
     (date(2005, 12, 25), 'Christmas Day'),
     ]
 
+tuples = [
+         (('a',1), 'a1'),
+         (('b',1), 'b1'),
+         (('c',1), 'c1'),
+         ]
+        
 def data_strings(ctx, data):
     # Let's defer it, just for fun.
     return defer.succeed(strings)
@@ -44,6 +50,11 @@ class SelectionFormPage(main.FormExamplePage):
                     options=data_strings))
         form.addField('multipleDates', formal.Sequence(formal.Date()),
                 formal.widgetFactory(formal.CheckboxMultiChoice, options=dates))
+
+        form.addField('multipleTuples', formal.Sequence(formal.Sequence()),
+                formal.widgetFactory(formal.CheckboxMultiChoice,
+                    options=tuples))
+        
         form.addField('differentNoneSelect', formal.String(),
                 formal.widgetFactory(formal.SelectChoice, options=strings,
                     noneOption=differentNone))

@@ -140,3 +140,8 @@
 /* Hide from IE Mac \*/
 .nevow-form div.field {display:block;}
 /* End hide from IE Mac */
+
+
+.nevow-form .add {
+  display:block;
+}
