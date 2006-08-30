@@ -199,7 +199,7 @@ class ChoiceBase(object):
         IKey and ILabel adapters for tuple are provided.
     noneOption:
         An object adaptable to IKey and ILabel that is used to identify when
-        nothing has been selected. Defaults to ('', '')
+        nothing has been selected.
     """
 
     options = None
@@ -215,7 +215,8 @@ class ChoiceBase(object):
     def processInput(self, ctx, key, args):
         value = args.get(key, [''])[0]
         value = iformal.IStringConvertible(self.original).toType(value)
-        if self.noneOption is not None and value == self.noneOption[0]:
+        if self.noneOption is not None and \
+                value == iformal.IKey(self.noneOption).key():
             value = None
         return self.original.validate(value)
 
@@ -366,7 +367,7 @@ class SelectOtherChoice(object):
     def processInput(self, ctx, key, args):
         value = self._valueFromRequestArgs(key, args)
         value = iformal.IStringConvertible(self.original).toType(value)
-        if self.noneOption is not None and value == self.noneOption[0]:
+        if self.noneOption is not None and value == iformal.IKey(self.noneOption).key():
             value = None
         return self.original.validate(value)
 
