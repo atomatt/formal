@@ -798,11 +798,12 @@ class FileUploadWidget(object):
             return '%s__%s' % (prefix,part)
         return _
 
-    def __init__( self, original, convertibleFactory=None, originalKeyIsURL=False ):
+    def __init__( self, original, convertibleFactory=None, originalKeyIsURL=False, removeable=False ):
         self.original = original
         if convertibleFactory is not None:
             self.convertibleFactory = convertibleFactory
         self.originalKeyIsURL = originalKeyIsURL
+        self.removeable = removeable
 
     def _blankField( self, field ):
         """
@@ -851,10 +852,19 @@ class FileUploadWidget(object):
             originalKey = args.get( key )
         originalKey = self._blankField( originalKey )
 
+        # if we have a removeable attribute, generate the html
+        if self.removeable is True:
+            checkbox = T.input(type='checkbox', name='%s_remove'%key, id=render_cssid('%s_remove'%key),class_='upload-checkbox-remove',value='remove')
+            if args.get('%s_remove'%key, [None])[0] is not None:
+                checkbox = checkbox = checkbox(checked='checked')
+            removeableHtml = T.p[ 'check to remove', checkbox]
+        else:
+            removeableHtml = ''
+            
         if resourceId:
             # Have an uploaded file, so render a URL to the uploaded file
             tmpURL = widgetResourceURL(form.name).child(key).child( self.FROM_RESOURCE_MANAGER ).child(resourceId)
-            yield T.p[T.img(src=tmpURL)]
+            yield [ T.p[T.img(src=tmpURL)],removeableHtml]
         elif originalKey:
             # The is no uploaded file, but there is an original, so render a
             # URL to it
@@ -862,7 +872,7 @@ class FileUploadWidget(object):
                 tmpURL = originalKey
             else:
                 tmpURL = widgetResourceURL(form.name).child(key).child( self.FROM_CONVERTIBLE ).child( originalKey )
-            yield T.p[T.img(src=tmpURL)]
+            yield [ T.p[T.img(src=tmpURL)], removeableHtml ]
         else:
             # No uploaded file, no original
             yield T.p[T.strong['Nothing uploaded']]
@@ -925,6 +935,14 @@ class FileUploadWidget(object):
         # original file meet a required field validation?
         value = resourceManager.getResourceForWidget( key )
         value = self.convertibleFactory(self.original).toType( value )
+        
+        # check to see if we should remove this      
+        if self.removeable is True:
+            remove = args.get('%s_remove'%key, [None])[0]
+            if remove is not None:
+                value = (None,None,None)
+        
+        
         return self.original.validate( value )
 
     def _registerWithResourceManager( self, key, args, resourceManager ):
