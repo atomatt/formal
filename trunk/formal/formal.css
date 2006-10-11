@@ -95,6 +95,10 @@
   height:30px;
 }
 
+.nevow-form .fileuploadwidget input.upload-checkbox-remove {
+  width:auto;
+}
+
 .nevow-form .disabled, .nevow-form .readonly {
   background-color: #FFF;
   color: #777;

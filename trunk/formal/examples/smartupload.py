@@ -10,6 +10,8 @@ class SmartUploadFormPage(main.FormExamplePage):
         form = formal.Form()
         form.addField('required', formal.String(required=True))
         form.addField('file', formal.File(), formal.FileUploadWidget)
+        form.addField('removeableFile', formal.File(), formal.widgetFactory(formal.FileUploadWidget, removeable=True ) )
+                      
         form.addAction(self.submitted)
         return form
     
