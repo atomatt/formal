@@ -1,5 +1,5 @@
 from zope.interface import implements
-from nevow import tags as T
+from nevow import tags as T, util
 from formal import iformal
 from formal.util import render_cssid
 
