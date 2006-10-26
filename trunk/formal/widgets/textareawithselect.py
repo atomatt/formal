@@ -32,9 +32,14 @@ class TextAreaWithSelect(object):
         if self.values is None:
             return html
         
-        selecttrigger = T.select(name='%s__selecttrigger'%key)
-        for value,label in self.values:
-            selecttrigger[ T.option(value=value)[label] ]
+        def renderOptions(ctx,options):
+            for value,label in options:
+                yield T.option(value=value)[label] 
+
+            
+        selecttrigger = T.select(name='%s__selecttrigger'%key, data=self.values)[ renderOptions ]
+
+
             
         form = iformal.IForm( ctx )
         js = T.xml("var x = document.getElementById('%(form)s');x.%(key)s.value += x.%(key)s__selecttrigger.options[x.%(key)s__selecttrigger.options.selectedIndex].value + &quot;\\n&quot;;"%{'key':key,'form':form.name})
