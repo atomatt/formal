@@ -9,6 +9,7 @@ class DatesTimesFormPage(main.FormExamplePage):
     def form_example(self, ctx):
         form = formal.Form()
         form.addField('isoFormatDate', formal.Date(), formal.TextInput)
+        form.addField('datePartsSelect', formal.Date(), formal.widgetFactory(formal.DatePartsSelect, dayFirst=True))
         form.addField('monthFirstDate', formal.Date(), formal.DatePartsInput)
         form.addField('dayFirstDate', formal.Date(), formal.widgetFactory(formal.DatePartsInput, dayFirst=True))
         form.addField('monthYearDate', formal.Date(), formal.MMYYDatePartsInput)

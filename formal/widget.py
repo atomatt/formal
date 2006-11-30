@@ -423,6 +423,124 @@ class RadioChoice(ChoiceBase):
         return self._renderTag(ctx, key, value, converter, True)
 
 
+class DatePartsSelect(object):
+    """
+    A date entry widget that uses three <input> elements for the day, month and
+    year parts.
+
+    The default entry format is the US (month, day, year) but can be switched to
+    the more common (day, month, year) by setting the dayFirst attribute to
+    True.
+    
+    The start and end year can be passed through but default to 1970 and 2070.
+    
+    The months default to non-zero prefixed numerics but can be passed as a list
+    of label, value pairs
+    """    
+    implements( iformal.IWidget )
+
+    dayFirst = False
+    days = [ (d,d) for d in xrange(1,32) ]
+    months = [ (m,m) for m in xrange(1,13) ]
+    yearFrom = 1970
+    yearTo = 2070
+
+    def __init__(self, original, dayFirst=None, yearFrom=None, yearTo=None, months=None):
+        self.original = original
+        if dayFirst is not None:
+            self.dayFirst = dayFirst
+        if yearFrom is not None:
+            self.yearFrom = yearFrom
+        if yearTo is not None:
+            self.yearTo = yearTo
+        if months is not None:
+            self.months = months
+
+    def _namer(self, prefix):
+        def _(part):
+            return '%s__%s' % (prefix,part)
+        return _
+
+    def _renderTag(self, ctx, year, month, day, namer, readonly):
+        years = [(v,v) for v in xrange(self.yearFrom,self.yearTo)]
+        months = self.months
+        days = self.days
+
+        options = []
+        for value in years:
+            if str(value[0]) == year:
+                options.append( T.option(value=value[0],selected='selected')[value[1]] )
+            else:
+                options.append( T.option(value=value[0])[value[1]] )
+        yearTag = T.select(name=namer('year'))[ options ]
+        
+        options = []
+        for value in months:
+            if str(value[0]) == month:
+                options.append( T.option(value=value[0],selected='selected')[value[1]] )
+            else:
+                options.append( T.option(value=value[0])[value[1]] )
+        monthTag = T.select(name=namer('month'))[ options ]
+        
+        
+        options = []
+        for value in days:
+            if str(value[0]) == day:
+                options.append( T.option(value=value[0],selected='selected')[value[1]] )
+            else:
+                options.append( T.option(value=value[0])[value[1]] )
+        dayTag = T.select(name=namer('day'))[ options ]
+        
+        if readonly:
+            tags = (yearTag, monthTag, dayTag)
+            for tag in tags:
+                tag(class_='readonly', readonly='readonly')
+
+        if self.dayFirst:
+            return dayTag, ' / ', monthTag, ' / ', yearTag, ' ', _('(day/month/year)')
+        else:
+            return monthTag, ' / ', dayTag, ' / ', yearTag, ' ', _('(month/day/year)')
+
+    def render(self, ctx, key, args, errors):
+        converter = iformal.IDateTupleConvertible(self.original)
+        namer = self._namer(key)
+        if errors:
+            year = args.get(namer('year'), [''])[0]
+            month = args.get(namer('month'), [''])[0]
+            day = args.get(namer('day'), [''])[0]
+        else:
+            year, month, day = converter.fromType(args.get(key))
+
+        return self._renderTag(ctx, year, month, day, namer, False)
+
+    def renderImmutable(self, ctx, key, args, errors):
+        converter = iformal.IDateTupleConvertible(self.original)
+        namer = self._namer(key)
+        year, month, day = converter.fromType(args.get(key))
+        return self._renderTag(ctx, year, month, day, namer, True)
+
+    def processInput(self, ctx, key, args):
+        namer = self._namer(key)
+        # Get the form field values as a (y,m,d) tuple
+        ymd = [args.get(namer(part), [''])[0].strip() for part in ('year', 'month', 'day')]
+        # Remove parts that were not entered.
+        ymd = [p for p in ymd if p]
+        # Nothing entered means None otherwise we need all three.
+        if not ymd:
+            ymd = None
+        elif len(ymd) != 3:
+            raise validation.FieldValidationError("Invalid date")
+        # So, we have what looks like a good attempt to enter a date.
+        if ymd is not None:
+            # Map to integers
+            try:
+                ymd = [int(p) for p in ymd]
+            except ValueError, e:
+                raise validation.FieldValidationError("Invalid date")
+        ymd = iformal.IDateTupleConvertible(self.original).toType(ymd)
+        return self.original.validate(ymd)
+    
+    
 class DatePartsInput(object):
     """
     A date entry widget that uses three <input> elements for the day, month and
@@ -1019,7 +1137,7 @@ class Hidden(object):
 __all__ = [
     'Checkbox', 'CheckboxMultiChoice', 'CheckedPassword', 'FileUploadRaw',
     'Password', 'SelectChoice', 'TextArea', 'TextInput', 'DatePartsInput',
-    'MMYYDatePartsInput', 'Hidden', 'RadioChoice', 'SelectOtherChoice',
-    'FileUpload', 'FileUploadWidget',
+    'DatePartsSelect', 'MMYYDatePartsInput', 'Hidden', 'RadioChoice',
+    'SelectOtherChoice', 'FileUpload', 'FileUploadWidget',
     ]
 
