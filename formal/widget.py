@@ -468,7 +468,7 @@ class DatePartsSelect(object):
 
         options = []
         for value in years:
-            if str(value[0]) == year:
+            if value[0] == year:
                 options.append( T.option(value=value[0],selected='selected')[value[1]] )
             else:
                 options.append( T.option(value=value[0])[value[1]] )
@@ -476,7 +476,7 @@ class DatePartsSelect(object):
         
         options = []
         for value in months:
-            if str(value[0]) == month:
+            if value[0] == month:
                 options.append( T.option(value=value[0],selected='selected')[value[1]] )
             else:
                 options.append( T.option(value=value[0])[value[1]] )
@@ -485,7 +485,7 @@ class DatePartsSelect(object):
         
         options = []
         for value in days:
-            if str(value[0]) == day:
+            if value[0] == day:
                 options.append( T.option(value=value[0],selected='selected')[value[1]] )
             else:
                 options.append( T.option(value=value[0])[value[1]] )
