@@ -645,7 +645,7 @@ class FormRenderer(object):
     implements( inevow.IRenderer )
 
     loader = loaders.stan(
-            T.form(**{'id': T.slot('formId'), 'action': T.slot('formAction'),
+            T.form(**{'id': T.slot('formName'), 'action': T.slot('formAction'),
                 'class': 'nevow-form', 'method': 'post', 'enctype':
                 'multipart/form-data', 'accept-charset': 'utf-8'})[
             T.div[
@@ -667,7 +667,6 @@ class FormRenderer(object):
     def rend(self, ctx, data):
         tag = T.invisible[self.loader.load()]
         tag.fillSlots('formName', self.original.name)
-        tag.fillSlots('formId', util.keytocssid(ctx.key))
         tag.fillSlots('formAction', url.here)
         tag.fillSlots('formErrors', self._renderErrors)
         tag.fillSlots('formItems', self._renderItems)
@@ -708,7 +707,7 @@ class FormRenderer(object):
             yield T.invisible(data=action, render=self._renderAction)
 
     def _renderAction(self, ctx, data):
-        return T.input(type='submit', id='%s-action-%s'%(util.keytocssid(ctx.key), data.name), name=data.name, value=data.label)
+        return T.input(type='submit', id='%s-action-%s'%(self.original.name, data.name), name=data.name, value=data.label)
 
 
 registerAdapter(FormRenderer, Form, inevow.IRenderer)
