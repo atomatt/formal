@@ -42,9 +42,6 @@ def render_cssid(fieldKey, *extras):
     return l
 
 
-def keytocssid(key):
-    return '-'.join(key.split('.'))
-
 
 def validIdentifier(name):
     """
