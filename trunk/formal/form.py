@@ -208,14 +208,15 @@ class FieldFragment(rend.Fragment):
             render = widget.render
 
         # Fill the slots
-        ctx.tag.fillSlots('id', util.render_cssid(field.key))
-        ctx.tag.fillSlots('fieldId', [util.render_cssid(field.key), '-field'])
-        ctx.tag.fillSlots('class', ' '.join(classes))
-        ctx.tag.fillSlots('label', field.label)
-        ctx.tag.fillSlots('inputs', render(ctx, field.key, formData,
+        tag = ctx.tag
+        tag.fillSlots('id', util.render_cssid(field.key))
+        tag.fillSlots('fieldId', [util.render_cssid(field.key), '-field'])
+        tag.fillSlots('class', ' '.join(classes))
+        tag.fillSlots('label', field.label)
+        tag.fillSlots('inputs', render(ctx, field.key, formData,
             formErrors))
-        ctx.tag.fillSlots('message', message)
-        ctx.tag.fillSlots('description',
+        tag.fillSlots('message', message)
+        tag.fillSlots('description',
                 T.div(class_='description')[field.description or ''])
 
         return ctx.tag
@@ -288,11 +289,12 @@ class GroupFragment(rend.Fragment):
         cssClass = ' '.join(cssClass)
 
         # Fill the slots
-        ctx.tag.fillSlots('id', util.render_cssid(group.key))
-        ctx.tag.fillSlots('cssClass', cssClass)
-        ctx.tag.fillSlots('label', group.label)
-        ctx.tag.fillSlots('description', group.description or '')
-        ctx.tag.fillSlots('items', [inevow.IRenderer(item) for item in
+        tag = ctx.tag
+        tag.fillSlots('id', util.render_cssid(group.key))
+        tag.fillSlots('cssClass', cssClass)
+        tag.fillSlots('label', group.label)
+        tag.fillSlots('description', group.description or '')
+        tag.fillSlots('items', [inevow.IRenderer(item) for item in
                 group.items])
         return ctx.tag
 
