@@ -19,7 +19,7 @@ WIDGET_RESOURCE_KEY = 'widget_resource'
 
 
 # Backwards compatability/workaround until there's nothing left in Formal or
-# application code that adapts the context to IFormalErrors.
+# application code that adapts the context to IFormErrors.
 def formErrorsFinder(ctx):
     form = iformal.IForm(ctx)
     return form.errors
