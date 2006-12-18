@@ -17,6 +17,17 @@ FORMS_KEY = '__nevow_form__'
 WIDGET_RESOURCE_KEY = 'widget_resource'
 
 
+
+# Backwards compatability/workaround until there's nothing left in Formal or
+# application code that adapts the context to IFormalErrors.
+def formErrorsFinder(ctx):
+    form = iformal.IForm(ctx)
+    return form.errors
+
+registerAdapter(formErrorsFinder, context.WovenContext, iformal.IFormErrors)
+
+
+
 def renderForm(name):
 
     def _(ctx, data):
@@ -34,11 +45,9 @@ def renderForm(name):
             ctx = context.WovenContext(parent=ctx, tag=tag)
 
             # Find errors for *this* form and remember things on the context
-            errors = iformal.IFormErrors(ctx, None)
-            if errors is not None and errors.formName == name:
-                ctx.remember(errors.data, iformal.IFormData)
+            if form.errors:
+                ctx.remember(form.errors.data, iformal.IFormData)
             else:
-                ctx.remember(None, iformal.IFormErrors)
                 ctx.remember(form.data or {}, iformal.IFormData)
 
             return ctx
@@ -317,6 +326,7 @@ class Form(object):
         self.resourceManager = ResourceManager()
         self.data = {}
         self.items = FormItems(None)
+        self.errors = FormErrors()
         # Forward to FormItems methods
         self.add = self.items.add
         self.getItemByName = self.items.getItemByName
@@ -334,12 +344,11 @@ class Form(object):
 
     def process(self, ctx):
 
-        # Get the request args
-        requestArgs = inevow.IRequest(ctx).args
-
-        # Decode the request arg names
+        request = inevow.IRequest(ctx)
         charset = getPOSTCharset(ctx)
-        args = dict([(k.decode(charset),v) for k,v in requestArgs.iteritems()])
+
+        # Get the request args and decode the arg names
+        args = dict([(k.decode(charset),v) for k,v in request.args.items()])
 
         # Find the callback to use, defaulting to the form default
         callback, validate = self.callback, True
@@ -368,20 +377,18 @@ class Form(object):
                 callback, validate = self.actions[0].callback, \
                         self.actions[0].validate
 
-        # Store an errors object in the context
-        errors = FormErrors(self.name)
-        errors.data = args
-        ctx.remember(errors, iformal.IFormErrors)
+        # Remember the args in case validation fails.
+        self.errors.data = args
 
         # Iterate the items and collect the form data and/or errors.
         for item in self.items:
-            item.process(ctx, self, args, errors)
+            item.process(ctx, self, args, self.errors)
 
-        if errors and validate:
-            return errors
+        if self.errors and validate:
+            return self.errors
 
         def _clearUpResources( r ):
-            if not errors:
+            if not self.errors:
                 self.resourceManager.clearUpResources()
             return r
 
@@ -393,9 +400,8 @@ class Form(object):
     def _cbFormProcessingFailed(self, failure, ctx):
         e = failure.value
         failure.trap(validation.FormError, validation.FieldError)
-        errors = iformal.IFormErrors(ctx)
-        errors.add(failure.value)
-        return errors
+        self.errors.add(failure.value)
+        return self.errors
 
 
 
@@ -442,8 +448,7 @@ class FormItems(object):
 class FormErrors(object):
     implements( iformal.IFormErrors )
 
-    def __init__(self, formName):
-        self.formName = formName
+    def __init__(self):
         self.errors = []
 
     def add(self, error):
@@ -676,11 +681,11 @@ class FormRenderer(object):
         return tag
 
     def _renderErrors(self, ctx, data):
-        errors = iformal.IFormErrors(ctx, None)
-        if errors is not None:
-            errors = errors.getFormErrors()
-        if not errors:
+
+        if not self.original.errors:
             return ''
+
+        errors = self.original.errors.getFormErrors()
 
         errorList = T.ul()
         for error in errors:
