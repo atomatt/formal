@@ -1,3 +1,11 @@
+2007-01-19  Matt Goodall <matt@pollenation.net>
+	
+	Made construction of the form more convenient by adding addField and
+	addGroup methods to Form and Group as well as returning the added item.
+
+	I also added the ability to construct a Form in a stan-like way. See the
+	stanstyle example for details.
+
 2006-11-30  Tim Parkin <tim@pollenation.net>
 	
 	Added DatePartsSelect widget and also an example of it's use
