@@ -236,7 +236,22 @@ registerAdapter(FieldFragment, Field, inevow.IRenderer)
 
 
 
-class Group(object):
+class AddHelperMixin(object):
+    """
+    A mixin that provides methods for common uses of add(...).
+    """
+
+    
+    def addGroup(self, *a, **k):
+        return self.add(Group(*a, **k))
+        
+        
+    def addField(self, *a, **k):
+        return self.add(Field(*a, **k))
+
+        
+
+class Group(AddHelperMixin, object):
 
 
     itemParent = None
@@ -256,8 +271,8 @@ class Group(object):
 
 
     key = property(lambda self: itemKey(self))
-
-
+    
+    
     def setItemParent(self, itemParent):
         self.itemParent = itemParent
 
@@ -313,7 +328,7 @@ registerAdapter(GroupFragment, Group, inevow.IRenderer)
 
 
 
-class Form(object):
+class Form(AddHelperMixin, object):
 
     implements( iformal.IForm )
 
@@ -331,9 +346,6 @@ class Form(object):
         self.add = self.items.add
         self.getItemByName = self.items.getItemByName
 
-    def addField(self, name, type, widgetFactory=None, label=None,
-            description=None, cssClass=None):
-        self.add(Field(name, type, widgetFactory, label, description, cssClass))
 
     def addAction(self, callback, name="submit", validate=True, label=None):
         if self.actions is None:
@@ -428,6 +440,7 @@ class FormItems(object):
         # Add to child items and set self the parent
         self.items.append(item)
         item.setItemParent(self.itemParent)
+        return item
 
 
     def getItemByName(self, name):
