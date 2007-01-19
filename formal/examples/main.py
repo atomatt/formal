@@ -14,6 +14,7 @@ examples = [
     'formal.examples.missing.MissingFormPage',
     'formal.examples.prepopulate.PrepopulateFormPage',
     'formal.examples.group.GroupFormPage',
+    'formal.examples.stanstyle.StanStyleFormPage',
     'formal.examples.fileupload.FileUploadFormPage',
     'formal.examples.smartupload.SmartUploadFormPage',
     'formal.examples.selections.SelectionFormPage',
