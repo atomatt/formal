@@ -248,8 +248,24 @@ class AddHelperMixin(object):
         
     def addField(self, *a, **k):
         return self.add(Field(*a, **k))
-
         
+        
+    def __getitem__(self, items):
+        """
+        Overridden to allow stan-style construction of forms.
+        """
+        # Items may be a list or a scalar so stick a scalar into a list
+        # immediately to simplify the code.
+        try:
+            items = iter(items)
+        except TypeError:
+            items = [items]
+        # Add each item
+        for item in items:
+            self.add(item)
+        # Return myself
+        return self
+
 
 class Group(AddHelperMixin, object):
 
