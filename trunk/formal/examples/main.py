@@ -14,6 +14,7 @@ examples = [
     'formal.examples.missing.MissingFormPage',
     'formal.examples.prepopulate.PrepopulateFormPage',
     'formal.examples.group.GroupFormPage',
+    'formal.examples.stanstyle.StanStyleFormPage',
     'formal.examples.fileupload.FileUploadFormPage',
     'formal.examples.smartupload.SmartUploadFormPage',
     'formal.examples.selections.SelectionFormPage',
@@ -26,9 +27,9 @@ examples = [
     'formal.examples.textareawithselect.TextAreaWithSelectFormPage',
     ]
 
-def makeSite(application):
+def makeSite():
     root = RootPage()
-    site = appserver.NevowSite(root, logPath='web.log')
+    site = appserver.NevowSite(root, logPath="web.log")
     return site
 
 class RootPage(rend.Page):
@@ -109,3 +110,20 @@ examples_css = pkg_resources.resource_filename('formal.examples', 'examples.css'
 setattr(RootPage, 'child_examples.css', static.File(examples_css))
 setattr(RootPage, 'child_formal.css', formal.defaultCSS)
 setattr(RootPage, 'child_js', formal.formsJS)
+
+if __name__ == '__main__':
+    
+    import sys
+    from twisted.internet import reactor
+    from twisted.python import log
+    
+    if len(sys.argv) > 1:
+        port = int(sys.argv[1])
+    else:
+        port = 8000
+    
+    log.startLogging(sys.stdout)
+    site = makeSite()
+    reactor.listenTCP(port, site)
+    reactor.run()
+    
