@@ -1,3 +1,8 @@
+2007-02-13  Matt Goodall <matt@pollenation.net>
+
+	Added a TextAreaList widget. The widget is rendered as a <textarea> and
+	splits the entered text into a sequence of values.
+
 2007-01-19  Matt Goodall <matt@pollenation.net>
 	
 	Made construction of the form more convenient by adding addField and
