@@ -145,6 +145,67 @@ class TextArea(object):
         return self.original.validate(value)
 
 
+class TextAreaList(object):
+    """
+    A text area that allows a list of values to be entered, one per line. Any
+    empty lines are discarded.
+    """
+    implements( iformal.IWidget )
+
+    cols = 48
+    rows = 6
+
+    def __init__(self, original, cols=None, rows=None):
+        self.original = original
+        if cols is not None:
+            self.cols = cols
+        if rows is not None:
+            self.rows = rows
+
+    def _renderTag(self, ctx, key, values, readonly):
+        value = '\n'.join(values)
+        tag=T.textarea(name=key, id=render_cssid(key), cols=self.cols, rows=self.rows)[value]
+        if readonly:
+            tag(class_='readonly', readonly='readonly')
+        return tag
+
+    def render(self, ctx, key, args, errors):
+        converter = iformal.IStringConvertible(self.original.type)
+        if errors:
+            values = args.get(key, [])
+        else:
+            values = args.get(key)
+            if values is not None:
+                values = [converter.fromType(v) for v in values]
+            else:
+                values = []
+        return self._renderTag(ctx, key, values, False)
+
+    def renderImmutable(self, ctx, key, args, errors):
+        converter = iformal.IStringConvertible(self.original.type)
+        values = args.get(key)
+        if values is not None:
+            values = [converter.fromType(v) for v in values]
+        else:
+            values = []
+        return self._renderTag(ctx, key, values, True)
+
+    def processInput(self, ctx, key, args):
+        # Get the whole string
+        value = args.get(key, [''])[0].decode(util.getPOSTCharset(ctx))
+        # Split into lines
+        values = value.splitlines()
+        # Strip each line
+        values = [v.strip() for v in values]
+        # Discard empty lines
+        values = [v for v in values if v]
+        # Convert values to correct type
+        converter = iformal.IStringConvertible(self.original.type)
+        values = [converter.toType(v) for v in values]
+        # Validate and return
+        return self.original.validate(values)
+
+
 class CheckedPassword(object):
     """
     Two password entry fields that must contain the same value to validate.
@@ -1138,6 +1199,6 @@ __all__ = [
     'Checkbox', 'CheckboxMultiChoice', 'CheckedPassword', 'FileUploadRaw',
     'Password', 'SelectChoice', 'TextArea', 'TextInput', 'DatePartsInput',
     'DatePartsSelect', 'MMYYDatePartsInput', 'Hidden', 'RadioChoice',
-    'SelectOtherChoice', 'FileUpload', 'FileUploadWidget',
+    'SelectOtherChoice', 'FileUpload', 'FileUploadWidget', 'TextAreaList',
     ]
 
