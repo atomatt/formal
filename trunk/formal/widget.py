@@ -437,8 +437,7 @@ class RadioChoice(ChoiceBase):
     """
     A list of options in the form of radio buttons.
 
-    <input type="radio" ... value="..."/><label>...</label><br />
-    <input type="radio" ... value="..."/><label>...</label><br />
+    <div class="radiobutton"><input type="radio" ... value="..."/><label>...</label></div>
     """
     implements( iformal.IWidget )
 
@@ -451,7 +450,7 @@ class RadioChoice(ChoiceBase):
                 tag = tag(checked='checked')
             if disabled:
                 tag = tag(disabled='disabled')
-            return tag, ' ', T.label(for_=cssid)[itemLabel], T.br
+            return T.div(class_='radiobutton')[ tag, T.label(for_=cssid)[itemLabel] ]
 
         def renderOptions(ctx, data):
             # A counter to assign unique ids to each input
