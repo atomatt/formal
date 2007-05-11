@@ -238,7 +238,8 @@ class CheckedPassword(object):
         ]
 
     def processInput(self, ctx, key, args):
-        pwds = [pwd for pwd in args.get(key, [])]
+        charset = util.getPOSTCharset(ctx)
+        pwds = [pwd.decode(charset) for pwd in args.get(key, [])]
         if len(pwds) == 0:
             pwd = ''
         elif len(pwds) == 1:
@@ -274,7 +275,8 @@ class ChoiceBase(object):
             self.noneOption = noneOption
 
     def processInput(self, ctx, key, args):
-        value = args.get(key, [''])[0]
+        charset = util.getPOSTCharset(ctx)
+        value = args.get(key, [''])[0].decode(charset)
         value = iformal.IStringConvertible(self.original).toType(value)
         if self.noneOption is not None and \
                 value == iformal.IKey(self.noneOption).key():
@@ -361,17 +363,19 @@ class SelectOtherChoice(object):
                 'html/SelectOtherChoice.html'))
 
 
-    def _valueFromRequestArgs(self, key, args):
-        value = args.get(key, [''])[0]
+    def _valueFromRequestArgs(self, charset, key, args):
+        value = args.get(key, [''])[0].decode(charset)
         if value == self.otherOption[0]:
-            value = args.get(key+'-other', [''])[0]
+            value = args.get(key+'-other', [''])[0].decode(charset)
         return value
 
     def render(self, ctx, key, args, errors):
 
+        charset = util.getPOSTCharset(ctx)
         converter = iformal.IStringConvertible(self.original)
+
         if errors:
-            value = self._valueFromRequestArgs(key, args)
+            value = self._valueFromRequestArgs(charset, key, args)
         else:
             value = converter.fromType(args.get(key))
 
@@ -426,7 +430,8 @@ class SelectOtherChoice(object):
         raise NotImplemented
 
     def processInput(self, ctx, key, args):
-        value = self._valueFromRequestArgs(key, args)
+        charset = util.getPOSTCharset(ctx)
+        value = self._valueFromRequestArgs(charset, key, args)
         value = iformal.IStringConvertible(self.original).toType(value)
         if self.noneOption is not None and value == iformal.IKey(self.noneOption).key():
             value = None
