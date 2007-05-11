@@ -852,7 +852,8 @@ class CheckboxMultiChoice(object):
         return self._renderTag(ctx, key, values, converter, True)
 
     def processInput(self, ctx, key, args):
-        values = args.get(key, [])
+        charset = util.getPOSTCharset(ctx)
+        values = [v.decode(charset) for v in args.get(key, [])]
         converter = iformal.IStringConvertible(self.original.type)
         values = [converter.toType(v) for v in values]
         return self.original.validate(values)
