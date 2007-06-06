@@ -509,8 +509,9 @@ class DatePartsSelect(object):
     months = [ (m,m) for m in xrange(1,13) ]
     yearFrom = 1970
     yearTo = 2070
+    noneOption = ('', '')
 
-    def __init__(self, original, dayFirst=None, yearFrom=None, yearTo=None, months=None):
+    def __init__(self, original, dayFirst=None, yearFrom=None, yearTo=None, months=None, noneOption=_UNSET):
         self.original = original
         if dayFirst is not None:
             self.dayFirst = dayFirst
@@ -520,6 +521,8 @@ class DatePartsSelect(object):
             self.yearTo = yearTo
         if months is not None:
             self.months = months
+        if noneOption is not _UNSET:
+            self.noneOption = noneOption
 
     def _namer(self, prefix):
         def _(part):
@@ -532,25 +535,30 @@ class DatePartsSelect(object):
         days = self.days
 
         options = []
+        if self.noneOption is not None:
+            options.append( T.option(value=self.noneOption[0])[self.noneOption[1]] )
         for value in years:
-            if value[0] == year:
+            if str(value[0]) == str(year):
                 options.append( T.option(value=value[0],selected='selected')[value[1]] )
             else:
                 options.append( T.option(value=value[0])[value[1]] )
         yearTag = T.select(name=namer('year'))[ options ]
         
         options = []
+        if self.noneOption is not None:
+            options.append( T.option(value=self.noneOption[0])[self.noneOption[1]] )
         for value in months:
-            if value[0] == month:
+            if str(value[0]) == str(month):
                 options.append( T.option(value=value[0],selected='selected')[value[1]] )
             else:
                 options.append( T.option(value=value[0])[value[1]] )
         monthTag = T.select(name=namer('month'))[ options ]
         
-        
         options = []
+        if self.noneOption is not None:
+            options.append( T.option(value=self.noneOption[0])[self.noneOption[1]] )
         for value in days:
-            if value[0] == day:
+            if str(value[0]) == str(day):
                 options.append( T.option(value=value[0],selected='selected')[value[1]] )
             else:
                 options.append( T.option(value=value[0])[value[1]] )
