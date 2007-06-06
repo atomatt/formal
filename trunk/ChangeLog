@@ -1,5 +1,14 @@
 2007-06-06  Matt Goodall <matt@pollenation.net>
 
+	Fixed the DatePartsSelect widget so that, by default, it includes a none
+	option.
+	
+	I also fixed (well, quick hack might be a better description ;-))
+	DatePartsSelect so that it redisplays values entered by the user when
+	validation fails.
+
+2007-06-06  Matt Goodall <matt@pollenation.net>
+
 	Made the TextAreaList widget the default for Sequence types so that things
 	"just work" but can still be customized when necessary.
 
