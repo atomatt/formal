@@ -129,10 +129,32 @@ class PatternValidator(object):
             self.regex = re.compile(self.regex)
         if self.regex.match(value) is None:
             raise FieldValidationError, 'Invalid format'
+
+
+
+class CallableValidator(object):
+    """
+    A validator that delegates the validation of non-None values to a callable
+    with the same signature as IValidator.validate.
+    """
+
+    implements(iformal.IValidator)
+
+
+    def __init__(self, callable):
+        self.callable = callable
+
+
+    def validate(self, field, value):
+        if value is None:
+            return
+        self.callable(field, value)
+        
             
     
 __all__ = [
     'FormError', 'FieldError', 'FieldValidationError', 'FieldRequiredError',
     'RequiredValidator', 'LengthValidator', 'RangeValidator', 'PatternValidator',
+    'CallableValidator',
     ]
 

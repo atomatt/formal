@@ -1,3 +1,8 @@
+2007-06-08  Matt Goodall <matt@pollenation.net>
+
+	Added a CallableValidator that delegates the validation to some callable
+	object. This makes typical validators much easier to write.
+
 2007-06-06  Matt Goodall <matt@pollenation.net>
 
 	Fixed the DatePartsSelect widget so that, by default, it includes a none
