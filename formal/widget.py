@@ -1054,17 +1054,21 @@ class FileUploadWidget(object):
             removeableHtml = ''
             
         if resourceId:
-            # Have an uploaded file, so render a URL to the uploaded file
+            # Have an uploaded file, so render a link to the uploaded file
             tmpURL = widgetResourceURL(form.name).child(key).child( self.FROM_RESOURCE_MANAGER ).child(resourceId)
-            yield [ T.p[T.img(src=tmpURL)],removeableHtml]
+            value = form.resourceManager.getResourceForWidget( key )
+            yield [ T.p[T.a(href=tmpURL)[value[2]]], removeableHtml]
         elif originalKey:
             # The is no uploaded file, but there is an original, so render a
             # URL to it
             if self.originalKeyIsURL:
                 tmpURL = originalKey
+                yield [ T.p[T.img(src=tmpURL)], removeableHtml ]
             else:
-                tmpURL = widgetResourceURL(form.name).child(key).child( self.FROM_CONVERTIBLE ).child( originalKey )
-            yield [ T.p[T.img(src=tmpURL)], removeableHtml ]
+                # Copy the data to the resource manager and render from there
+                resourceId = self._storeInResourceManager(ctx, key, originalKey)
+                tmpURL = widgetResourceURL(form.name).child(key).child( self.FROM_RESOURCE_MANAGER ).child(resourceId)
+                yield [ T.p[T.a(href=tmpURL)[originalKey[2]]], removeableHtml]
         else:
             # No uploaded file, no original
             yield T.p[T.strong['Nothing uploaded']]
@@ -1073,7 +1077,7 @@ class FileUploadWidget(object):
 
         # Id of uploaded file in the resource manager
         yield T.input(name=resourceIdName,value=resourceId,type='hidden')
-        if originalKey:
+        if originalKey and self.originalKeyIsURL:
             # key of the original that can be used to get a file later
             yield T.input(name=originalIdName,value=originalKey,type='hidden')
 
@@ -1095,9 +1099,12 @@ class FileUploadWidget(object):
             # URL to it
             if self.originalKeyIsURL:
                 tmpURL = originalKey
+                yield T.p[T.img(src=tmpURL)]
             else:
-                tmpURL = widgetResourceURL(form.name).child(key).child(self.FROM_CONVERTIBLE).child(originalKey)
-            yield T.p[T.img(src=tmpURL)]
+                # Store the file in the resource manager and render from there
+                resourceId = self._storeInResourceManager(ctx, key, originalKey)
+                tmpURL = widgetResourceURL(form.name).child(key).child( self.FROM_RESOURCE_MANAGER ).child(resourceId)
+                yield [ T.p[T.a(href=tmpURL)[originalKey[2]]]]
         else:
             # No uploaded file, no original
             yield T.p[T.strong['Nothing uploaded']]
@@ -1161,7 +1168,10 @@ class FileUploadWidget(object):
             # instance that points to the file
             rm = iformal.IForm( ctx ).resourceManager
             (mimetype, path, fileName) = rm.getResourcePath( segments[1] )
-            return static.File( path, mimetype ), []
+            inevow.IRequest(ctx).setHeader('Cache-Control',
+                    'no-cache, must-revalidate, no-store')
+            return static.Data(file(path).read(), str(mimetype)), ()
+
         elif segments[0] == self.FROM_CONVERTIBLE:
             # The convertible can provide a file like object so create a
             # static.Data instance with the data from the convertible.
@@ -1178,6 +1188,15 @@ class FileUploadWidget(object):
             return d
         else:
             return None
+
+
+    def _storeInResourceManager(self, ctx, key, originalKey):
+        resourceManager = iformal.IForm( ctx ).resourceManager
+        resourceManager.setResource( key, originalKey[1], originalKey[2] )
+        resourceId = resourceManager.getResourceId( key )
+        return resourceId
+
+
 
 class Hidden(object):
     """
