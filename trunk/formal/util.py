@@ -30,6 +30,8 @@ def titleFromName(name):
 
     return ''.join(_())
 
+def keytocssid(fieldKey, *extras):
+    return render_cssid(fieldKey, *extras)
 
 def render_cssid(fieldKey, *extras):
     """
