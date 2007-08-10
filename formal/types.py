@@ -131,8 +131,45 @@ class File(Type):
     pass
 
 
+
+class RichText:
+    """ 
+    A data structure for the RichTextType to use
+    """
+    
+    def __init__(self,type,value):
+        self.type = type
+        self.value = value
+        
+    def __repr__(self):
+        shortvalue = self.value[:30]
+        if len(self.value) > 30:
+            shortvalue += '...'
+        return '<formal.types.RichText instance, (%s,"%s")>'%(self.type,shortvalue)
+
+
+class RichTextType(Type):
+    """Forms type used for rich text"""
+
+    def __init__(self, **kwds):
+        strip = kwds.pop('strip', None)
+        super(RichTextType, self).__init__(**kwds)
+        self.strip = strip or False
+        
+
+    def validate(self, value):
+        # For the moment all the validation is against the content
+
+        if self.strip:
+            value.value = value.value.strip()
+        if not value.value:
+            value=None
+
+        return super(RichTextType, self).validate(value)
+
+
 __all__ = [
-    'Boolean', 'Date', 'File', 'Float', 'Integer', 'Sequence', 'String', 'Time',
+    'Boolean', 'Date', 'File', 'Float', 'Integer', 'Sequence', 'String', 'Time', 'RichTextType', 'RichText',
     ]
 
 if haveDecimal:
