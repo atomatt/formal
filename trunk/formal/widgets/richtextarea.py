@@ -25,6 +25,9 @@ class RichTextArea(widget.TextArea):
         tag=T.invisible()
         if len(self.parsers) > 1:
             tp = T.select(name=namer('tparser'),id=render_cssid(namer('tparser')))
+            if readonly:
+                tp(class_='disabled', disabled='disabled')        
+            
             for k,v in self.parsers:
                 if k == tparser:
                     tp[T.option(selected='selected',value=k)[ v ]]
@@ -56,11 +59,19 @@ class RichTextArea(widget.TextArea):
         return self._renderTag(ctx, tparser, tvalue, namer, False)
         
     def renderImmutable(self, ctx, key, args, errors):
-        tparsers = self.original.type
-        tvalue = self.original.value
         namer = self._namer(key)
-        tparser = args.get(namer('tp'), [''])[0]
-        tvalue = args.get(key, [''])[0]
+        if errors:
+            tparser = args.get(namer('tparser'), [''])[0]
+            tvalue = args.get(namer('tvalue'), [''])[0]
+        else:
+            value = args.get(key)
+            if value is not None:
+                tparser = value.type
+                tvalue = value.value
+            else:
+                tparser = None
+                tvalue = ''
+        
         return self._renderTag(ctx, tparser, tvalue, namer, True)
     
     def processInput(self, ctx, key, args):
