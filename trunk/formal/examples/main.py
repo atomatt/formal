@@ -25,6 +25,7 @@ examples = [
     'formal.examples.nofields.NoFieldsFormPage',
     'formal.examples.hidden.HiddenFieldsFormPage',
     'formal.examples.textareawithselect.TextAreaWithSelectFormPage',
+    'formal.examples.richtextarea.RichTextAreaFormPage',
     ]
 
 def makeSite():
