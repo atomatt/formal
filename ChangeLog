@@ -1,3 +1,7 @@
+2007-08-16  Tim Parkin <tim@pollenation.net>
+
+	Added a richtext widget and example.
+
 2007-06-08  Matt Goodall <matt@pollenation.net>
 
 	Added a CallableValidator that delegates the validation to some callable
