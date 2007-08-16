@@ -38,7 +38,7 @@ class RichTextArea(widget.TextArea):
         ta=T.textarea(name=namer('tvalue'), id=render_cssid(namer('tvalue')), cols=self.cols, rows=self.rows)[tvalue or '']
         if readonly:
             ta(class_='readonly', readonly='readonly')
-        tag[tp,ta]
+        tag[tp,T.br,ta]
         return tag
 
 
