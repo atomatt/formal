@@ -370,6 +370,12 @@ class SelectOtherChoice(object):
         return value
 
     def render(self, ctx, key, args, errors):
+        return self._render(ctx, key, args, errors, False)
+
+    def renderImmutable(self, ctx, key, args, errors):
+        return self._render(ctx, key, args, errors, True)
+
+    def _render(self, ctx, key, args, errors, immutable):
 
         charset = util.getPOSTCharset(ctx)
         converter = iformal.IStringConvertible(self.original)
@@ -382,8 +388,12 @@ class SelectOtherChoice(object):
         if value is None:
             value = iformal.IKey(self.noneOption).key()
 
-        optionGen = inevow.IQ(self.template).patternGenerator('option')
-        selectedOptionGen = inevow.IQ(self.template).patternGenerator('selectedOption')
+        if immutable:
+            template = inevow.IQ(self.template).onePattern('immutable')
+        else:
+            template = inevow.IQ(self.template).onePattern('editable')
+        optionGen = template.patternGenerator('option')
+        selectedOptionGen = template.patternGenerator('selectedOption')
         optionTags = []
         selectOther = True
 
@@ -419,15 +429,12 @@ class SelectOtherChoice(object):
         tag.fillSlots('label', self.otherOption[1])
         optionTags.append(tag)
 
-        tag = T.invisible[self.template.load(ctx)]
+        tag = template
         tag.fillSlots('key', key)
         tag.fillSlots('id', render_cssid(key))
         tag.fillSlots('options', optionTags)
         tag.fillSlots('otherValue', otherValue)
         return tag
-
-    def renderImmutable(self, ctx, key, args, errors):
-        raise NotImplemented
 
     def processInput(self, ctx, key, args):
         charset = util.getPOSTCharset(ctx)
