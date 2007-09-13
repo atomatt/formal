@@ -50,8 +50,8 @@ class RichTextArea(widget.TextArea):
         else:
             value = args.get(key)
             if value is not None:
-                tparser = value.type
-                tvalue = value.value
+                tparser = getattr(value,'type',None)
+                tvalue = getattr(value,'value','')
             else:
                 tparser = None
                 tvalue = ''
@@ -67,7 +67,7 @@ class RichTextArea(widget.TextArea):
             value = args.get(key)
             if value is not None:
                 tparser = value.type
-                tvalue = value.value
+                tvalue = getattr(value,'value','')
             else:
                 tparser = None
                 tvalue = ''
