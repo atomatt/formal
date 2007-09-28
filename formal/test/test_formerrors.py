@@ -4,7 +4,7 @@ from formal import form, validation
 class TestFormErrors(unittest.TestCase):
     
     def test_nonzero(self):
-        e = form.FormErrors('foo')
+        e = form.FormErrors()
         self.failIf(not not e)
         self.failUnless(not e)
         e.add(validation.FieldRequiredError('required'))
