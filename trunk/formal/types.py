@@ -8,6 +8,7 @@ try:
 except ImportError:
     haveDecimal = False
 from zope.interface import implements
+from twisted.internet import defer
 
 from formal import iformal, validation
 
@@ -42,11 +43,22 @@ class Type(object):
             self.validators.append(validation.RequiredValidator())
 
     def validate(self, value):
+        dl = []
         for validator in self.validators:
-            validator.validate(self, value)
-        if value is None:
-            value = self.missing
-        return value
+            dl.append(defer.maybeDeferred(validator.validate, self, value))
+
+        def _cbValidate(_, value):
+            if value is None:
+                value = self.missing
+            return value
+
+        def _err(failure):
+            failure.trap(defer.FirstError)
+            return failure.value.subFailure
+
+        d = defer.DeferredList(dl, consumeErrors=True, fireOnOneErrback=True)
+        d.addCallbacks(_cbValidate, _err, [value])
+        return d
 
     def hasValidator(self, validatorType):
         """

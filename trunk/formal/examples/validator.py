@@ -1,10 +1,13 @@
 from zope.interface import implements
+from twisted.internet import defer
 import formal
 from formal import iformal
 from formal.examples import main
 
+
 # A not-too-good regex for matching an IP address.
 IP_ADDRESS_PATTERN = '^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$'
+
 
 class ValidatorFormPage(main.FormExamplePage):
     
@@ -25,12 +28,14 @@ class ValidatorFormPage(main.FormExamplePage):
         form.addField('silly', formal.String(validators=[SillyValidator()]))
         # Check age is between 18 and 30
         form.addField('ohToBeYoungAgain', formal.Integer(validators=[formal.RangeValidator(min=18, max=30)]))
+        form.addField('deferred', formal.String(validators=[DeferredValidator()]))
         form.addAction(self.submitted)
         return form
 
     def submitted(self, ctx, form, data):
         print form, data
         
+
 class SillyValidator(object):
     """
     A pointless example that checks a specific word, 'silly', is entered.
@@ -44,3 +49,15 @@ class SillyValidator(object):
             return
         if value.lower() != self.word.lower():
             raise formal.FieldValidationError(u'You must enter \'%s\''%self.word)
+
+
+class DeferredValidator(object):
+    """
+    Just to demonstrate the validators can be deferred.
+    """
+
+    def validate(self, field, value):
+        if value == 'fail':
+            return defer.fail(formal.FieldValidationError(u"You triggered a failure"))
+        return defer.succeed(None)
+
