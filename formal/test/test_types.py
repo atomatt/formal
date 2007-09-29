@@ -1,9 +1,10 @@
 from datetime import date, time
 try:
-    import decimal
+    from decimal import Decimal
     haveDecimal = True
 except ImportError:
     haveDecimal = False
+from twisted.internet import defer
 from twisted.trial import unittest
 import formal
 from formal import validation
@@ -38,87 +39,160 @@ class TestCreation(unittest.TestCase):
 
 class TestValidate(unittest.TestCase):
 
-    def testString(self):
-        self.assertEquals(formal.String().validate(None), None)
-        self.assertEquals(formal.String().validate(''), None)
-        self.assertEquals(formal.String().validate(' '), ' ')
-        self.assertEquals(formal.String().validate('foo'), 'foo')
-        self.assertEquals(formal.String().validate(u'foo'), u'foo')
-        self.assertEquals(formal.String(strip=True).validate(' '), None)
-        self.assertEquals(formal.String(strip=True).validate(' foo '), 'foo')
-        self.assertEquals(formal.String(missing='bar').validate('foo'), 'foo')
-        self.assertEquals(formal.String(missing='bar').validate(''), 'bar')
-        self.assertEquals(formal.String(strip=True, missing='').validate(' '), '')
-        self.assertEquals(formal.String(missing='foo').validate('bar'), 'bar')
-        self.assertRaises(formal.FieldValidationError, formal.String(required=True).validate, '')
-        self.assertRaises(formal.FieldValidationError, formal.String(required=True).validate, None)
 
-    def testInteger(self):
-        self.assertEquals(formal.Integer().validate(None), None)
-        self.assertEquals(formal.Integer().validate(0), 0)
-        self.assertEquals(formal.Integer().validate(1), 1)
-        self.assertEquals(formal.Integer().validate(-1), -1)
-        self.assertEquals(formal.Integer(missing=1).validate(None), 1)
-        self.assertEquals(formal.Integer(missing=1).validate(2), 2)
-        self.assertRaises(formal.FieldValidationError, formal.Integer(required=True).validate, None)
+    @defer.deferredGenerator
+    def runSuccessTests(self, type, tests):
+        for test in tests:
+            d = type(*test[0], **test[1]).validate(test[2])
+            d = defer.waitForDeferred(d)
+            yield d
+            self.assertEquals(d.getResult(), test[3])
 
-    def testFloat(self):
-        self.assertEquals(formal.Float().validate(None), None)
-        self.assertEquals(formal.Float().validate(0), 0.0)
-        self.assertEquals(formal.Float().validate(0.0), 0.0)
-        self.assertEquals(formal.Float().validate(.1), 0.1)
-        self.assertEquals(formal.Float().validate(1), 1.0)
-        self.assertEquals(formal.Float().validate(-1), -1.0)
-        self.assertEquals(formal.Float().validate(-1.86), -1.86)
-        self.assertEquals(formal.Float(missing=1.0).validate(None), 1.0)
-        self.assertEquals(formal.Float(missing=1.0).validate(2.0), 2.0)
-        self.assertRaises(formal.FieldValidationError, formal.Float(required=True).validate, None)
+
+    @defer.deferredGenerator
+    def runFailureTests(self, type, tests):
+        for test in tests:
+            d = type(*test[0], **test[1]).validate(test[2])
+            d = defer.waitForDeferred(d)
+            yield d
+            self.assertRaises(test[3], d.getResult)
+
+
+    def testStringSuccess(self):
+        return self.runSuccessTests(formal.String, [
+                ([], {}, None, None),
+                ([], {}, '', None),
+                ([], {}, ' ',  ' '),
+                ([], {},  'foo', 'foo'),
+                ([], {}, u'foo', u'foo'),
+                ([], {'strip': True}, ' ', None),
+                ([], {'strip': True}, ' foo ', 'foo'),
+                ([], {'missing': 'bar'}, 'foo', 'foo'),
+                ([], {'missing': 'bar'}, '', 'bar'),
+                ([], {'strip': True, 'missing': ''}, ' ', ''),
+                ])
+
+
+    def testStringFailure(self):
+        return self.runFailureTests(formal.String, [
+            ([], {'required': True}, '', formal.FieldValidationError),
+            ([], {'required': True}, None, formal.FieldValidationError),
+            ])
+
+
+    def testIntegerSuccess(self):
+        return self.runSuccessTests(formal.Integer, [
+                ([], {}, None, None),
+                ([], {}, 0, 0),
+                ([], {}, 1, 1),
+                ([], {}, -1, -1),
+                ([], {'missing': 1}, None, 1),
+                ([], {'missing': 1}, 2, 2),
+                ])
+
+
+    def testIntegerFailure(self):
+        return self.runFailureTests(formal.Integer, [
+            ([], {'required': True}, None, formal.FieldValidationError),
+            ])
+
+
+    def testFloatSuccess(self):
+        self.runSuccessTests(formal.Float, [
+            ([], {}, None, None),
+            ([], {}, 0, 0.0),
+            ([], {}, 0.0, 0.0),
+            ([], {}, .1, .1),
+            ([], {}, 1, 1.0),
+            ([], {}, -1, -1.0),
+            ([], {}, -1.86, -1.86),
+            ([], {'missing': 1.0}, None, 1.0),
+            ([], {'missing': 1.0}, 2.0, 2.0),
+            ])
+
+    
+    def testFloatFailure(self):
+        self.runFailureTests(formal.Float, [
+            ([], {'required': True}, None, formal.FieldValidationError),
+            ])
+
 
     if haveDecimal:
-        def testDecimal(self):
-            from decimal import Decimal
-            self.assertEquals(formal.Decimal().validate(None), None)
-            self.assertEquals(formal.Decimal().validate(Decimal('0')), Decimal('0'))
-            self.assertEquals(formal.Decimal().validate(Decimal('0.0')), Decimal('0.0'))
-            self.assertEquals(formal.Decimal().validate(Decimal('.1')), Decimal('0.1'))
-            self.assertEquals(formal.Decimal().validate(Decimal('1')), Decimal('1'))
-            self.assertEquals(formal.Decimal().validate(Decimal('-1')), Decimal('-1'))
-            self.assertEquals(formal.Decimal().validate(Decimal('-1.86')),
-                    Decimal('-1.86'))
-            self.assertEquals(formal.Decimal(missing=Decimal("1.0")).validate(None),
-                    Decimal("1.0"))
-            self.assertEquals(formal.Decimal(missing=Decimal("1.0")).validate(Decimal("2.0")),
-                    Decimal("2.0"))
-            self.assertRaises(formal.FieldValidationError, formal.Decimal(required=True).validate, None)
 
-    def testBoolean(self):
-        self.assertEquals(formal.Boolean().validate(None), None)
-        self.assertEquals(formal.Boolean().validate(True), True)
-        self.assertEquals(formal.Boolean().validate(False), False)
-        self.assertEquals(formal.Boolean(missing=True).validate(None), True)
-        self.assertEquals(formal.Boolean(missing=True).validate(False), False)
+        def testDecimalSuccess(self):
+            return self.runSuccessTests(formal.Decimal, [
+                ([], {}, None, None),
+                ([], {}, Decimal('0'), Decimal('0')),
+                ([], {}, Decimal('0.0'), Decimal('0.0')),
+                ([], {}, Decimal('.1'), Decimal('.1')),
+                ([], {}, Decimal('1'), Decimal('1')),
+                ([], {}, Decimal('-1'), Decimal('-1')),
+                ([], {}, Decimal('-1.86'), Decimal('-1.86')),
+                ([], {'missing': Decimal('1.0')}, None, Decimal('1.0')),
+                ([], {'missing': Decimal('1.0')}, Decimal('2.0'), Decimal('2.0')),
+                ])
 
-    def testDate(self):
-        self.assertEquals(formal.Date().validate(None), None)
-        self.assertEquals(formal.Date().validate(date(2005,1,1)), date(2005,1,1))
-        self.assertEquals(formal.Date(missing=date(2005,1,2)).validate(None), date(2005,1,2))
-        self.assertEquals(formal.Date(missing=date(2005,1,2)).validate(date(2005,1,1)), date(2005,1,1))
-        self.assertRaises(formal.FieldValidationError, formal.Date(required=True).validate, None)
 
-    def testTime(self):
-        self.assertEquals(formal.Time().validate(None), None)
-        self.assertEquals(formal.Time().validate(time(12,30,30)), time(12,30,30))
-        self.assertEquals(formal.Time(missing=time(12,30,30)).validate(None), time(12,30,30))
-        self.assertEquals(formal.Time(missing=time(12,30,30)).validate(time(12,30,31)), time(12,30,31))
-        self.assertRaises(formal.FieldValidationError, formal.Time(required=True).validate, None)
+        def testDecimalFailure(self):
+            return self.runFailureTests(formal.Decimal, [
+                ([], {'required': True}, None, formal.FieldValidationError),
+                ])
 
-    def test_sequence(self):
-        self.assertEquals(formal.Sequence(formal.String()).validate(None), None)
-        self.assertEquals(formal.Sequence(formal.String()).validate(['foo']), ['foo'])
-        self.assertEquals(formal.Sequence(formal.String(), missing=['foo']).validate(None), ['foo'])
-        self.assertEquals(formal.Sequence(formal.String(), missing=['foo']).validate(['bar']), ['bar'])
-        self.assertRaises(formal.FieldValidationError, formal.Sequence(formal.String(), required=True).validate, None)
-        self.assertRaises(formal.FieldValidationError, formal.Sequence(formal.String(), required=True).validate, [])
+
+    def testBooleanSuccess(self):
+        return self.runSuccessTests(formal.Boolean, [
+            ([], {}, None, None),
+            ([], {}, True, True),
+            ([], {}, False, False),
+            ([], {'missing' :True}, None, True),
+            ([], {'missing': True}, False, False)
+            ])
+
+
+    def testDateSuccess(self):
+        return self.runSuccessTests(formal.Date, [
+            ([], {}, None, None),
+            ([], {}, date(2005, 1, 1), date(2005, 1, 1)),
+            ([], {'missing': date(2005, 1, 2)}, None, date(2005, 1, 2)),
+            ([], {'missing': date(2005, 1, 2)}, date(2005, 1, 1), date(2005, 1, 1)),
+            ])
+
+
+    def testDateFailure(self):
+        return self.runFailureTests(formal.Date, [
+            ([], {'required': True}, None, formal.FieldValidationError),
+            ])
+
+
+    def testTimeSuccess(self):
+        self.runSuccessTests(formal.Time, [
+            ([], {}, None, None),
+            ([], {}, time(12, 30, 30), time(12, 30, 30)),
+            ([], {'missing': time(12, 30, 30)}, None, time(12, 30, 30)),
+            ([], {'missing': time(12, 30, 30)}, time(12, 30, 31), time(12, 30, 31)),
+            ])
+
+
+    def testTimeFailure(self):
+        self.runFailureTests(formal.Time, [
+            ([], {'required': True}, None, formal.FieldValidationError),
+            ])
+
+
+    def testSequenceSuccess(self):
+        self.runSuccessTests(formal.Sequence, [
+            ([formal.String()], {}, None, None),
+            ([formal.String()], {}, ['foo'], ['foo']),
+            ([formal.String()], {'missing': ['foo']}, None, ['foo']),
+            ([formal.String()], {'missing': ['foo']}, ['bar'], ['bar']),
+            ])
+
+
+    def testSequenceFailure(self):
+        self.runFailureTests(formal.Sequence, [
+            ([formal.String()], {'required': True}, None, formal.FieldValidationError),
+            ([formal.String()], {'required': True}, [], formal.FieldValidationError),
+            ])
 
     def test_file(self):
         pass

@@ -1,3 +1,7 @@
+2007-09-29  Matt Goodall <matt@pollenation.net>
+
+	Add deferred validator support, many thanks to Marian Schubert.
+
 2007-08-16  Tim Parkin <tim@pollenation.net>
 
 	Added a richtext widget and example.

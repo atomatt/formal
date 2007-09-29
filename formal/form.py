@@ -4,6 +4,7 @@ Form implementation and high-level renderers.
 
 from zope.interface import Interface
 from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.python.components import registerAdapter
 from nevow import appserver, context, loaders, inevow, rend, tags as T, url
 from nevow.util import getPOSTCharset
@@ -129,7 +130,6 @@ class Field(object):
 
 
     def process(self, ctx, form, args, errors):
-
         # If the type is immutable then copy the original value to args in case
         # another validation error causes this field to be re-rendered.
         if self.type.immutable:
@@ -137,13 +137,21 @@ class Field(object):
             return
 
         # Process the input using the widget, storing the data back on the form.
-        try:
-            form.data[self.key] = self.makeWidget().processInput(ctx, self.key, args)
-        except validation.FieldError, e:
+        widget = self.makeWidget()
+        def _cbProcess(data):
+            form.data[self.key] = data
+
+        def _errProcess(failure):
+            failure.trap(validation.FieldError)
+            e = failure.value
+
             if e.fieldName is None:
                 e.fieldName = self.key
             errors.add(e)
-
+            
+        d = defer.maybeDeferred(widget.processInput, ctx, self.key, args)
+        d.addCallbacks(_cbProcess, _errProcess)
+        return d
 
 
 class FieldFragment(rend.Fragment):
@@ -408,21 +416,27 @@ class Form(AddHelperMixin, object):
         # Remember the args in case validation fails.
         self.errors.data = args
 
+        def _cbProcessingDone(_):
+            if self.errors and validate:
+                return self.errors
+
+            def _clearUpResources( r ):
+                if not self.errors:
+                    self.resourceManager.clearUpResources()
+                return r
+
+            d = defer.maybeDeferred(callback, ctx, self, self.data)
+            d.addCallback( _clearUpResources )
+            d.addErrback(self._cbFormProcessingFailed, ctx)
+            return d
+
         # Iterate the items and collect the form data and/or errors.
+        dl = []
         for item in self.items:
-            item.process(ctx, self, args, self.errors)
+            dl.append(defer.maybeDeferred(item.process, ctx, self, args, self.errors))
 
-        if self.errors and validate:
-            return self.errors
-
-        def _clearUpResources( r ):
-            if not self.errors:
-                self.resourceManager.clearUpResources()
-            return r
-
-        d = defer.maybeDeferred(callback, ctx, self, self.data)
-        d.addCallback( _clearUpResources )
-        d.addErrback(self._cbFormProcessingFailed, ctx)
+        d = defer.gatherResults(dl)
+        d.addCallback(_cbProcessingDone)
         return d
 
     def _cbFormProcessingFailed(self, failure, ctx):
